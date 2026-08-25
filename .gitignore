@@ -1,0 +1,17 @@
+# 絕對不能進 git 的東西
+credentials.json
+*.credentials.json
+client_secret*.json
+token.json
+.env
+
+# 教學與工作用檔案，不屬於這個網站
+【專案】*.md
+000_*.md
+CLAUDE.md
+迭代/
+_雲端硬碟舊版下載備份*/
+*.bat
+auth-test.html
+gas_code.js
+firestore.rules

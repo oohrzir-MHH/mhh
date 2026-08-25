@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#2b3a55">
+<title>MH⋯H ｜ Where Minds Bond</title>
+<style>
+:root{
+  --ink:#1a1d24; --ink-2:#5b6472; --line:#dfe3ea;
+  --bg:#f4f6f9; --card:#fff; --brand:#2b3a55; --brand-2:#3d5a80;
+  --ok:#2ea86a; --warn:#e8a13a; --bad:#e05260;
+  --r:14px; --shadow:0 2px 10px rgba(20,25,40,.07);
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root{ --ink:#eef1f6; --ink-2:#9aa4b4; --line:#333a48;
+         --bg:#161a22; --card:#1e242e; --brand:#8fb3e0; --brand-2:#6d9bd1; }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);
+  font:16px/1.7 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  overscroll-behavior:none}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+
+/* ---------- 版面 ---------- */
+.screen{display:none;min-height:100dvh;flex-direction:column}
+.screen.on{display:flex}
+.top{display:flex;align-items:center;gap:10px;padding:12px 16px;
+  background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.top .logo{font-weight:800;letter-spacing:.5px;color:var(--brand);white-space:nowrap}
+.top .who{margin-left:auto;font-size:.78rem;color:var(--ink-2);text-align:right;line-height:1.35}
+.body{flex:1;padding:20px 16px calc(20px + var(--safe-b))}
+.mid{flex:1;display:flex;flex-direction:column;justify-content:center;
+  align-items:center;text-align:center;padding:28px 22px;gap:14px}
+
+h2{font-size:1.15rem;margin:0 0 4px}
+.sub{color:var(--ink-2);font-size:.9rem;margin:0}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:18px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:15px 24px;border-radius:12px;font-weight:700;background:var(--card);
+  border:1.5px solid var(--line);min-height:52px}
+.btn.pri{background:var(--brand);color:#fff;border-color:var(--brand)}
+.btn.big{width:100%;font-size:1.05rem;min-height:60px}
+.btn:disabled{opacity:.45}
+.btn:active{transform:scale(.985)}
+
+/* ---------- 座號格 ---------- */
+.seatgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(66px,1fr));gap:9px;margin-top:14px}
+.seat{aspect-ratio:1/1;border-radius:12px;background:var(--card);border:1.5px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  box-shadow:var(--shadow);padding:2px}
+.seat b{font-size:1.35rem;line-height:1.1}
+.seat small{font-size:.66rem;color:var(--ink-2);max-width:100%;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.seat.taken{opacity:.34}
+.seat.me{border-color:var(--brand);border-width:2.5px;background:color-mix(in srgb,var(--brand) 12%,var(--card))}
+
+/* ---------- 題目 ---------- */
+.q{font-size:1.16rem;font-weight:700;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+.qimg{width:100%;border-radius:10px;margin-top:12px;display:block}
+.qlink{display:inline-block;margin-top:12px;color:var(--brand);font-weight:700;
+  word-break:break-all;text-decoration:underline}
+.pill{display:inline-block;font-size:.72rem;padding:3px 10px;border-radius:99px;
+  background:color-mix(in srgb,var(--brand) 14%,transparent);color:var(--brand);font-weight:700}
+
+textarea,input[type=text],input[type=number]{width:100%;font:inherit;color:inherit;
+  background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:13px 14px}
+textarea{min-height:170px;resize:vertical;line-height:1.7}
+input[type=number]{font-size:1.9rem;font-weight:800;text-align:center;padding:16px}
+
+.choices{display:flex;flex-direction:column;gap:9px;margin-top:12px}
+.choice{padding:15px 16px;border-radius:12px;background:var(--card);
+  border:1.5px solid var(--line);text-align:left;font-weight:600}
+.choice.sel{border-color:var(--brand);border-width:2.5px;
+  background:color-mix(in srgb,var(--brand) 12%,var(--card))}
+
+/* ---------- 畫布 ---------- */
+.padwrap{background:#fff;border:1.5px solid var(--line);border-radius:12px;
+  overflow:hidden;margin-top:12px;position:relative}
+#pad{display:block;width:100%;touch-action:none;background:#fff}
+.tools{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:10px}
+.sw{width:34px;height:34px;border-radius:50%;border:2.5px solid transparent;
+  box-shadow:0 0 0 1.5px var(--line) inset}
+.sw.on{border-color:var(--ink);transform:scale(1.12)}
+.tool{padding:9px 13px;border-radius:10px;background:var(--card);
+  border:1.5px solid var(--line);font-size:.85rem;font-weight:700}
+.tool.on{border-color:var(--brand);border-width:2.5px;color:var(--brand)}
+
+.foot{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--line);
+  padding:12px 16px calc(12px + var(--safe-b));display:flex;gap:10px}
+.foot .btn{flex:1}
+
+.note{font-size:.82rem;color:var(--ink-2);margin-top:10px;line-height:1.6}
+.err{background:color-mix(in srgb,var(--bad) 12%,var(--card));border:1px solid var(--bad);
+  color:var(--bad);border-radius:10px;padding:12px 14px;font-size:.86rem;margin-top:14px;
+  text-align:left;white-space:pre-wrap}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--ok);display:inline-block;
+  animation:bp 1.5s ease-in-out infinite}
+@keyframes bp{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+.big-ok{font-size:3.4rem;line-height:1}
+.spin{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--brand);
+  border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* 平板／電腦橫式 */
+@media (min-width:760px){
+  .body{max-width:820px;margin:0 auto;width:100%;padding:26px 24px}
+  .foot{max-width:820px;margin:0 auto;width:100%;border-radius:14px 14px 0 0}
+  .seatgrid{grid-template-columns:repeat(auto-fill,minmax(84px,1fr))}
+  .q{font-size:1.3rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ 0 載入中 ══════════ -->
+<div class="screen on" id="s-load">
+  <div class="mid"><div class="spin"></div><p class="sub">連線中…</p></div>
+</div>
+
+<!-- ══════════ 1 登入 ══════════ -->
+<div class="screen" id="s-login">
+  <div class="mid">
+    <div style="font-size:2.6rem;font-weight:800;color:var(--brand);letter-spacing:1px">MH⋯H</div>
+    <h2 style="margin:0">Where Minds Bond</h2>
+    <p class="sub" id="login-room">—</p>
+    <button class="btn pri big" id="btn-login" style="max-width:330px;margin-top:12px">
+      使用學校帳號登入</button>
+    <p class="note" style="max-width:330px">
+      請用 <b>@tngs.tn.edu.tw</b> 的學校帳號。<br>
+      <b>只有第一次要登入</b>，之後這台裝置會直接進入。</p>
+    <div class="err" id="login-err" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ══════════ 2 選座號 ══════════ -->
+<div class="screen" id="s-seat">
+  <div class="top"><span class="logo">MH⋯H</span>
+    <span class="who" id="seat-who"></span></div>
+  <div class="body">
+    <h2>點一下你的座號</h2>
+    <p class="sub">選錯了跟老師說，老師可以幫你解除。</p>
+    <div class="seatgrid" id="seatgrid"></div>
+    <div class="err" id="seat-err" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ══════════ 3 等待題目 ══════════ -->
+<div class="screen" id="s-wait">
+  <div class="top"><span class="logo">MH⋯H</span><span class="who" id="wait-who"></span></div>
+  <div class="mid">
+    <span class="dot"></span>
+    <h2 style="margin:0">已就緒</h2>
+    <p class="sub">老師推送題目後<br>這頁會自動出現，不用重整。</p>
+  </div>
+</div>
+
+<!-- ══════════ 4 作答 ══════════ -->
+<div class="screen" id="s-answer">
+  <div class="top"><span class="logo">MH⋯H</span><span class="who" id="ans-who"></span></div>
+  <div class="body">
+    <span class="pill" id="q-kind">題目</span>
+    <div class="q" id="q-text" style="margin-top:10px"></div>
+    <img class="qimg" id="q-img" style="display:none" alt="題目附圖">
+    <a class="qlink" id="q-link" style="display:none" target="_blank" rel="noopener"></a>
+
+    <div id="a-text" style="display:none;margin-top:16px">
+      <textarea id="in-text" placeholder="在這裡寫下你的答案…"></textarea>
+    </div>
+    <div id="a-number" style="display:none;margin-top:16px">
+      <input type="number" id="in-number" inputmode="decimal" placeholder="0">
+    </div>
+    <div id="a-choice" style="display:none"><div class="choices" id="choices"></div></div>
+    <div id="a-draw" style="display:none">
+      <div class="padwrap"><canvas id="pad"></canvas></div>
+      <div class="tools" id="tools"></div>
+    </div>
+
+    <div class="err" id="ans-err" style="display:none"></div>
+  </div>
+  <div class="foot">
+    <button class="btn" id="btn-clearans">清除</button>
+    <button class="btn pri" id="btn-send" style="flex:2">送出</button>
+  </div>
+</div>
+
+<!-- ══════════ 5 已送出 ══════════ -->
+<div class="screen" id="s-done">
+  <div class="top"><span class="logo">MH⋯H</span><span class="who" id="done-who"></span></div>
+  <div class="mid">
+    <div class="big-ok">✅</div>
+    <h2 style="margin:0">已送出</h2>
+    <p class="sub" id="done-sub">老師已經收到你的答案。</p>
+    <button class="btn" id="btn-redo" style="margin-top:8px">我要修改答案</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
+         getRedirectResult, onAuthStateChanged, signOut }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getFirestore, doc, collection, getDoc, setDoc, onSnapshot, serverTimestamp }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+/* ═══════════ 設定 ═══════════ */
+const CFG = {
+  apiKey: "AIzaSyB21eHdFPd9W5o0Xa9EFvJEAk8Wsuzfzbw",
+  authDomain: "mhh-tngs.firebaseapp.com",
+  projectId: "mhh-tngs",
+  storageBucket: "mhh-tngs.firebasestorage.app",
+  messagingSenderId: "471690787859",
+  appId: "1:471690787859:web:37fa09bcd09a54032013e6"
+};
+const DOMAIN = 'tngs.tn.edu.tw';
+
+const app = initializeApp(CFG);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+/* ═══════════ 小工具 ═══════════ */
+const $ = s => document.querySelector(s);
+const show = id => document.querySelectorAll('.screen')
+  .forEach(el => el.classList.toggle('on', el.id === id));
+const err = (sel, msg) => { const e = $(sel);
+  e.style.display = msg ? 'block' : 'none'; e.textContent = msg || ''; };
+
+const ROOM = new URLSearchParams(location.search).get('r');
+
+function deviceId(){
+  let d = localStorage.getItem('mhh_device');
+  if(!d){ d = 'd_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36);
+          localStorage.setItem('mhh_device', d); }
+  return d;
+}
+const DEV = deviceId();
+
+let ME = null;        // firebase user
+let ROOMDATA = null;  // 房間文件
+let MYSEAT = null;    // 我的座號
+let CURQ = null;      // 目前題目
+let SENTQ = null;     // 已送出的 qid
+
+/* ═══════════ 啟動 ═══════════ */
+if(!ROOM){
+  show('s-login');
+  err('#login-err', '網址少了教室代碼。\n請重新掃描老師提供的 QR Code，或向老師索取連結。');
+  $('#btn-login').disabled = true;
+} else {
+  $('#login-room').textContent = `教室代碼　${ROOM}`;
+  getRedirectResult(auth).catch(()=>{});
+  onAuthStateChanged(auth, async u => {
+    if(!u){ show('s-login'); return; }
+    if(!(u.email || '').endsWith('@' + DOMAIN)){
+      await signOut(auth);
+      show('s-login');
+      err('#login-err', `你登入的是 ${u.email}\n這不是學校帳號。\n請改用 @${DOMAIN} 的帳號再登入一次。`);
+      return;
+    }
+    ME = u;
+    const who = `${u.displayName || ''}<br>${u.email}`;
+    ['#seat-who','#wait-who','#ans-who','#done-who']
+      .forEach(s => $(s).innerHTML = who);
+    await enterRoom();
+  });
+}
+
+$('#btn-login').onclick = async () => {
+  err('#login-err', '');
+  const p = new GoogleAuthProvider();
+  p.setCustomParameters({ hd: DOMAIN, prompt: 'select_account' });
+  try { await signInWithPopup(auth, p); }
+  catch(e){
+    if(/popup-blocked|popup-closed|cancelled-popup/.test(e.code)){
+      try { await signInWithRedirect(auth, p); return; } catch(_){}
+    }
+    err('#login-err', `登入失敗\n${e.code}\n\n如果訊息提到「管理員」或「已封鎖」，請告訴老師 —— 這是學校端的設定問題，不是你的錯。`);
+  }
+};
+
+/* ═══════════ 進入教室 ═══════════ */
+async function enterRoom(){
+  let snap;
+  try { snap = await getDoc(doc(db,'rooms',ROOM)); }
+  catch(e){
+    show('s-login');
+    err('#login-err', `讀不到教室資料\n${e.code || e.message}`);
+    return;
+  }
+  if(!snap.exists()){
+    show('s-login');
+    err('#login-err', `找不到教室「${ROOM}」。\n可能老師還沒開啟，或代碼看錯了。`);
+    return;
+  }
+  ROOMDATA = snap.data();
+
+  // 這台裝置之前綁過哪個座號？
+  const cached = localStorage.getItem('mhh_seat_' + ROOM);
+  if(cached){
+    const s = await getDoc(doc(db,'rooms',ROOM,'seats',cached)).catch(()=>null);
+    if(s && s.exists() && s.data().email === ME.email){ MYSEAT = cached; }
+  }
+
+  if(MYSEAT) listenQuestion();
+  else       await renderSeats();
+}
+
+/* ═══════════ 選座號 ═══════════ */
+async function renderSeats(){
+  show('s-seat');
+  const grid = $('#seatgrid');
+  const roster = ROOMDATA.roster || [];
+  if(!roster.length){
+    err('#seat-err','老師還沒把班級名單推上來，請稍等一下再重新整理。');
+    return;
+  }
+  const taken = {};
+  onSnapshot(collection(db,'rooms',ROOM,'seats'), snap => {
+    snap.forEach(d => taken[d.id] = d.data());
+    grid.innerHTML = '';
+    roster.forEach(st => {
+      const no = String(st.no);
+      const t  = taken[no];
+      const mine = t && t.email === ME.email;
+      const b = document.createElement('button');
+      b.className = 'seat' + (t && !mine ? ' taken' : '') + (mine ? ' me' : '');
+      b.innerHTML = `<b>${no}</b><small>${st.name || ''}</small>`;
+      b.onclick = () => claim(no, st.name, t);
+      grid.appendChild(b);
+    });
+  });
+}
+
+async function claim(no, name, taken){
+  if(taken && taken.email !== ME.email){
+    err('#seat-err', `${no} 號已經被 ${taken.displayName || '其他人'} 選走了。\n如果那是你的座號，請舉手跟老師說，老師可以解除。`);
+    return;
+  }
+  err('#seat-err','');
+  try{
+    await setDoc(doc(db,'rooms',ROOM,'seats',String(no)), {
+      no: Number(no), name: name || '', email: ME.email,
+      displayName: ME.displayName || '', deviceId: DEV, claimedAt: serverTimestamp()
+    });
+    MYSEAT = String(no);
+    localStorage.setItem('mhh_seat_' + ROOM, MYSEAT);
+    listenQuestion();
+  }catch(e){
+    err('#seat-err', `綁定失敗\n${e.code || e.message}`);
+  }
+}
+
+/* ═══════════ 監聽題目 ═══════════ */
+function listenQuestion(){
+  show('s-wait');
+  onSnapshot(doc(db,'rooms',ROOM), snap => {
+    if(!snap.exists()) return;
+    ROOMDATA = snap.data();
+    const q = ROOMDATA.question;
+    if(!q || !q.qid){ CURQ = null; show('s-wait'); return; }
+    if(CURQ && CURQ.qid === q.qid) return;      // 同一題，不重畫
+    CURQ = q; SENTQ = null;
+    renderQuestion(q);
+  });
+}
+
+const KIND = { text:'文字作答', number:'數字作答', draw:'畫圖作答', choice:'選擇題' };
+
+function renderQuestion(q){
+  $('#q-kind').textContent = KIND[q.type] || '題目';
+  $('#q-text').textContent = q.prompt || '';
+  const img = $('#q-img');
+  if(q.imageUrl){ img.src = q.imageUrl; img.style.display = 'block'; }
+  else img.style.display = 'none';
+  const lk = $('#q-link');
+  if(q.linkUrl){ lk.href = q.linkUrl; lk.textContent = q.linkUrl; lk.style.display='inline-block'; }
+  else lk.style.display = 'none';
+
+  ['#a-text','#a-number','#a-choice','#a-draw']
+    .forEach(s => $(s).style.display = 'none');
+  err('#ans-err','');
+
+  if(q.type === 'number'){ $('#a-number').style.display=''; $('#in-number').value=''; }
+  else if(q.type === 'draw'){ $('#a-draw').style.display=''; initPad(); }
+  else if(q.type === 'choice'){
+    $('#a-choice').style.display='';
+    const box = $('#choices'); box.innerHTML=''; PICK = null;
+    (q.choices||[]).forEach((c,i) => {
+      const b = document.createElement('button');
+      b.className='choice'; b.textContent = `${String.fromCharCode(65+i)}. ${c}`;
+      b.onclick = () => { PICK = c;
+        [...box.children].forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); };
+      box.appendChild(b);
+    });
+  }
+  else { $('#a-text').style.display=''; $('#in-text').value=''; }
+
+  show('s-answer');
+}
+let PICK = null;
+
+/* ═══════════ 畫布 ═══════════ */
+const PAD_W = 1600, PAD_H = 1200;
+const COLORS = ['#111111','#e05260','#2f7bd6','#2ea86a','#e8a13a','#8e5bd0'];
+let pad, pctx, strokes = [], cur = null, penColor = COLORS[0], penW = 6, erasing = false, padReady = false;
+
+function initPad(){
+  pad = $('#pad');
+  pad.width = PAD_W; pad.height = PAD_H;
+  pad.style.aspectRatio = `${PAD_W}/${PAD_H}`;
+  pctx = pad.getContext('2d');
+  strokes = []; redraw();
+  if(padReady) return;
+  padReady = true;
+
+  const tools = $('#tools');
+  COLORS.forEach((c,i) => {
+    const b = document.createElement('button');
+    b.className = 'sw' + (i===0?' on':''); b.style.background = c;
+    b.onclick = () => { penColor = c; erasing = false;
+      tools.querySelectorAll('.sw').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on'); syncTools(); };
+    tools.appendChild(b);
+  });
+  [['細',3],['中',6],['粗',14]].forEach(([t,w],i) => {
+    const b = document.createElement('button');
+    b.className = 'tool' + (i===1?' on':''); b.textContent = t; b.dataset.w = w;
+    b.onclick = () => { penW = w; erasing = false;
+      tools.querySelectorAll('[data-w]').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on'); syncTools(); };
+    tools.appendChild(b);
+  });
+  const eb = document.createElement('button');
+  eb.className='tool'; eb.id='btn-eraser'; eb.textContent='橡皮擦';
+  eb.onclick = () => { erasing = !erasing; syncTools(); };
+  tools.appendChild(eb);
+  const ub = document.createElement('button');
+  ub.className='tool'; ub.textContent='↩︎ 復原';
+  ub.onclick = () => { strokes.pop(); redraw(); };
+  tools.appendChild(ub);
+
+  const pos = ev => {
+    const r = pad.getBoundingClientRect();
+    return [ (ev.clientX - r.left) * PAD_W / r.width,
+             (ev.clientY - r.top ) * PAD_H / r.height ];
+  };
+  pad.addEventListener('pointerdown', ev => {
+    ev.preventDefault(); pad.setPointerCapture(ev.pointerId);
+    cur = { color:penColor, w: erasing ? penW*4 : penW, erase:erasing, pts:[pos(ev)] };
+    strokes.push(cur); redraw();
+  });
+  pad.addEventListener('pointermove', ev => {
+    if(!cur) return; ev.preventDefault(); cur.pts.push(pos(ev)); redraw();
+  });
+  const end = () => { cur = null; };
+  pad.addEventListener('pointerup', end);
+  pad.addEventListener('pointercancel', end);
+  pad.addEventListener('pointerleave', end);
+}
+function syncTools(){
+  const eb = $('#btn-eraser'); if(eb) eb.classList.toggle('on', erasing);
+}
+function redraw(){
+  pctx.fillStyle = '#fff'; pctx.fillRect(0,0,PAD_W,PAD_H);
+  pctx.lineCap = 'round'; pctx.lineJoin = 'round';
+  strokes.forEach(s => {
+    pctx.strokeStyle = s.erase ? '#fff' : s.color;
+    pctx.lineWidth = s.w;
+    pctx.beginPath();
+    s.pts.forEach(([x,y],i) => i ? pctx.lineTo(x,y) : pctx.moveTo(x,y));
+    if(s.pts.length === 1) pctx.lineTo(s.pts[0][0]+.1, s.pts[0][1]+.1);
+    pctx.stroke();
+  });
+}
+
+/* ═══════════ 送出 ═══════════ */
+$('#btn-clearans').onclick = () => {
+  if(!CURQ) return;
+  if(CURQ.type === 'draw'){ strokes = []; redraw(); }
+  else if(CURQ.type === 'number') $('#in-number').value = '';
+  else if(CURQ.type === 'choice'){ PICK = null;
+    $('#choices').querySelectorAll('.choice').forEach(x=>x.classList.remove('sel')); }
+  else $('#in-text').value = '';
+};
+
+$('#btn-send').onclick = async () => {
+  if(!CURQ || !ME || !MYSEAT) return;
+  const payload = { qid: CURQ.qid, no: Number(MYSEAT),
+    name: (ROOMDATA.roster||[]).find(s=>String(s.no)===MYSEAT)?.name || '',
+    email: ME.email, displayName: ME.displayName || '',
+    type: CURQ.type, submittedAt: serverTimestamp() };
+
+  if(CURQ.type === 'draw'){
+    if(!strokes.length) return err('#ans-err','畫布還是空的，畫點東西再送出。');
+    let data = pad.toDataURL('image/png');
+    if(data.length > 900000) data = pad.toDataURL('image/jpeg', .92);
+    if(data.length > 950000) return err('#ans-err','圖太複雜了，請按「清除」重畫簡單一點。');
+    payload.drawing = data;
+  } else if(CURQ.type === 'number'){
+    const v = $('#in-number').value.trim();
+    if(v === '') return err('#ans-err','還沒填數字。');
+    payload.number = Number(v); payload.text = v;
+  } else if(CURQ.type === 'choice'){
+    if(!PICK) return err('#ans-err','還沒選一個答案。');
+    payload.text = PICK;
+  } else {
+    const v = $('#in-text').value.trim();
+    if(!v) return err('#ans-err','還沒寫答案。');
+    payload.text = v;
+  }
+
+  const btn = $('#btn-send');
+  btn.disabled = true; btn.textContent = '送出中…';
+  try{
+    await setDoc(doc(db,'rooms',ROOM,'answers',`${CURQ.qid}__${MYSEAT}`), payload);
+    SENTQ = CURQ.qid;
+    $('#done-sub').textContent =
+      `${MYSEAT} 號 ${payload.name}　—　老師已經收到你的答案。`;
+    show('s-done');
+  }catch(e){
+    err('#ans-err', `送出失敗\n${e.code || e.message}\n\n請檢查網路，再按一次送出。`);
+  }finally{
+    btn.disabled = false; btn.textContent = '送出';
+  }
+};
+
+$('#btn-redo').onclick = () => { if(CURQ) show('s-answer'); };
+</script>
+</body>
+</html>

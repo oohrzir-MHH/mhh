@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>閱讀思考 · 課堂儀表板</title>
+<link rel="stylesheet" href="style.css?v=28">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-logo">🌈</span>
+    <div>
+      <h1>閱讀思考 · 課堂儀表板</h1>
+      <p class="brand-sub">六組蜂巢座位 × 彩虹職位 × 雲端累積加分</p>
+    </div>
+  </div>
+  <div class="topbar-ctrl">
+    <label class="mini">學年度
+      <span class="yearbox">
+        <select id="sel-year" class="ctl"></select>
+        <button class="yrbtn" id="btn-year-add" title="新增學年度">＋</button>
+        <button class="yrbtn" id="btn-year-edit" title="改目前學年度的名稱">✏️</button>
+      </span>
+    </label>
+    <label class="mini">班級<select id="sel-class" class="ctl"></select></label>
+    <label class="mini">本堂日期<input type="date" id="inp-session" class="ctl"></label>
+    <label class="mini">職位輪次
+      <select id="sel-round" class="ctl">
+        <option value="1">第 1 輪</option><option value="2">第 2 輪</option>
+        <option value="3">第 3 輪</option><option value="4">第 4 輪</option>
+        <option value="5">第 5 輪</option><option value="6">第 6 輪</option>
+      </select>
+    </label>
+    <label class="mini">輪動方向
+      <select id="sel-rotdir" class="ctl" title="兩種都叫「順時針」，看你指的是學生還是牌子">
+        <option value="1">學生順著職位表走</option>
+        <option value="-1">牌子在桌上順時針走</option>
+      </select>
+    </label>
+    <button class="btn btn-ghost" id="btn-theme" title="切換深淺色">🌙</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-panel="p-seat">🪑 座位表</button>
+  <button class="tab" data-panel="p-live">⚡ 課堂互動</button>
+  <button class="tab" data-panel="p-roll">📋 課堂點名</button>
+  <button class="tab" data-panel="p-push">📡 推送題目</button>
+  <button class="tab" data-panel="p-roles">🎩 職位說明</button>
+  <button class="tab" data-panel="p-stats">📊 統計分析</button>
+  <button class="tab" data-panel="p-setup">⚙️ 名單與雲端</button>
+  <button class="tab" data-panel="p-help">📖 加分機制</button>
+  <button class="tab tab-collapse" id="btn-collapse"
+    title="收合最上方的狀態列，讓座位表一次看完（快捷鍵：H）">⌃ 收合上方</button>
+</nav>
+
+<main>
+
+<!-- ============ 座位表 ============ -->
+<section id="p-seat" class="panel active">
+  <div class="panel-head">
+    <div>
+      <h2>座位表 <span class="tag" id="seat-class-tag">—</span></h2>
+      <p class="hint">蜂巢排列：學生格就是六角形，直接貼著中心桌長出去。點任一格 → 只要輸入<b>座號</b>就自動帶出姓名。
+        起點固定 <b>12 點鐘方向</b>，<b>學生不換位</b>，只有職位每輪轉一格。
+        轉的方向用右上角「輪動方向」切換 —— 下面圖例會用<b>具體例子</b>告訴你現在是哪一種。</p>
+    </div>
+    <div class="row-btns">
+      <label class="mini">每組人數<input type="number" id="inp-groupsize" class="ctl" min="4" max="12" value="6"></label>
+      <button class="btn" id="btn-autofill">⚡ 依座號自動排入</button>
+      <button class="btn btn-primary" id="btn-export-png">🖼️ 下載座位表（橫向 A4 一頁）</button>
+      <button class="btn" id="btn-export-xlsx">⬇️ 下載登記冊 Excel（正反兩頁）</button>
+      <button class="btn btn-ghost" id="btn-clearseat">🧹 清空座位</button>
+      <button class="btn btn-ghost" id="btn-print">🖨️ 直接列印座位表</button>
+      <button class="btn" id="btn-truesize" title="放大到 24pt（32px）實際大小，畫面可捲動">🔠 24pt 實際大小</button>
+      <span class="zoombar">🔍 <input type="range" id="inp-zoom" min="0.5" max="2.6" step="0.05" value="1"><b id="zoom-label">100%</b></span>
+    </div>
+  </div>
+
+  <div class="classbar" id="seat-classbar"></div>
+
+  <div class="legend" id="seat-legend"></div>
+
+  <div class="print-only" id="print-title"></div>
+  <div class="classroom-scroll"><div class="classroom" id="classroom"></div></div>
+
+  <div class="podium">▲ 講　台 ▲</div>
+</section>
+
+<!-- ============ 課堂互動 ============ -->
+<section id="p-live" class="panel">
+  <div class="panel-head">
+    <div>
+      <h2>課堂互動計分</h2>
+      <p class="hint">點學生卡片＝<b>＋1</b>；點右邊的「−」＝<b>−1</b>；組卡片上方有<b>「全組每人 +1」</b>和<b>「全組每人 −1」</b>（30 秒會議答錯時用）。
+        <b>一個人一盞燈</b>，全組每個人都發言過 → 彩虹貫通 ⭐ 全組每人 +5，一堂課可無限次累積。</p>
+    </div>
+    <div class="row-btns">
+      <button class="btn btn-warn" id="btn-lottery">🎲 不得已才抽籤</button>
+      <button class="btn btn-ghost" id="btn-undo">↩️ 復原上一筆</button>
+      <button class="btn btn-danger" id="btn-clear-session">🧹 清空「本堂」累積</button>
+    </div>
+  </div>
+
+  <div class="scoreboard" id="scoreboard"></div>
+
+  <div class="live-foot">
+    <div class="live-stat"><span id="live-total">0</span><small>本堂總分（含扣分）</small></div>
+    <div class="live-stat"><span id="live-spoke">0</span><small>本堂發言人次</small></div>
+    <div class="live-stat"><span id="live-rainbow">0</span><small>本堂彩虹貫通次數</small></div>
+    <div class="live-stat"><span id="live-silent">0</span><small>本堂尚未發言人數</small></div>
+  </div>
+</section>
+
+<!-- ============ 課堂點名 ============ -->
+<section id="p-roll" class="panel">
+  <div class="panel-head">
+    <div>
+      <h2>課堂點名與註記 <span class="tag" id="roll-class-tag">—</span></h2>
+      <p class="hint">點學生 → 選狀態。<b>一位學生一堂課只留一筆</b>，改了就是覆蓋，不會重複記。
+        資料寫進<b>同一份</b>後台試算表的 <code>Attendance</code> 分頁，和加分統計共用。</p>
+    </div>
+    <div class="row-btns">
+      <label class="mini">排序方式
+        <select id="sel-rollsort" class="ctl">
+          <option value="group">依小組</option>
+          <option value="no">依座號</option>
+        </select>
+      </label>
+      <button class="btn btn-ok" id="btn-roll-allpresent">✅ 全部設為出席</button>
+      <button class="btn btn-ghost" id="btn-roll-clear">🧹 清空本堂註記</button>
+    </div>
+  </div>
+
+  <div class="rollstat" id="roll-stat"></div>
+  <div class="rollwrap" id="rollwrap"></div>
+</section>
+
+<!-- ============ 推送題目 ============ -->
+<section id="p-push" class="panel">
+  <div class="panel-head">
+    <div>
+      <h2>推送題目 · 學生即時作答</h2>
+      <p class="hint">學生掃 QR 或開連結 → <b>用學校帳號登入（只有第一次）</b> → 點自己的座號 → 綁定這台裝置。
+        之後每次直接進入，老師推題目就會自動出現在她們手機上。</p>
+    </div>
+  </div>
+
+  <div id="push-login" class="card" style="max-width:560px">
+    <h3>先用老師的學校帳號登入</h3>
+    <p class="hint">推題目與看答案需要老師身分。學生請開 <code>student.html</code>，不是這一頁。</p>
+    <div class="row-btns"><button class="btn btn-primary" id="btn-tea-login">🔑 老師登入</button></div>
+    <label class="mini" style="margin-top:12px">協作老師名單（一行一個 email，這些帳號都能開教室、推題目、看答案）
+      <textarea id="inp-teachers" class="ctl mono" rows="3"
+        placeholder="oohrzir@tngs.tn.edu.tw&#10;oohrzir@gmail.com"></textarea></label>
+    <div class="row-btns" style="margin-top:6px">
+      <button class="btn" id="btn-save-teachers">💾 儲存名單</button>
+    </div>
+    <p class="hint" style="margin-top:8px">⚠️ 這份名單只管<b>這個網頁的介面</b>。
+      真正的安全是 Firestore 規則決定的 —— 新增協作老師時，
+      <b>規則裡的 <code>teacher()</code> 也要加上同一個 email</b>，否則她登入後一樣會 permission-denied。</p>
+  </div>
+
+  <div id="push-main" style="display:none">
+    <div class="setup-grid">
+
+      <div class="card">
+        <h3>① 開啟教室</h3>
+        <p class="hint">目前班級：<b id="room-class">—</b>　登入身分：<span id="tea-who" class="hint"></span></p>
+        <div class="roomrow">
+          <div>
+            <p class="hint" style="margin:0 0 2px">教室代碼（學生也可以直接輸入）</p>
+            <div class="roomcode" id="room-code">——————</div>
+          </div>
+          <div class="qrbox">
+            <canvas id="room-qr"></canvas>
+            <span class="hint">掃這個進教室</span>
+          </div>
+        </div>
+        <label class="mini" style="margin-top:6px">學生要開的網址前綴
+          <input type="text" id="room-base" class="ctl mono"
+            placeholder="https://oohrzir-mhh.github.io/mhh/"></label>
+        <p class="hint" style="margin-top:2px">⚠️ 手機連不到你電腦的 <code>localhost</code>。
+          測試時填區網 IP（例如 <code>http://192.168.1.50:8777/</code>），
+          正式上線後填 GitHub Pages 網址。</p>
+        <p class="hint" style="margin-top:8px">學生連結（可貼到 Google Classroom）：</p>
+        <input type="text" id="room-url" class="ctl mono" readonly>
+        <div class="row-btns" style="margin-top:8px">
+          <button class="btn btn-primary" id="btn-open-room">🚪 開啟教室 / 更新名單</button>
+          <button class="btn" id="btn-copy-url">📋 複製連結</button>
+          <button class="btn" id="btn-qr-big">🔍 QR 放大投影</button>
+          <button class="btn btn-ghost" id="btn-tea-logout">登出</button>
+        </div>
+        <div class="log" id="push-log">按「開啟教室」後，學生才進得來。換班級記得再按一次。</div>
+      </div>
+
+      <div class="card">
+        <h3>② 出題</h3>
+        <label class="mini">作答方式
+          <select id="q-type" class="ctl">
+            <option value="text">文字</option>
+            <option value="number">數字</option>
+            <option value="draw">作圖（手繪）</option>
+            <option value="choice">選擇題</option>
+          </select>
+        </label>
+        <label class="mini" style="margin-top:8px">題目內容
+          <textarea id="q-prompt" class="ctl" rows="4" placeholder="例如：這段報導裡，哪一句是「主張」？把它抄下來。"></textarea></label>
+        <label class="mini" style="margin-top:8px">選項（選擇題用，一行一個）
+          <textarea id="q-choices" class="ctl" rows="3" placeholder="全球暖化是真的&#10;報導有偏誤&#10;資料不足以判斷"></textarea></label>
+        <label class="mini" style="margin-top:8px">附圖（選填）</label>
+        <div class="imgdrop" id="q-imgdrop" tabindex="0">
+          <div class="imgdrop-empty" id="q-imgempty">
+            <b>直接 Ctrl+V 貼上截圖</b>
+            <span>或把圖片檔拖進來 · 或點一下選檔案</span>
+          </div>
+          <img id="q-imgprev" style="display:none" alt="附圖預覽">
+          <button class="imgdrop-x" id="q-imgclear" style="display:none" title="移除附圖">✕</button>
+          <input type="file" id="q-imgfile" accept="image/*" hidden>
+        </div>
+        <label class="mini" style="margin-top:6px">…或貼圖片網址
+          <input type="text" id="q-imgurl" class="ctl mono" placeholder="https://..."></label>
+        <label class="mini" style="margin-top:8px">附連結（選填）
+          <input type="text" id="q-linkurl" class="ctl mono" placeholder="https://..."></label>
+        <div class="row-btns" style="margin-top:10px">
+          <button class="btn btn-primary" id="btn-push-q">📡 推送給全班</button>
+          <button class="btn btn-ghost" id="btn-stop-q">⏹️ 收回題目</button>
+        </div>
+      </div>
+
+      <div class="card wide">
+        <h3>③ 即時作答　<span class="tag"><b id="ans-count">0</b> 人已送出</span></h3>
+        <div class="row-btns" style="margin-bottom:10px">
+          <button class="btn" id="btn-archive-ans">📥 歸檔到試算表</button>
+          <button class="btn btn-ghost btn-danger" id="btn-clear-ans">🧹 清空作答紀錄</button>
+          <span class="hint">點任一張卡片可以放大看。</span>
+        </div>
+        <p class="hint" style="margin:-4px 0 10px">
+          Firestore 只是通道，<b>試算表才是真相</b>。下課前先「歸檔」，資料才會進到你自己的雲端試算表
+          （手繪圖存到隔壁的「作答圖檔」資料夾）。歸檔完再清空，Firestore 就不會越積越多。
+        </p>
+        <div class="ansgrid" id="ans-grid"><p class="hint">還沒有人送出答案。</p></div>
+      </div>
+
+      <div class="card">
+        <h3>④ 座號綁定</h3>
+        <p class="hint">一個座號綁一台裝置。學生換手機、點錯座號時，按「解除」讓她重選。</p>
+        <div id="seat-bind"><p class="hint">還沒有人綁定座號。</p></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ 職位說明 ============ -->
+<section id="p-roles" class="panel">
+  <div class="panel-head">
+    <div><h2>彩虹六職位（正1 / 正2）</h2>
+    <p class="hint">沒有「副手」—— 兩個都是正職，只差<b>深色＝正1（內圈）、淺色＝正2（外圈）</b>。
+      職責完全相同，而且<b>各自有一盞燈</b>，兩個人都要開口這組才會貫通。</p></div>
+  </div>
+  <div class="role-cards" id="role-cards"></div>
+</section>
+
+<!-- ============ 統計 ============ -->
+<section id="p-stats" class="panel">
+  <div class="panel-head">
+    <div><h2>統計分析</h2><p class="hint">數字都換算成<b>「每堂平均」</b>，才不會因為上課次數變多就一路膨脹。同一學年度所有班級寫進同一份後台試算表。</p></div>
+    <div class="row-btns">
+      <label class="mini">範圍
+        <select id="sel-scope" class="ctl">
+          <option value="class">本班（本學年度累積）</option>
+          <option value="session">本班（僅本堂）</option>
+          <option value="year">全學年度所有班級</option>
+        </select>
+      </label>
+      <button class="btn btn-ghost" id="btn-export-csv">⬇️ 匯出 CSV</button>
+    </div>
+  </div>
+
+  <div class="kpi-row" id="kpi-row"></div>
+
+  <div class="stat-grid">
+    <div class="card"><h3>各組平均得分（分 / 堂）</h3><div class="bars" id="bar-group"></div></div>
+    <div class="card"><h3>🌈 各組彩虹貫通（次 / 堂）</h3><div class="bars" id="bar-rainbow"></div></div>
+    <div class="card"><h3>各職位發言分布（次 / 堂）</h3><div class="bars" id="bar-role"></div></div>
+    <div class="card"><h3>🔥 最常發言 Top 10</h3><div class="rank" id="rank-high"></div></div>
+    <div class="card"><h3>💤 低互動（需要點名關懷）</h3><div class="rank" id="rank-low"></div></div>
+    <div class="card wide"><h3>每堂課總分走勢</h3><div class="bars" id="bar-session"></div></div>
+  </div>
+</section>
+
+<!-- ============ 名單與雲端 ============ -->
+<section id="p-setup" class="panel">
+  <div class="setup-grid">
+    <div class="card">
+      <h3>① 匯入學生名單</h3>
+      <p class="hint">每行一位：<code>座號,姓名</code>（Tab / 空白 / 逗號皆可，可整欄從試算表貼上）。匯入後會<b>自動排好座位</b>。</p>
+      <div class="row-btns" style="margin-bottom:8px">
+        <input type="text" id="inp-newclass" class="ctl" placeholder="班級名稱，例如 115 高一忠">
+        <button class="btn" id="btn-addclass">➕ 新增班級</button>
+        <button class="btn btn-danger btn-ghost" id="btn-delclass">🗑️ 刪除目前班級</button>
+      </div>
+      <textarea id="ta-roster" class="ctl mono" rows="10" placeholder="1,王小明&#10;2,陳美美&#10;3	林大同"></textarea>
+      <div class="row-btns" style="margin-top:8px">
+        <button class="btn btn-primary" id="btn-import">📥 匯入 / 覆蓋名單</button>
+        <button class="btn" id="btn-export-xlsx2">⬇️ 下載登記冊 Excel（依座號／依小組 各一頁）</button>
+        <span class="hint" id="roster-count">目前 0 人</span>
+      </div>
+    </div>
+
+    <div class="card gas-card">
+      <h3>② 雲端試算表（Google Apps Script）</h3>
+
+      <div class="steps">
+        <div class="step"><b>1</b><div>到你要的 Google 雲端資料夾 → <b>新增 → Google 試算表</b>，命名例如
+          <code>閱讀思考_課堂加分_${'115'}學年度</code>。<br>
+          <span class="warn-txt">整個學年度只要「一份」試算表，所有班級共用。</span></div></div>
+        <div class="step"><b>2</b><div>在那份試算表裡：<b>擴充功能 → Apps Script</b>。</div></div>
+        <div class="step"><b>3</b><div>把本資料夾的 <code>gas_code.js</code> 全部內容貼上（取代原本的 <code>myFunction</code>），存檔。</div></div>
+        <div class="step"><b>4</b><div>先按下面的「🔑 產生金鑰」，把金鑰貼進 Apps Script 最上面那行
+          <code>var ACCESS_TOKEN = "…";</code> 的引號中間，再存檔一次。</div></div>
+        <div class="step"><b>5</b><div><b>部署 → 新增部署作業 → 網頁應用程式</b>；執行身分「<b>我</b>」，誰可以存取「<b>任何人</b>」→ 部署 → 授權。</div></div>
+        <div class="step"><b>6</b><div>複製 <code>…/exec</code> 結尾的網址，連同金鑰貼到下面 →「💾 儲存」→「🔌 測試連線」。</div></div>
+        <div class="step done"><b>✓</b><div><b>只要做這一次。</b>網址存在這台電腦的瀏覽器裡，之後每節課直接開儀表板點分數就好，不用重貼。
+          改程式碼後要重新部署時，記得選「<b>管理部署作業 → 編輯 → 版本：新版本</b>」，網址才不會變。</div></div>
+      </div>
+
+      <label class="mini" style="margin-top:12px">Apps Script 網址
+        <input type="text" id="inp-gas" class="ctl mono" placeholder="https://script.google.com/macros/s/XXXX/exec"></label>
+      <label class="mini" style="margin-top:8px">存取金鑰（ACCESS_TOKEN）
+        <input type="text" id="inp-token" class="ctl mono" placeholder="按右邊「產生金鑰」"></label>
+      <label class="mini" style="margin-top:8px">後台試算表網址（貼上就好，之後一鍵直達，不用再翻雲端硬碟）
+        <input type="text" id="inp-sheeturl" class="ctl mono"
+          placeholder="https://docs.google.com/spreadsheets/d/XXXX/edit"></label>
+      <div class="row-btns" style="margin-top:6px">
+        <button class="btn btn-ok" id="btn-open-sheet">📊 開啟後台試算表</button>
+        <button class="btn btn-ghost" id="btn-open-gasedit">🧩 開啟 Apps Script 編輯器</button>
+      </div>
+      <div class="row-btns" style="margin-top:8px">
+        <button class="btn" id="btn-gencode">🔑 產生金鑰</button>
+        <button class="btn btn-primary" id="btn-save-gas">💾 儲存</button>
+        <button class="btn" id="btn-push">☁️⬆️ 上傳本機紀錄</button>
+        <button class="btn" id="btn-pull">☁️⬇️ 下載雲端紀錄</button>
+        <button class="btn btn-ghost" id="btn-test">🔌 測試連線</button>
+      </div>
+      <label class="chk" style="margin-top:10px">
+        <input type="checkbox" id="chk-autosync"> 每次加分即時同步雲端（關閉則離線累積，下課再按上傳）
+      </label>
+      <div class="log" id="sync-log">尚未連線。所有資料會先存在本機瀏覽器，不會遺失。</div>
+
+      <div class="faq">
+        <h4>❓ 這個網址可以貼到 Google Classroom 給學生嗎？</h4>
+        <p><b>絕對不行。</b>部署時選了「任何人可存取」，代表<b>任何拿到網址的人，都能把整份紀錄抓下來</b> ——
+          包含全班姓名、座號、每一筆分數。這是個資，貼到 Classroom 等於公開。</p>
+        <p>所以本版加了 <b>ACCESS_TOKEN 金鑰</b>：沒有金鑰的請求一律被擋掉，只回 <code>unauthorized</code>。
+          就算網址不小心外流，沒有金鑰也拿不到資料。<b>金鑰只留在你自己的電腦，不要寫進任何給學生看的地方。</b></p>
+        <h4>❓ 每一節課都要重貼網址嗎？</h4>
+        <p>不用。設定一次就長期有效（存在瀏覽器 localStorage）。換電腦才需要重貼一次，或用「匯出 JSON」搬過去。</p>
+        <h4>❓ 試算表裡不同的分頁，都要各自新增一次 GAS 嗎？</h4>
+        <p><b>不用。</b>一份試算表只需要<b>一份</b> Apps Script。它會自己建立並維護三個分頁：
+          <code>Records</code>（原始紀錄）、<code>Summary</code>（每位學生累積）、<code>ByClass</code>（每班每組）。你不用手動開分頁。</p>
+        <h4>❓ Excel 登記冊上傳回雲端後，會自動去寫 GAS 網址嗎？</h4>
+        <p>不會，這是兩件不同的事。<b>Excel 登記冊是給你列印的紙本</b>（正面依座號、背面依小組、外加一頁座位表）；
+          <b>GAS 是雲端計分的後台</b>。兩者不互相依賴，也不需要互相設定。</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>③ 學年度</h3>
+      <p class="hint">換學年度＝換一份統計範圍；同一學年度不同班級共用同一份後台試算表。</p>
+      <div class="row-btns">
+        <input type="text" id="inp-newyear" class="ctl" placeholder="例如 115（按 Enter 也可以）">
+        <button class="btn" id="btn-addyear">➕ 新增學年度</button>
+      </div>
+      <div class="row-btns" style="margin-top:8px">
+        <button class="btn" id="btn-renameyear">✏️ 重新命名目前學年度</button>
+        <button class="btn btn-danger btn-ghost" id="btn-delyear">🗑️ 刪除目前學年度</button>
+      </div>
+      <p class="hint" style="margin-top:10px">把班級搬到別的學年度（例如 115 建錯，其實是 116）：</p>
+      <div class="row-btns">
+        <select id="sel-moveclass" class="ctl"></select>
+        <span class="hint">→</span>
+        <select id="sel-moveyear" class="ctl"></select>
+        <button class="btn" id="btn-moveclass">📦 搬過去</button>
+      </div>
+      <div class="log" id="year-log">重新命名會一併更新該學年度所有班級與加分紀錄。</div>
+    </div>
+
+    <div class="card" id="cloud-box" style="display:none">
+      <h3><span class="syncdot ok" id="sync-dot"></span> ☁️ 雲端自動同步</h3>
+      <p class="hint">登入身分：<b id="cloud-who">—</b>
+        班級名單、座位表、加分與點名紀錄<b>每次變更後自動上傳</b>（延遲 4 秒，連點加分不會狂傳）。</p>
+      <p class="hint" style="margin-top:6px">
+        <b>教室桌機還原後怎麼辦？</b>開儀表板 → 到「📡 推送題目」登入 →
+        系統偵測到這台裝置沒資料，會問你要不要從雲端還原，按「確定」就回來了。<b>不用手動匯入 JSON。</b></p>
+      <div class="row-btns" style="margin-top:10px">
+        <button class="btn" id="btn-cloud-push">☁️⬆️ 立刻上傳</button>
+        <button class="btn" id="btn-cloud-pull">☁️⬇️ 從雲端覆蓋本機</button>
+      </div>
+      <div class="log" id="sync-cloud-log">等待登入…</div>
+      <p class="hint" style="margin-top:8px">兩個帳號（tngs 與 gmail）看的是<b>同一份</b>資料，
+        學校桌機和家裡電腦可以無縫接續。學期末的「⬇️ 匯出整包 JSON」留給存檔算成績用。</p>
+    </div>
+
+    <div class="card">
+      <h3>④ 備份 / 還原</h3>
+      <div class="row-btns">
+        <button class="btn" id="btn-backup">⬇️ 匯出整包 JSON</button>
+        <label class="btn" style="cursor:pointer">⬆️ 匯入 JSON<input type="file" id="file-restore" accept=".json" hidden></label>
+      </div>
+      <div class="row-btns" style="margin-top:10px">
+        <button class="btn btn-ghost" id="btn-tidy">🧹 清理空班級與重複班級</button>
+        <button class="btn btn-danger" id="btn-wipe">🧨 清空全部資料（重新開始）</button>
+      </div>
+      <div class="log" id="backup-log">建議每學期匯出一次備份。
+        「清空全部資料」會刪掉<b>所有</b>學年度、班級、座位、加分與點名紀錄，
+        只保留 Apps Script 網址與金鑰 —— 測試完要正式用之前按這個。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 加分機制說明 ============ -->
+<section id="p-help" class="panel">
+  <div class="help-wrap" id="help-wrap"></div>
+</section>
+
+</main>
+
+<!-- 抽籤彈窗 -->
+<div class="modal" id="modal-lottery">
+  <div class="modal-box">
+    <h3>🎲 抽籤（不得已才用）</h3>
+    <p class="hint">優先抽「本堂尚未發言」的人。抽到的人一定有台階下 —— 從下面四張<b>求生卡</b>任選一張。
+      <b>每張卡，每組每堂課各限用一次</b>，用過會變灰。</p>
+    <div class="lottery-display" id="lottery-display">準備抽籤</div>
+    <div class="row-btns" style="justify-content:center">
+      <button class="btn btn-primary" id="btn-do-lottery">開始抽</button>
+      <label class="chk"><input type="checkbox" id="chk-only-silent" checked> 只抽尚未發言的人</label>
+    </div>
+    <div class="lifelines" id="lifelines"></div>
+    <div class="row-btns" style="justify-content:center;margin-top:14px">
+      <button class="btn" id="btn-lottery-score">✅ 他回答了，＋1 分</button>
+      <button class="btn btn-ok" id="btn-lottery-plus">🌟 答得好，全組每人 +1</button>
+      <button class="btn btn-danger" id="btn-lottery-minus">❌ 答錯，全組每人 −1</button>
+      <button class="btn btn-ghost" id="btn-close-lottery">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- 座位輸入彈窗 -->
+<div class="modal" id="modal-seat">
+  <div class="modal-box narrow">
+    <h3 id="seat-modal-title">輸入座號</h3>
+    <input type="number" id="inp-seatno" class="ctl big" placeholder="座號">
+    <div class="seat-preview" id="seat-preview">—</div>
+    <p class="hint" style="text-align:center;margin:10px 0 4px">或直接從本班名單點一位（<b>已就座的人會直接和這個位子對調</b>）</p>
+    <input type="text" id="inp-seatsearch" class="ctl" placeholder="🔍 打姓名或座號篩選">
+    <div class="pickgrid" id="seat-pick"></div>
+    <div class="row-btns" style="justify-content:center">
+      <button class="btn btn-primary" id="btn-seat-ok">確定</button>
+      <button class="btn btn-ghost" id="btn-seat-del">清除此位</button>
+      <button class="btn btn-ghost" id="btn-seat-cancel">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- 放大看單一作答 -->
+<div class="modal" id="modal-ans">
+  <div class="modal-box">
+    <h3 id="modal-ans-title">作答</h3>
+    <div id="modal-ans-body"></div>
+    <div class="row-btns" style="justify-content:center;margin-top:14px">
+      <button class="btn btn-ghost" id="modal-ans-close">關閉</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="fx-canvas"></canvas>
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script src="xlsx.js?v=13"></script>
+<script src="qr.js?v=1"></script>
+<script src="app.js?v=22"></script>
+<script src="tools.js?v=3"></script>
+<script type="module" src="push.js?v=5"></script>
+<script type="module" src="sync.js?v=1"></script>
+</body>
+</html>
