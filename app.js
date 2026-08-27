@@ -30,13 +30,46 @@ const ROLES = [
 const RING1_SLOTS = [0,2,4,6,8,10];
 const RING2_SLOTS = [1,3,5,7,9,11];
 
-/* 六桌排列：上排 4 5 6，下排 3 2 1（講台在最下方） */
-const TABLE_LAYOUT = [4,5,6,3,2,1];
+/* ---------------- 1b. 教室座位配置 ----------------
+   同一個班可能在不同教室上課，桌子排法不一樣，所以做成可切換。
 
-/* 各組底色（與職位彩虹無關，純粹讓老師一眼看出組別分佈） */
+   兩種「方桌」配置的共通規則（使用者 2026-08-25 指定）：
+     學生預設坐在與黑板**平行**的兩側，每側 side 人，共 2×side 人。
+     人數超過時，多的人坐在桌子**左右兩側**（與黑板垂直）。
+
+   為什麼側邊位只給 2 個：那是「這一組多出來的人」，不是常態編制。
+   多到需要第 3 個側邊位，代表該分更多組而不是硬塞。
+
+   ★ order 是「畫面上的排列順序」，不是組別編號。
+     講台在最下方，所以最後一列（最靠近講台）放編號最小的組，
+     老師站在台上看到的順序才跟點名順序一致。 */
+const LAYOUTS = {
+  hex6:  { name:'蜂巢 6 組',  short:'🐝 蜂巢 6 組',  kind:'hex',
+           tables:6, perRow:3, base:6, max:12, order:[4,5,6,3,2,1],
+           hint:'六角形蜂巢，一桌六人圍坐，第 7 人起補外圈。' },
+  quad9: { name:'四人 9 組',  short:'▦ 四人 9 組',  kind:'rect',
+           tables:9, perRow:3, side:2, base:4, max:6, order:[7,8,9,4,5,6,1,2,3],
+           hint:'一橫列三組、共三列。每組面對面各坐 2 人；第 5、6 人坐左右側邊。' },
+  hex6r: { name:'六人 6 組',  short:'▤ 六人 6 組',  kind:'rect',
+           tables:6, perRow:2, side:3, base:6, max:8, order:[5,6,3,4,1,2],
+           hint:'一橫列兩組、共三列。每組面對面各坐 3 人；第 7、8 人坐左右側邊。' }
+};
+const DEF_LAYOUT = 'hex6';
+
+function layoutKey(){ const c=curClass();
+  return (c && LAYOUTS[c.layout]) ? c.layout : DEF_LAYOUT; }
+function LO(){ return LAYOUTS[layoutKey()]; }
+/* 邏輯用：由小到大的組別編號。畫面用：tableOrder() 的排列順序。 */
+function TABLES(){ const L=LO();
+  return Array.from({length:L.tables},(_,i)=>i+1); }
+function tableOrder(){ const L=LO(); return L.order || TABLES(); }
+
+/* 各組底色（與職位彩虹無關，純粹讓老師一眼看出組別分佈）。
+   四人 9 組要用到 7～9，所以備到九個。 */
 const GROUP_TINT = {
   1:'#7f9cf5', 2:'#68c9a3', 3:'#e2a35c',
-  4:'#c98bd6', 5:'#6fb7d8', 6:'#d98a94'
+  4:'#c98bd6', 5:'#6fb7d8', 6:'#d98a94',
+  7:'#8fc98b', 8:'#d6b06b', 9:'#9d93e0'
 };
 
 /* 求生卡：每組每堂課，每張各限用一次 */
@@ -68,10 +101,47 @@ const $$ = s=>[...document.querySelectorAll(s)];
 const cssVar = v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 
 /* updatedAt 讓 sync.js 判斷雲端與本機誰比較新 —— 沒有它就無法安全對帳 */
-function save(){ DB.updatedAt=Date.now(); localStorage.setItem(LS_KEY, JSON.stringify(DB)); }
+function save(){
+  /* c.seats 是「目前配置」那一份的指標，但有幾處會直接 c.seats={} 重新指派
+     （清空座位、自動排入），指標就斷了。與其逐處修補，不如在存檔的當下
+     一律把 c.seats 寫回 c.layouts —— 只有這裡是所有變更的必經之路。 */
+  const c = DB.classes[DB.activeClass];
+  if(c){ c.layouts = c.layouts || {}; c.layouts[c.layout || DEF_LAYOUT] = c.seats || {}; }
+  DB.updatedAt=Date.now(); localStorage.setItem(LS_KEY, JSON.stringify(DB));
+}
 function load(){ try{ const raw=localStorage.getItem(LS_KEY); if(raw) DB=Object.assign(DB,JSON.parse(raw)); }
-                 catch(e){ console.warn('讀取本機資料失敗',e); } }
+                 catch(e){ console.warn('讀取本機資料失敗',e); }
+                 migrateAllLayouts(); }
 function curClass(){ return DB.classes[DB.activeClass]||null; }
+
+/* ---- 座位依配置分層存放 ----
+   同一班在不同教室有不同排法，切過去不該把另一種排法洗掉。
+   c.layouts = { hex6:{1:[..],..}, quad9:{...}, hex6r:{...} }
+   c.seats 永遠指向「目前這個配置」那一份 —— 這樣既有的 36 處 c.seats
+   完全不用改，換配置時只是把指標換過去。 */
+function migrateLayouts(c){
+  if(!c) return;
+  c.layout  = LAYOUTS[c.layout] ? c.layout : DEF_LAYOUT;
+  c.layouts = c.layouts || {};
+  /* 舊資料只有 c.seats，那份就是蜂巢的排法 */
+  if(!c.layouts[c.layout]) c.layouts[c.layout] = c.seats || {};
+  c.seats = c.layouts[c.layout];
+}
+function migrateAllLayouts(){ Object.values(DB.classes||{}).forEach(migrateLayouts); }
+
+/* 切換配置。切之前先把目前這份存回去，免得剛排好的位子掉了。 */
+function switchLayout(key){
+  if(!LAYOUTS[key]) return;
+  const c=curClass();
+  if(!c){ toast('請先選擇 / 建立班級'); return; }
+  c.layouts = c.layouts || {};
+  c.layouts[c.layout || DEF_LAYOUT] = c.seats || {};   // 存回目前這份
+  c.layout  = key;
+  c.seats   = c.layouts[key] || (c.layouts[key] = {});
+  save();
+  renderSeats(); renderScoreboard(); renderRoll(); renderStats();
+  toast(`已切換到「${LAYOUTS[key].name}」`);
+}
 
 /* ---------------- 3. 職位計算 ---------------- */
 /* slot 每 +2 就是螢幕上順時針轉一格（0=12點鐘、2=2點鐘…）。
@@ -80,11 +150,28 @@ function curClass(){ return DB.classes[DB.activeClass]||null; }
      B 學生拿到的職位順著清單走 → 職位牌在桌上逆時針移動
    吵不完，所以做成可切換，並在圖例用「具體例子」講清楚現在是哪一種。 */
 function rotDir(){ return DB.rotDir === -1 ? -1 : 1; }   // +1＝學生職位順著清單走
+/* slot 怎麼對到職位，兩種配置規則不同：
+     蜂巢：slot 是時鐘位置 0..11，偶數＝內圈正1、奇數＝外圈正2，anchor = slot/2
+     方桌：slot 是座位序 0..max-1，前 base 個是正1（anchor＝自己），
+           之後的側邊位是正2，跟第 (slot-base) 個正1 共用職位
+
+   四人組只有四個位子，但輪動公式是 (anchor + 輪次) mod 6，
+   所以四個位子會**輪過全部六個職位** —— 第1輪策略/營運/品牌/知識，
+   第2輪營運/品牌/知識/資訊……六輪之後每個人都當過每個職位。
+   這是刻意的：職位輪動的教學目的就是讓每個人都練到每一種角色。 */
 function roleAtSlot(slot, round){
-  const anchorIdx = Math.floor(slot/2);
+  const L = LO();
+  let anchorIdx, second;
+  if(L.kind === 'hex'){
+    anchorIdx = Math.floor(slot/2);
+    second    = slot % 2 === 1;
+  }else{
+    second    = slot >= L.base;
+    anchorIdx = second ? (slot - L.base) : slot;
+  }
   const n = ROLES.length;
   const roleIdx = ((anchorIdx + rotDir()*(round-1)) % n + n) % n;
-  return { role:ROLES[roleIdx], second: slot%2===1, anchorIdx };
+  return { role:ROLES[roleIdx], second, anchorIdx };
 }
 /* 該組有沒有「正2」，決定標籤要不要標 ①②  */
 function roleLabel(slot, round, hasSecond){
@@ -95,8 +182,14 @@ function roleColor(slot, round){
   const r = roleAtSlot(slot, round);
   return cssVar(r.second ? r.role.light : r.role.color);
 }
-/* n 人要用哪些 slot：先排滿 6 個內圈正1，第 7 人起依序補外圈正2 */
+/* n 人要用哪些 slot。
+   蜂巢：先排滿 6 個內圈正1，第 7 人起依序補外圈正2
+   方桌：slot 就是座位序，0..side-1 上排、side..base-1 下排、base 起是左右側邊 */
 function slotsForSize(n){
+  const L = LO();
+  if(L.kind !== 'hex'){
+    return Array.from({length: Math.min(Math.max(n, L.base), L.max)}, (_,i)=>i);
+  }
   const out = RING1_SLOTS.slice(0, Math.min(n,6));
   for(let i=0;i<n-6 && i<6;i++) out.push(RING2_SLOTS[i]);
   return out.sort((a,b)=>a-b);
@@ -112,23 +205,23 @@ function tableMembers(tno){
    老師點一下填座號即可，多出來的空位可以打叉收掉。
 
    一組最多 12 個（內圈 6 ＋ 外圈 6），這是蜂巢排列的物理上限。 */
-const MAX_PER_TABLE = 12;
 function ensureEnoughSeats(){
   const c=curClass(); if(!c) return false;
+  const L=LO(), TS=TABLES();
   c.seats=c.seats||{};
-  for(let t=1;t<=6;t++) c.seats[t]=c.seats[t]||[];
+  TS.forEach(t=>{ c.seats[t]=c.seats[t]||[]; });
   const need = (c.students||[]).length;
   let changed=false, guard=0;
-  const total = () => [1,2,3,4,5,6].reduce((s,t)=>s+Math.max(c.seats[t].length,6),0);
-  while(total() < need && guard++ < 72){
+  const total = () => TS.reduce((s,t)=>s+Math.max(c.seats[t].length, L.base), 0);
+  while(total() < need && guard++ < L.tables*L.max){
     /* 補在目前最少的那一組，維持各組人數平均 */
     let best=null;
-    for(let t=1;t<=6;t++){
-      const len=Math.max(c.seats[t].length,6);
-      if(len>=MAX_PER_TABLE) continue;
+    for(const t of TS){
+      const len=Math.max(c.seats[t].length, L.base);
+      if(len>=L.max) continue;
       if(!best || len<best.len) best={t,len};
     }
-    if(!best) break;                       // 六組都滿 12 人了，補不下去
+    if(!best) break;                       // 每組都滿了，補不下去
     while(c.seats[best.t].length < best.len) c.seats[best.t].push(null);
     c.seats[best.t].push(null); changed=true;
   }
@@ -138,11 +231,14 @@ function ensureEnoughSeats(){
 function dropSeatSlot(tno, idx){
   const c=curClass(); if(!c||!c.seats||!c.seats[tno]) return;
   if(c.seats[tno][idx]!=null) return;
+  if(c.seats[tno].length <= LO().base) return;   // 基本盤不給收，收了版面會破洞
   c.seats[tno].splice(idx,1);
   save(); renderSeats(); renderScoreboard(); renderRoll();
   toast(`第 ${tno} 組收掉一個空位`);
 }
-function tableSlots(tno){ return slotsForSize(Math.max(tableMembers(tno).length,6)); }
+function tableSlots(tno){
+  return slotsForSize(Math.max(tableMembers(tno).length, LO().base));
+}
 
 /* ---------------- 4. 名單 ---------------- */
 function studentName(no){
@@ -198,11 +294,14 @@ function autofillSeats(){
   const c=curClass(); if(!c) return alert('請先選擇 / 建立班級');
   const list=[...c.students].sort((a,b)=>a.no-b.no), n=list.length;
   if(!n) return alert('請先匯入名單');
-  if(n>72) return alert('每組上限 12 人，六組最多 72 人');
-  const base=Math.floor(n/6), extra=n%6;
+  const L=LO(), cap=L.tables*L.max;
+  if(n>cap) return alert(`「${L.name}」每組上限 ${L.max} 人，${L.tables} 組最多 ${cap} 人。
+目前 ${n} 人，請換一種座位配置。`);
+  const base=Math.floor(n/L.tables), extra=n%L.tables;
   c.seats={}; let i=0;
-  for(let t=1;t<=6;t++){ const cnt=base+(t<=extra?1:0);
+  for(let t=1;t<=L.tables;t++){ const cnt=base+(t<=extra?1:0);
     c.seats[t]=list.slice(i,i+cnt).map(s=>s.no); i+=cnt; }
+  if(c.layouts) c.layouts[c.layout||DEF_LAYOUT]=c.seats;
   c.size=base+(extra?1:0);
   const gs=$('#inp-groupsize'); if(gs) gs.value=c.size;
   save(); renderSeats(); renderScoreboard();
@@ -219,6 +318,38 @@ const R1 = HEX_H, R2 = HEX_W*1.5;                               // 194 / 336
 const UNIT_W = Math.round(2*(R2 + HEX_W/2)) + 16;               // 一桌佔的寬
 const UNIT_H = Math.round(2*(R2*Math.cos(Math.PI/6) + HEX_H/2)) + 16;
 const CANVAS_W = UNIT_W*3 + 24;
+
+/* ---- 方桌配置的尺寸 ----
+   座位寬度沿用蜂巢的 224px，投影出來字級才一致（老師是站在教室後面看的）。
+   側邊位窄一點（170px），視覺上就看得出「那是加出來的位子」。 */
+const RSEAT_W = 224, RSEAT_H = 118;
+const RSIDE_W = 170, RSIDE_H = 150;      // 側邊位：窄而高，暗示與黑板垂直
+const RTABLE_H = 104, RGAP = 12, RTOP = 34;
+
+function rectMetrics(L){
+  const innerW = L.side * RSEAT_W;
+  const padL   = RSIDE_W + RGAP + 8;
+  const unitW  = innerW + 2*padL;
+  const unitH  = RTOP + RSEAT_H*2 + RTABLE_H + RGAP*2 + 18;
+  return { innerW, padL, unitW, unitH };
+}
+/* slot → 在 unit 內的像素座標。
+   0..side-1     上排（與黑板平行）
+   side..base-1  下排（與黑板平行）
+   base, base+1  左、右側邊（與黑板垂直，人數溢出時才出現） */
+function rectSeatPos(L, slot){
+  const M = rectMetrics(L);
+  const topY   = RTOP + RSEAT_H/2;
+  const tableY = RTOP + RSEAT_H + RGAP + RTABLE_H/2;
+  const botY   = RTOP + RSEAT_H + RGAP*2 + RTABLE_H + RSEAT_H/2;
+  if(slot < L.side)
+    return { x: M.padL + RSEAT_W*(slot + 0.5), y: topY, side:false };
+  if(slot < L.base)
+    return { x: M.padL + RSEAT_W*(slot - L.side + 0.5), y: botY, side:false };
+  const isLeft = (slot === L.base);
+  return { x: isLeft ? (RSIDE_W/2 + 8) : (M.unitW - RSIDE_W/2 - 8),
+           y: tableY, side:true };
+}
 
 let seatEditing=null;
 let dragFrom=null;
@@ -334,50 +465,93 @@ document.addEventListener('click', ev=>{
   }
 }, true);
 
+/* 座位配置的子分頁。畫在座位表面板最上方，切一下就換一間教室的排法。 */
+function renderLayoutTabs(){
+  const box=$('#layout-tabs'); if(!box) return;
+  const cur=layoutKey();
+  box.innerHTML=Object.keys(LAYOUTS).map(k=>{
+    const L=LAYOUTS[k];
+    return `<button class="ltab${k===cur?' on':''}" data-layout="${k}"
+      title="${L.hint}">${L.short}</button>`;
+  }).join('')+`<span class="ltab-hint">${LAYOUTS[cur].hint}</span>`;
+  box.querySelectorAll('[data-layout]').forEach(b=>{
+    b.onclick=()=>{ if(b.dataset.layout!==layoutKey()) switchLayout(b.dataset.layout); };
+  });
+}
+
 function renderSeats(){
   const wrap=$('#classroom'); wrap.innerHTML='';
   const c=curClass();
+  migrateLayouts(c);                   // 換班級／新建班級都會經過這裡
+  renderLayoutTabs();
   if(ensureEnoughSeats()) save();      // 人比位子多就先補足，避免有人沒座位可填
   $('#seat-class-tag').textContent = c ? `${DB.year} · ${c.name}` : '尚未建立班級';
   if(c) $('#inp-groupsize').value = c.size||6;
 
-  wrap.style.width=CANVAS_W+'px';
-  wrap.dataset.cw=CANVAS_W;
+  const L = LO();
+  const M = L.kind==='hex' ? null : rectMetrics(L);
+  const unitW = L.kind==='hex' ? UNIT_W : M.unitW;
+  const unitH = L.kind==='hex' ? UNIT_H : M.unitH;
+  const canvasW = unitW*L.perRow + 24;
 
-  TABLE_LAYOUT.forEach(tno=>{
+  wrap.style.gridTemplateColumns=`repeat(${L.perRow},1fr)`;
+  wrap.style.width=canvasW+'px';
+  wrap.dataset.cw=canvasW;
+
+  tableOrder().forEach(tno=>{
     const members = c ? tableMembers(tno) : [];
-    const slots = slotsForSize(Math.max(members.length,6));
-    const hasSecond = members.length>6;
-    const tint = GROUP_TINT[tno];
+    const slots = slotsForSize(Math.max(members.length, L.base));
+    const hasSecond = members.length > L.base;
+    const tint = GROUP_TINT[tno] || '#8b93a7';
 
     const unit=document.createElement('div');
     unit.className='table-unit';
-    unit.style.height=UNIT_H+'px';
+    unit.style.height=unitH+'px';
     unit.style.setProperty('--tint', tint);
 
     const label=document.createElement('div');
     label.className='unit-label'; label.textContent=`第 ${tno} 組`;
     unit.appendChild(label);
 
-    const hex=document.createElement('div'); hex.className='hexwrap';
-    hex.style.width=HEX_W+'px'; hex.style.height=HEX_H+'px';
-    hex.innerHTML=`<b>${tno}</b>`;
-    unit.appendChild(hex);
+    if(L.kind==='hex'){
+      const hex=document.createElement('div'); hex.className='hexwrap';
+      hex.style.width=HEX_W+'px'; hex.style.height=HEX_H+'px';
+      hex.innerHTML=`<b>${tno}</b>`;
+      unit.appendChild(hex);
+    }else{
+      /* 方桌本體。畫成長方形而不是六角形，老師才看得出這是哪一間教室的排法。 */
+      const tb=document.createElement('div'); tb.className='tablewrap';
+      tb.style.width=M.innerW+'px'; tb.style.height=RTABLE_H+'px';
+      tb.style.left=(M.padL + M.innerW/2)+'px';
+      tb.style.top =(RTOP + RSEAT_H + RGAP + RTABLE_H/2)+'px';
+      tb.innerHTML=`<b>${tno}</b>`;
+      unit.appendChild(tb);
+    }
 
     slots.forEach((slot, idx)=>{
       const no = members[idx];
       const rr = roleAtSlot(slot, DB.round);
       const el = document.createElement('div');
-      el.className='seat'+(no==null?' empty':'')+(rr.second?' ring2':'');
-      el.style.width=HEX_W+'px'; el.style.height=HEX_H+'px';
       const col=roleColor(slot,DB.round);
+      if(L.kind==='hex'){
+        el.className='seat'+(no==null?' empty':'')+(rr.second?' ring2':'');
+        el.style.width=HEX_W+'px'; el.style.height=HEX_H+'px';
+        const rad=slot*30*Math.PI/180, R=rr.second?R2:R1;
+        el.style.left=`calc(50% + ${(Math.sin(rad)*R).toFixed(1)}px)`;
+        el.style.top =`calc(50% - ${(Math.cos(rad)*R).toFixed(1)}px)`;
+      }else{
+        const p=rectSeatPos(L, slot);
+        el.className='seat rect'+(no==null?' empty':'')+(rr.second?' ring2':'')
+                     +(p.side?' seat-side':'');
+        el.style.width =(p.side?RSIDE_W:RSEAT_W)+'px';
+        el.style.height=(p.side?RSIDE_H:RSEAT_H)+'px';
+        el.style.left=p.x.toFixed(1)+'px';
+        el.style.top =p.y.toFixed(1)+'px';
+      }
       el.style.setProperty('--sc', col);
-      const rad=slot*30*Math.PI/180, R=rr.second?R2:R1;
-      el.style.left=`calc(50% + ${(Math.sin(rad)*R).toFixed(1)}px)`;
-      el.style.top =`calc(50% - ${(Math.cos(rad)*R).toFixed(1)}px)`;
       /* 空位且這一組超過 6 個位子時，給一顆打叉鈕把多出來的空位收掉。
          前 6 個是蜂巢的基本盤，收掉會讓版面破洞，所以不給收。 */
-      const canDrop = (no==null && slots.length>6);
+      const canDrop = (no==null && slots.length > L.base);
       el.innerHTML=
         `<div class="s-in">`+
         `<div class="s-role" style="background:${col};color:${rr.second?'#10131a':'#fff'}">`+
@@ -671,7 +845,7 @@ function renderScoreboard(){
   const sr=sessionRecords();
   let spokeCnt=0, silent=0;
 
-  [1,2,3,4,5,6].forEach(tno=>{
+  TABLES().forEach(tno=>{
     const members=tableMembers(tno);
     const slots=tableSlots(tno);
     const hasSecond=members.length>6;
@@ -833,7 +1007,7 @@ function renderRoll(){
   const mode=$('#sel-rollsort').value;
   const groups=[];
   if(mode==='group'){
-    [1,2,3,4,5,6].forEach(t=>{
+    TABLES().forEach(t=>{
       const ms=tableMembers(t).filter(x=>x!=null);
       if(ms.length) groups.push({title:`第 ${t} 組（${ms.length} 人）`, tint:GROUP_TINT[t], nos:ms});
     });
@@ -996,8 +1170,8 @@ function renderStats(){
   const gmap={}, gmapPer={};
   if($('#sel-scope').value==='year'){
     Object.values(DB.classes).filter(x=>x.year===DB.year)
-      .forEach(x=>[1,2,3,4,5,6].forEach(t=>gmap[`${x.name} 第${t}組`]=0));
-  } else [1,2,3,4,5,6].forEach(t=>gmap['第'+t+'組']=0);
+      .forEach(x=>TABLES().forEach(t=>gmap[`${x.name} 第${t}組`]=0));
+  } else TABLES().forEach(t=>gmap['第'+t+'組']=0);
   rs.forEach(r=>{ if(!r.table) return; gmap[gkey(r)]=(gmap[gkey(r)]||0)+r.points; });
   Object.keys(gmap).forEach(k=>gmapPer[k]=per(gmap[k]));
   bars('#bar-group', gmapPer, 'var(--pri)', null, ' 分/堂');
@@ -1118,7 +1292,7 @@ function doLottery(){
   const c=curClass(); if(!c) return;
   const sr=sessionRecords();
   let pool=[];
-  [1,2,3,4,5,6].forEach(t=>{
+  TABLES().forEach(t=>{
     const ms=tableMembers(t), slots=tableSlots(t);
     ms.forEach((no,i)=>{ if(no!=null) pool.push({no,table:t,slot:slots[i]}); });
   });
@@ -1214,7 +1388,7 @@ function pairMarks(raw){
 }
 function groupInfo(cls){
   const grpOf={}, markOf={};
-  [1,2,3,4,5,6].forEach(t=>{
+  TABLES().forEach(t=>{
     const raw=(cls.seats&&cls.seats[t])||[];
     const marks=pairMarks(raw);
     raw.forEach(no=>{ if(no==null) return; grpOf[no]=t; markOf[no]=marks[no]||''; });
@@ -1241,7 +1415,7 @@ function buildClassSheet(cls){
   const g={rows:[], merges:[]};
   xlHeaderRows(g.rows,g.merges,cls,'背面：依小組');
   let idx=0;
-  [1,2,3,4,5,6].forEach(t=>{
+  TABLES().forEach(t=>{
     /* 直接照「目前座位表」的順序輸出（12 點鐘起順時針），
        所以老師手動調過的位子會原樣反映到紙本上 */
     const raw=(cls.seats&&cls.seats[t])||[];
@@ -1394,7 +1568,8 @@ function ensureClass(){
   if(curClass()) return true;
   const n=($('#inp-newclass').value.trim())||prompt('請先輸入班級名稱（例如 115 高一忠）','');
   if(!n) return false;
-  const id=uid(); DB.classes[id]={id,year:DB.year,name:n,students:[],seats:{},size:6};
+  const id=uid(); DB.classes[id]={id,year:DB.year,name:n,students:[],seats:{},size:6,
+      layout:DEF_LAYOUT,layouts:{}};
   DB.activeClass=id; $('#inp-newclass').value=''; save(); refreshSelectors();
   return true;
 }
@@ -1580,7 +1755,7 @@ function commitRoster(list){
   const c=curClass(); if(!c) return false;
   const seats=c.seats||{};
   const seated=[];
-  [1,2,3,4,5,6].forEach(t=>(seats[t]||[]).forEach(x=>{ if(x!=null) seated.push(x); }));
+  TABLES().forEach(t=>(seats[t]||[]).forEach(x=>{ if(x!=null) seated.push(x); }));
   const valid=new Set(list.map(s=>s.no));
   const noSeatsYet = seated.length===0;
   const hasStale   = seated.some(no=>!valid.has(no));            // 座位上有已退選的人
@@ -1674,7 +1849,7 @@ function bind(){
     c.size=Math.max(4,Math.min(12,parseInt(e.target.value,10)||6)); save(); renderSeats(); };
   $('#btn-autofill').onclick=()=>{
     const c=curClass();
-    const seated=c&&[1,2,3,4,5,6].some(t=>((c.seats||{})[t]||[]).some(x=>x!=null));
+    const seated=c&&TABLES().some(t=>((c.seats||{})[t]||[]).some(x=>x!=null));
     if(seated && !confirm('這會用座號順序重新排一次，你手動調整過的位子會被覆蓋。\n確定要重排嗎？')) return;
     autofillSeats();
   };
@@ -1746,7 +1921,8 @@ function bind(){
     const list=parseRoster($('#ta-roster').value);
     const leftover=list.length ? rosterMatchesExistingClass(list) : null;
 
-    const id=uid(); DB.classes[id]={id,year:DB.year,name:n,students:[],seats:{},size:6};
+    const id=uid(); DB.classes[id]={id,year:DB.year,name:n,students:[],seats:{},size:6,
+      layout:DEF_LAYOUT,layouts:{}};
     DB.activeClass=id; $('#inp-newclass').value='';
 
     if(list.length && !leftover){          // 真的是新貼上的名單 → 一起匯入

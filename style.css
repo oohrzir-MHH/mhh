@@ -88,7 +88,37 @@ code{background:rgba(127,127,127,.15);padding:1px 6px;border-radius:5px;font-siz
 
 /* ---------- 蜂巢教室 ---------- */
 .classroom-scroll{overflow:auto;padding-bottom:6px}
+/* grid-template-columns 由 JS 依配置覆寫（蜂巢與四人組是 3 欄，六人組是 2 欄） */
 .classroom{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;transform-origin:top left}
+
+/* ══════ 座位配置子分頁 ══════
+   同一個班可能在不同教室上課，桌子排法不一樣，切一下就換。 */
+.layout-tabs{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+.ltab{padding:8px 16px;border-radius:11px;border:1px solid var(--line);
+  background:var(--card);color:var(--txt2);font-size:14px;font-weight:700;
+  cursor:pointer;transition:.12s}
+.ltab:hover{border-color:var(--pri);color:var(--txt)}
+.ltab.on{background:var(--pri);border-color:var(--pri);color:#fff}
+.ltab-hint{font-size:12px;color:var(--txt2);margin-left:4px}
+
+/* ══════ 方桌配置 ══════ */
+/* 方桌本體。畫成長方形而不是六角形，老師才一眼認得出這是哪一間教室的排法。 */
+.tablewrap{position:absolute;transform:translate(-50%,-50%);z-index:2;
+  display:flex;align-items:center;justify-content:center;border-radius:14px;
+  background:linear-gradient(150deg,var(--card),var(--bg2));
+  border:2px solid var(--line);box-shadow:0 4px 16px rgba(0,0,0,.22)}
+.tablewrap b{font-size:56px;font-weight:800;line-height:1;color:var(--txt2);opacity:.5}
+
+/* 方桌的座位是圓角矩形，不切六角形 */
+.seat.rect{clip-path:none;border-radius:14px}
+.seat.rect::after{clip-path:none;border-radius:11px}
+.seat.rect .s-in{width:90%}
+/* 側邊位：人數溢出時才出現，坐在桌子左右、與黑板垂直。
+   用虛線框跟正規位子區隔，老師一眼看出「這是加出來的」。 */
+.seat.seat-side{border-style:dashed}
+.seat.seat-side::after{inset:5px}
+.seat.seat-side .s-main{font-size:32px}
+.seat.seat-side .s-role{font-size:26px}
 
 .table-unit{position:relative;border-radius:26px;
   background:color-mix(in srgb, var(--tint) calc(var(--tint-a)*100%), transparent);
