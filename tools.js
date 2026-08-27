@@ -245,8 +245,12 @@ function makeDraggable(handle, mover){
     if(ev.button!==undefined && ev.button!==0) return;
     /* 把手裡面還住著「縮成小點」那顆按鈕。不擋掉的話，按它會先被這裡接走並
        setPointerCapture，click 事件就被吞掉 —— 按鈕永遠沒反應。
-       （2026-08-25 使用者回報「可以移動但不能縮小」就是這個。） */
-    if(ev.target.closest && ev.target.closest('button')) return;
+       （2026-08-25 使用者回報「可以移動但不能縮小」就是這個。）
+
+       ★ 但要排除「把手自己就是一顆按鈕」的情況 —— 收合後的小點正是如此。
+         只寫 closest('button') 會連小點自己的拖曳一起擋掉，
+         症狀是「縮成小點後就固定在那裡動不了」。 */
+    if(ev.target !== handle && ev.target.closest && ev.target.closest('button')) return;
     const r = mover.getBoundingClientRect();
     const dx = ev.clientX - r.left, dy = ev.clientY - r.top;
     let moved = false;

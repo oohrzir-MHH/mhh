@@ -190,9 +190,13 @@ function slotsForSize(n){
   if(L.kind !== 'hex'){
     return Array.from({length: Math.min(Math.max(n, L.base), L.max)}, (_,i)=>i);
   }
+  /* ★ 不要排序。排序會讓外圈那一格被插進序列中間，
+       結果是「加第 7 個位子」把原本坐好的 6 個人全部往後推一格，
+       空位反而掉到內圈 —— 使用者回報「第二圈只有固定位置、選不到」就是這個。
+       依 內圈 → 外圈 的順序附加，第 7 人才會真的坐到外圈，前 6 人不動。 */
   const out = RING1_SLOTS.slice(0, Math.min(n,6));
   for(let i=0;i<n-6 && i<6;i++) out.push(RING2_SLOTS[i]);
-  return out.sort((a,b)=>a-b);
+  return out;
 }
 function tableMembers(tno){
   const c=curClass(); return (c&&c.seats&&c.seats[tno])||[];
@@ -227,6 +231,24 @@ function ensureEnoughSeats(){
   }
   return changed;
 }
+/* 主動幫某一組加一個空位。
+
+   為什麼需要：原本只有「人數比位子多」時才會自動補位，
+   老師想預留一個位子（轉學生、併組、臨時加人）完全沒有辦法。
+   使用者回報「第二圈依然只有固定位置，沒有灰色可以選、可以打叉的設計」
+   講的就是這件事 —— 自動補位補的是「缺的」，補不出「想要的」。 */
+function addSeatSlot(tno){
+  const c=curClass(); if(!c) return;
+  const L=LO();
+  c.seats=c.seats||{}; c.seats[tno]=c.seats[tno]||[];
+  const cur=Math.max(c.seats[tno].length, L.base);
+  if(cur>=L.max){ toast(`第 ${tno} 組已達上限 ${L.max} 人`); return; }
+  while(c.seats[tno].length < cur) c.seats[tno].push(null);   // 先補齊到基本盤
+  c.seats[tno].push(null);
+  save(); renderSeats(); renderScoreboard(); renderRoll();
+  toast(`第 ${tno} 組多了一個空位，點它填座號`);
+}
+
 /* 把某一組的第 idx 個空位收掉。只准收空的，有人的位子不能這樣消失。 */
 function dropSeatSlot(tno, idx){
   const c=curClass(); if(!c||!c.seats||!c.seats[tno]) return;
@@ -512,6 +534,17 @@ function renderSeats(){
     const label=document.createElement('div');
     label.className='unit-label'; label.textContent=`第 ${tno} 組`;
     unit.appendChild(label);
+
+    /* 主動加位子。放在組別標籤旁邊，老師想預留位子時不必先改名單。 */
+    if(c){
+      const addb=document.createElement('button');
+      addb.className='unit-add';
+      addb.textContent='＋ 位子';
+      addb.title=`幫第 ${tno} 組加一個空位（上限 ${L.max} 人）
+加出來的空位可以點它填座號，不要的按空位上的 ✕ 收掉`;
+      addb.onclick=e=>{ e.stopPropagation(); addSeatSlot(tno); };
+      unit.appendChild(addb);
+    }
 
     if(L.kind==='hex'){
       const hex=document.createElement('div'); hex.className='hexwrap';

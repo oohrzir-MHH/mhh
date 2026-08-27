@@ -125,6 +125,14 @@ code{background:rgba(127,127,127,.15);padding:1px 6px;border-radius:5px;font-siz
   border:2px dashed color-mix(in srgb, var(--tint) calc(var(--tint-b)*100%), transparent)}
 .unit-label{position:absolute;left:16px;top:10px;font-size:20px;font-weight:800;
   color:var(--tint);letter-spacing:1px;opacity:.85}
+/* 主動加位子。平常淡淡的，滑到那一組才明顯 —— 投影時不搶畫面。 */
+.unit-add{position:absolute;right:14px;top:10px;z-index:5;
+  padding:5px 12px;border-radius:9px;cursor:pointer;
+  border:1px dashed var(--tint);background:transparent;color:var(--tint);
+  font-size:14px;font-weight:700;font-family:inherit;opacity:.4;transition:.12s}
+.table-unit:hover .unit-add{opacity:1}
+.unit-add:hover{background:var(--tint);color:#fff;border-style:solid}
+@media print{ .unit-add{display:none!important} }
 
 .hexwrap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
   display:flex;align-items:center;justify-content:center;z-index:2;
