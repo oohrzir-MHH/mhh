@@ -107,6 +107,7 @@ const rail = el('div','mhh-rail');
 rail.innerHTML = `
   <div class="mhh-grip" id="mhh-grip" title="按住這裡可以把工具列拖到別的地方">
     <span class="mhh-grip-dots"></span>
+    <button class="mhh-mini" id="mhh-pip" title="浮出成獨立小窗，可蓋在 PowerPoint 等其他程式上面">⧉</button>
     <button class="mhh-mini" id="mhh-mini" title="縮成小點">－</button>
   </div>
   <button class="mhh-rbtn" data-open="timer" title="倒數計時">⏱<i>計時</i></button>
@@ -199,6 +200,7 @@ function clampPos(x, y, w, h){
 
 /* 把 CFG.pos 套到畫面上。pos 為 null 就用 CSS 的預設（右側置中）。 */
 function applyPos(){
+  if(inPip()) return;            /* 小窗裡位置由瀏覽器管，別再套 left/top */
   const target = CFG.mini ? dot : rail;
   [rail, dot].forEach(elm=>{
     elm.style.left=''; elm.style.top=''; elm.style.right=''; elm.style.transform='';
@@ -216,6 +218,7 @@ function applyPos(){
 
 /* 面板要跟著工具列跑，否則工具列拖到左邊、面板還飄在右邊。 */
 function placePops(){
+  if(inPip()) return;            /* 小窗裡面板是靜態排版，不必算座標 */
   const r = rail.getBoundingClientRect();
   const rightSide = r.left > innerWidth/2;   // 工具列在畫面右半邊 → 面板開在它左邊
   document.querySelectorAll('.mhh-pop').forEach(p=>{
@@ -230,6 +233,7 @@ function placePops(){
 }
 
 function applyMini(){
+  if(inPip()){ rail.style.display='flex'; dot.style.display='none'; return; }
   /* .mhh-dot 在 CSS 裡預設就是 display:none，所以展開時要明寫 'flex'
      —— 用 '' 會落回 CSS 的 none，小點永遠不會出現。 */
   rail.style.display = CFG.mini ? 'none' : 'flex';
@@ -281,6 +285,98 @@ function makeDraggable(handle, mover){
   });
 }
 
+/* ══════════ 浮出成獨立小窗（Document Picture-in-Picture）══════════
+
+   使用者要的是「切到其他視窗，工具列還在最上面」。
+   **一般網頁做不到這件事** —— 瀏覽器不允許網頁內容蓋在其他應用程式上面，
+   否則任何網站都能遮住你的銀行視窗。這是安全邊界，不是可以繞過的限制。
+
+   唯一的正解是 Document Picture-in-Picture：瀏覽器開一個「真的置頂」的
+   小視窗，我們把工具列整個搬進去。切到 PowerPoint、Word、其他分頁，
+   它都還浮在上面，關掉才消失。Chrome / Edge 116+ 支援。
+
+   ★ 為什麼是「搬移節點」而不是「在小窗重建一份」：
+     搬移之後，所有事件處理器仍然是主視窗那份程式的閉包，
+     裡面的 document 指的還是主視窗 —— 所以「跳到座位表」「螢幕註記」
+     這些作用在主畫面的功能，從浮動小窗按下去照樣有效。
+     重建一份就要把整套邏輯再接一次線，而且兩邊遲早漂移。 */
+
+let pipWin = null;
+const inPip = () => !!pipWin;
+
+/* PiP 視窗是全新的 document，一行 CSS 都沒有，要自己把樣式搬過去。 */
+function copyStylesTo(win){
+  [...document.styleSheets].forEach(sheet=>{
+    try{
+      const css = [...sheet.cssRules].map(r=>r.cssText).join('\n');
+      const st = win.document.createElement('style');
+      st.textContent = css;
+      win.document.head.appendChild(st);
+    }catch(e){
+      /* 跨網域樣式表讀不到 cssRules，改用 link 重新載入 */
+      if(sheet.href){
+        const l = win.document.createElement('link');
+        l.rel = 'stylesheet'; l.href = sheet.href;
+        win.document.head.appendChild(l);
+      }
+    }
+  });
+}
+
+async function openPip(){
+  if(!('documentPictureInPicture' in window)){
+    alert('這個瀏覽器不支援浮動小窗。\n\n'
+        + '需要 Chrome 或 Edge 116 以上版本。\n\n'
+        + '（一般網頁沒辦法蓋在其他程式上面，那是瀏覽器的安全限制；'
+        + '這個功能是官方唯一開的門。）');
+    return;
+  }
+  if(pipWin){ try{ pipWin.focus(); }catch(e){} return; }
+
+  try{
+    pipWin = await documentPictureInPicture.requestWindow({ width:300, height:470 });
+  }catch(e){
+    alert('開啟浮動小窗失敗：' + (e && e.message ? e.message : e));
+    pipWin = null; return;
+  }
+
+  copyStylesTo(pipWin);
+  const d = pipWin.document;
+  d.documentElement.setAttribute('data-theme',
+    document.documentElement.getAttribute('data-theme') || 'dark');
+  d.title = 'MH⋯H 課堂工具';
+  d.body.className = 'mhh-pip-body';
+
+  /* 浮出時一定是展開狀態；小點留在主視窗沒有意義 */
+  CFG.mini = false; saveCfg();
+  rail.style.display = 'flex';
+  dot.style.display  = 'none';
+  /* 清掉拖曳留下的絕對定位 —— 小窗裡位置由瀏覽器管 */
+  [rail, dot].forEach(e=>{
+    e.style.left=''; e.style.top=''; e.style.right=''; e.style.transform='';
+    e.classList.remove('mhh-moved');
+  });
+
+  d.body.appendChild(rail);
+  d.body.appendChild(pTimer);
+  d.body.appendChild(pPeriod);
+
+  /* 使用者關掉小窗（或瀏覽器收回）→ 把東西搬回主畫面 */
+  pipWin.addEventListener('pagehide', restoreFromPip);
+
+  closeAll();
+  toast('工具列已浮出，現在它會蓋在其他程式上面');
+}
+
+function restoreFromPip(){
+  if(!pipWin) return;
+  pipWin = null;
+  document.body.appendChild(rail);
+  document.body.appendChild(pTimer);
+  document.body.appendChild(pPeriod);
+  applyMini(); applyPos(); placePops();
+}
+
 /* ══════════ 開合 ══════════ */
 function closeAll(){ document.querySelectorAll('.mhh-pop').forEach(p=>p.classList.remove('show'));
   rail.querySelectorAll('[data-open]').forEach(b=>b.classList.remove('on')); }
@@ -308,6 +404,8 @@ document.addEventListener('click', e=>{
 rail.querySelectorAll('[data-open]').forEach(b=>{
   b.addEventListener('click', placePops);
 });
+
+$('#mhh-pip').onclick = e=>{ e.stopPropagation(); openPip(); };
 
 $('#mhh-mini').onclick = e=>{
   e.stopPropagation();

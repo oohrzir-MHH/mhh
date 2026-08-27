@@ -683,3 +683,28 @@ body.tb-open{overflow:hidden}
   box-shadow:0 0 22px color-mix(in srgb,var(--gt) 60%,transparent)}
 .tb-bulb{font-size:30px;line-height:1}
 .tb-gname{font-size:15px;font-weight:700}
+
+/* ══════════════ 浮出小窗（Document PiP）內的排版 ══════════════
+   小窗只有 300×470，工具列原本那套「固定在右側、垂直排列」完全不適用：
+   要改成填滿整個小窗、按鈕橫向並排、面板直接接在下面展開。 */
+.mhh-pip-body{margin:0;padding:10px;background:var(--bg);color:var(--txt);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  overflow-y:auto}
+
+/* 工具列本體：從浮動變成靜態，按鈕橫向排 */
+.mhh-pip-body .mhh-rail{position:static;transform:none;z-index:auto;
+  width:auto;flex-direction:row;flex-wrap:wrap;gap:6px;padding:0;
+  background:transparent;border:0;box-shadow:none}
+/* 拖曳把手在小窗裡沒有意義 —— 位置由作業系統的視窗管 */
+.mhh-pip-body .mhh-grip{display:none}
+.mhh-pip-body .mhh-rbtn{flex:1 1 78px;min-width:74px;padding:10px 4px;
+  background:var(--card);border:1px solid var(--line);border-radius:11px}
+.mhh-pip-body .mhh-clock{flex:1 1 100%;border-top:0;margin-top:0;
+  background:var(--card);border:1px solid var(--line);border-radius:11px;padding:8px 0}
+
+/* 面板：不再是浮在旁邊的彈出層，直接接在按鈕下面 */
+.mhh-pip-body .mhh-pop{position:static;transform:none;opacity:1;pointer-events:auto;
+  width:auto;margin-top:10px;box-shadow:none;display:none;transition:none}
+.mhh-pip-body .mhh-pop.show{display:block;transform:none}
+.mhh-pip-body .mhh-big{font-size:38px}
+.mhh-pip-body .mhh-sched{max-height:150px}
