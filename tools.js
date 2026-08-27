@@ -114,6 +114,7 @@ rail.innerHTML = `
   <button class="mhh-rbtn" id="mhh-ink" title="在螢幕上畫記（Esc 離開）">✏️<i>畫記</i></button>
   <button class="mhh-rbtn" data-go="p-seat" title="跳到座位表">🪑<i>座位</i></button>
   <button class="mhh-rbtn" data-go="p-live" title="跳到課堂互動加分">⚡<i>加分</i></button>
+  <button class="mhh-rbtn" data-go="p-task" title="跳到職位工作，推上投影幕">📋<i>工作</i></button>
   <div class="mhh-clock" id="mhh-clock">--:--</div>`;
 document.body.appendChild(rail);
 

@@ -37,21 +37,30 @@ const ROLES_R6 = [
    ★ 口頭禪（say）原始教材裡沒有，是依各自主責起草的，老師可自行改寫。
    ★ 用 --c1..--c6 這六個顏色變數裡的四個，才能沿用既有的彩虹配色與淺色（正2）。 */
 const ROLES_R4 = [
-  { key:'pm',   color:'--c2', light:'--c2l', name:'場控長', en:'PM · 專案管理（🦶 腳）',
-    duty:['器材借還與清點、實驗桌動線','計時：每個環節剩幾分鐘','安全與清潔，收拾到能交還為止',
-          '期末報告主筆：一、研究動機　三、器材'],
-    say:'「器材我點過了，剩 5 分鐘，收東西的先開始。」'},
-  { key:'coo',  color:'--c1', light:'--c1l', name:'執行長', en:'COO · 營運（✋ 手）',
-    duty:['秤重、量水、實際動手操作','儀器校正、重複測量、控制變因','確保每一次的條件都一樣',
-          '期末報告主筆：三、方法與步驟（嚴謹規劃與高品質數據 30 分）'],
-    say:'「這一次的條件跟上一次一樣嗎？不一樣就要重測。」'},
-  { key:'qa',   color:'--c4', light:'--c4l', name:'記錄長', en:'QA · 品保（👁 眼）',
-    duty:['觀察、判定、填數據','把判定有爭議的地方記下來，不要偷偷決定','缺值、異常值要註明怎麼處理的',
-          '期末報告主筆：四、數據記錄'],
-    say:'「這一格到底算不算變色？兩個人看法不一樣，我先記下來。」'},
-  { key:'cio',  color:'--c5', light:'--c5l', name:'資訊長', en:'CIO · 資料分析（🧠 腦）',
-    duty:['拍照上傳、共編簡報','繪圖、算統計','把數據變成看得懂的圖表',
-          '期末報告主筆：五、結果圖表　六、討論（數據趨勢 30 ＋ 建立模型 18）'],
+  { key:'pm',  code:'A', color:'--c2', light:'--c2l', name:'場控長',
+    en:'A · 專案 PM（🦶 腳）｜實驗設計・控制變因',
+    duty:['實驗設計，盯住<b>控制變因</b>：哪些條件必須每次都一樣',
+          '器材借還與清點、實驗桌動線','計時：每個環節剩幾分鐘',
+          '安全與清潔，收拾到能交還為止',
+          '期末報告主筆：<b>定題＋動機、實驗器材</b>'],
+    say:'「這一輪有哪些條件必須跟上一輪一樣？不一樣就不能拿來比。」'},
+  { key:'coo', code:'B', color:'--c1', light:'--c1l', name:'執行長',
+    en:'B · 營運 COO（✋ 手）｜操縱變因',
+    duty:['動手操作，負責<b>操縱變因</b>：我們刻意改變的是哪一個',
+          '秤重、量水、實際操作','儀器校正、重複測量',
+          '期末報告主筆：<b>方法流程</b>（嚴謹規劃與高品質數據 30 分）'],
+    say:'「這次我只改一個東西，其他都不准動。」'},
+  { key:'qa',  code:'C', color:'--c4', light:'--c4l', name:'記錄長',
+    en:'C · 品保 QA（👁 眼）｜應變變因',
+    duty:['觀察與判定，記下<b>應變變因</b>：跟著變的是什麼',
+          '填數據，把判定有爭議的地方記下來，不要偷偷決定',
+          '缺值、異常值要註明怎麼處理的',
+          '期末報告主筆：<b>歷程＋結論</b>'],
+    say:'「這一格到底算不算變色？兩個人看法不一樣，我先照實記下來。」'},
+  { key:'cio', code:'D', color:'--c6', light:'--c6l', name:'資訊長',
+    en:'D · 分析 CIO（🧠 腦）｜圖表製作',
+    duty:['把數據變成看得懂的<b>圖表</b>','拍照上傳、共編簡報、算統計',
+          '期末報告主筆：<b>分析＋討論</b>（數據趨勢 30 ＋ 建立模型 18）'],
     say:'「這張圖的橫軸是什麼？看不懂的圖等於沒做。」'}
 ];
 
@@ -951,8 +960,10 @@ function checkRainbow(table){
         second:rr.second?1:0, points:RAINBOW_BONUS, type:'bonus', note:'彩虹貫通' });
     });
   }
-  starBurst();
-  toast(`🌈 第 ${table} 組 全員發言，彩虹貫通！全組每人 +${RAINBOW_BONUS} 分（第 ${rounds} 次）`, true);
+  /* 彩虹貫通一堂課可能發生五六次，固定同一個特效放到後面就沒感覺了，
+     所以跟工作看板共用同一組輪替特效。 */
+  const _cn=celebrate();
+  toast(`🌈 第 ${table} 組 全員發言，彩虹貫通！全組每人 +${RAINBOW_BONUS} 分（第 ${rounds} 次）${_cn?'　'+_cn:''}`, true);
 }
 
 function renderScoreboard(){
@@ -1796,6 +1807,294 @@ function renderRoleCards(){
     </div>`).join('');
 }
 
+
+
+/* ---------------- 12c. 慶祝動畫與音效 ----------------
+   使用者回報「都一樣，還滿膩的」。一堂課會亮好幾次燈，
+   同一個特效放第三次就沒有感覺了 —— 這跟 tools.js 的下課提醒
+   要輪替說法是同一個道理。
+
+   做法：六種動畫各配一段音效，每次隨機挑一種，而且不會連續重複。
+   音效一律用 Web Audio 即時合成，不依賴音檔 —— 教室電腦常常
+   擋外部資源，而且合成的東西不會有版權問題。 */
+
+let _ac=null;
+function ac(){
+  if(!_ac){ try{ _ac=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; } }
+  if(_ac.state==='suspended') _ac.resume();
+  return _ac;
+}
+/* 一個音。type 換波形就換音色：sine 圓潤、triangle 像木琴、square 像電玩 */
+function tone(freq, start, dur, vol, type){
+  const a=ac(); if(!a) return;
+  const t0=a.currentTime+start;
+  const o=a.createOscillator(), g=a.createGain();
+  o.type=type||'sine'; o.frequency.setValueAtTime(freq,t0);
+  g.gain.setValueAtTime(0,t0);
+  g.gain.linearRampToValueAtTime(vol==null?.22:vol, t0+0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  o.connect(g); g.connect(a.destination);
+  o.start(t0); o.stop(t0+dur+0.05);
+}
+function slide(f1, f2, start, dur, vol, type){
+  const a=ac(); if(!a) return;
+  const t0=a.currentTime+start;
+  const o=a.createOscillator(), g=a.createGain();
+  o.type=type||'sine';
+  o.frequency.setValueAtTime(f1,t0);
+  o.frequency.exponentialRampToValueAtTime(f2, t0+dur);
+  g.gain.setValueAtTime(0,t0);
+  g.gain.linearRampToValueAtTime(vol==null?.2:vol, t0+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+  o.connect(g); g.connect(a.destination);
+  o.start(t0); o.stop(t0+dur+0.05);
+}
+function noiseHit(start, dur, vol){
+  const a=ac(); if(!a) return;
+  const n=Math.floor(a.sampleRate*dur);
+  const buf=a.createBuffer(1,n,a.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+  const s=a.createBufferSource(); s.buffer=buf;
+  const g=a.createGain(); g.gain.value=vol==null?.18:vol;
+  const f=a.createBiquadFilter(); f.type='highpass'; f.frequency.value=1200;
+  s.connect(f); f.connect(g); g.connect(a.destination);
+  s.start(a.currentTime+start);
+}
+
+const RB=['#e63946','#f28c28','#e9c716','#2ea86a','#2f7fd8','#6f4bd8','#ffd700'];
+function spray(x,y,n,spd,life,size,starRatio){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2, sp=Math.random()*spd+2;
+    parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:life,
+      c:RB[i%RB.length],s:Math.random()*size+2,star:Math.random()<(starRatio||0.3)});
+  }
+  runFx();
+}
+
+const CELEBRATIONS = [
+  /* 1. 彩虹禮炮：正中央一次炸開（原本那個） */
+  { name:'彩虹禮炮', run(){
+      starBurst();
+      [523,659,784,1047].forEach((f,i)=>tone(f,i*0.09,0.5,.2,'triangle'));
+  }},
+  /* 2. 連環煙火：畫面各處連續炸五發 */
+  { name:'連環煙火', run(){
+      for(let k=0;k<5;k++){
+        const d=k*0.22;
+        setTimeout(()=>{
+          spray(innerWidth*(0.15+Math.random()*0.7), innerHeight*(0.15+Math.random()*0.45),
+                60, 11, 80, 6, 0.35);
+        }, d*1000);
+        noiseHit(d,0.18,.12);
+        slide(300+Math.random()*260, 90, d, 0.32, .16, 'sine');
+      }
+  }},
+  /* 3. 彩帶雨：從畫面上緣灑下來 */
+  { name:'彩帶雨', run(){
+      for(let i=0;i<180;i++){
+        parts.push({x:Math.random()*innerWidth, y:-20-Math.random()*260,
+          vx:(Math.random()-.5)*2.2, vy:Math.random()*2+1.2, life:150,
+          c:RB[i%RB.length], s:Math.random()*5+3, star:i%4===0});
+      }
+      runFx();
+      [784,880,988,1175].forEach((f,i)=>tone(f,i*0.11,0.9,.14,'sine'));
+      for(let i=0;i<6;i++) noiseHit(0.15*i, 0.1, .05);
+  }},
+  /* 4. 電玩過關：由下往上噴，音效像 8-bit 破關 */
+  { name:'過關音效', run(){
+      for(let i=0;i<140;i++){
+        const a=-Math.PI/2+(Math.random()-.5)*1.1, sp=Math.random()*15+8;
+        parts.push({x:innerWidth/2+(Math.random()-.5)*260, y:innerHeight+10,
+          vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:110,
+          c:RB[i%RB.length], s:Math.random()*6+3, star:i%3===0});
+      }
+      runFx();
+      [392,523,659,784,1047,1319].forEach((f,i)=>tone(f,i*0.075,0.28,.17,'square'));
+  }},
+  /* 5. 鐘聲齊鳴：兩側對噴，音效像教堂鐘 */
+  { name:'鐘聲齊鳴', run(){
+      spray(60, innerHeight*0.55, 90, 13, 95, 6, 0.5);
+      spray(innerWidth-60, innerHeight*0.55, 90, 13, 95, 6, 0.5);
+      [1047,784,1047,1319].forEach((f,i)=>tone(f,i*0.22,1.5,.14,'sine'));
+      tone(523,0,2.2,.08,'sine');
+  }},
+  /* 6. 螺旋上升：粒子繞圈往上，音效滑音上揚 */
+  { name:'螺旋上升', run(){
+      const cx=innerWidth/2, cy=innerHeight*0.72;
+      for(let i=0;i<160;i++){
+        const a=i*0.24, r=2+i*0.05;
+        parts.push({x:cx+Math.cos(a)*r*6, y:cy+Math.sin(a)*r*2,
+          vx:Math.cos(a)*3.2, vy:-Math.random()*7-3, life:120,
+          c:RB[i%RB.length], s:Math.random()*5+3, star:i%5===0});
+      }
+      runFx();
+      slide(220, 1400, 0, 1.0, .16, 'triangle');
+      [1047,1319,1568].forEach((f,i)=>tone(f,0.85+i*0.1,0.6,.16,'triangle'));
+  }}
+];
+
+let _lastCeleb=-1;
+/* 隨機挑一種，但不連續重複同一種 —— 「不重複」比「隨機」更有感。 */
+function celebrate(){
+  if(!CELEBRATIONS.length) return;
+  let i=Math.floor(Math.random()*CELEBRATIONS.length);
+  if(CELEBRATIONS.length>1 && i===_lastCeleb) i=(i+1+Math.floor(Math.random()*(CELEBRATIONS.length-1)))%CELEBRATIONS.length;
+  _lastCeleb=i;
+  try{ CELEBRATIONS[i].run(); }catch(e){ starBurst(); }
+  return CELEBRATIONS[i].name;
+}
+
+/* ---------------- 12b. 職位工作推送 ----------------
+   老師課前把「這一節每個職位要做什麼」寫好暫存，上課按一下推到投影幕，
+   下方列出各組，做完的按一下亮燈。
+
+   幾個刻意的決定：
+
+   ★ 只推到投影幕，不進 Firestore。
+     使用者選的就是這個 —— 不需要學生登入、不需要網路、不會有 permission 問題，
+     而且投影幕本來就是全班都看得到的地方。要進學生手機是之後的事。
+
+   ★ 沒填工作的職位顯示成灰色，不是隱藏。
+     隱藏會讓學生以為「我這個職位這節沒事」；灰色是「這節沒有指定任務，
+     但你的職責還在」。使用者明確要求灰色。
+
+   ★ 完成用「亮燈」不是「消滅」。
+     消滅會讓做完的組從畫面上消失，失去被看見的獎賞；而且落後的組會越來越孤立
+     （「只剩三組沒亮」和「只剩三組還在」的心理感受差很多）。
+     亮燈是全班一起把燈點亮，跟既有的「一人一盞燈／彩虹貫通」是同一套語言，
+     全部亮完直接放彩虹禮炮。
+
+   ★ 草稿依課程類型分開存。高一六職位和高二四職位的任務內容不一樣，
+     共用一份會互相覆蓋。 */
+
+function taskStore(){
+  DB.taskDrafts = DB.taskDrafts || {};
+  const k = courseKey();
+  DB.taskDrafts[k] = DB.taskDrafts[k] || { title:'', items:{}, done:{} };
+  return DB.taskDrafts[k];
+}
+
+function renderTaskPanel(){
+  const box=$('#task-editor'); if(!box) return;
+  const t=taskStore(), rs=ROLESET();
+  $('#task-course-tag').textContent = CO().name;
+  const ti=$('#task-title');
+  if(ti && document.activeElement!==ti) ti.value = t.title||'';
+
+  box.innerHTML = rs.map(r=>`
+    <div class="task-row" style="--rc:var(${r.color})">
+      <div class="task-role">
+        <b>${r.name}</b>
+        <small>${r.en}</small>
+      </div>
+      <textarea class="ctl task-input" data-role="${r.key}" rows="3"
+        placeholder="${r.name}這一節要做什麼？留白就是灰色（沒有指定任務）">${
+          (t.items[r.key]||'').replace(/</g,'&lt;')}</textarea>
+    </div>`).join('');
+
+  box.querySelectorAll('.task-input').forEach(inp=>{
+    inp.oninput=()=>{ taskStore().items[inp.dataset.role]=inp.value; save();
+                      updateTaskCount(); };
+  });
+  updateTaskCount();
+}
+function updateTaskCount(){
+  const t=taskStore(), rs=ROLESET();
+  const filled=rs.filter(r=>(t.items[r.key]||'').trim()).length;
+  const el=$('#task-count');
+  if(el) el.textContent = `${filled} / ${rs.length} 個職位已填`;
+}
+
+/* ---- 推上投影幕 ---- */
+function pushTaskBoard(){
+  const c=curClass();
+  if(!c) return alert('請先選擇 / 建立班級');
+  const t=taskStore(), rs=ROLESET();
+  const filled=rs.filter(r=>(t.items[r.key]||'').trim()).length;
+  if(!filled && !confirm('目前一個職位的工作都沒有填，確定要推嗎？\n（推出去會是一整片灰色）')) return;
+  buildTaskBoard();
+  $('#taskboard').classList.add('show');
+  document.body.classList.add('tb-open');
+}
+function closeTaskBoard(){
+  $('#taskboard').classList.remove('show');
+  document.body.classList.remove('tb-open');
+}
+
+function buildTaskBoard(){
+  const t=taskStore(), rs=ROLESET(), TS=TABLES();
+  const c=curClass();                       // 抬頭要印班級名；這裡自己取，不要依賴呼叫端
+  const board=$('#taskboard'); if(!board) return;
+
+  const roleCards = rs.map(r=>{
+    const txt=(t.items[r.key]||'').trim();
+    return `<div class="tb-role${txt?'':' tb-blank'}" style="--rc:var(${r.color})">
+      <div class="tb-role-name">${r.name}</div>
+      <div class="tb-role-body">${
+        txt ? txt.replace(/</g,'&lt;').replace(/\n/g,'<br>')
+            : '這一節沒有指定任務<br><small>你的職責還在，支援同組</small>'}</div>
+    </div>`;
+  }).join('');
+
+  const lamps = TS.map(tno=>{
+    const on = !!t.done[tno];
+    return `<button class="tb-lamp${on?' on':''}" data-tno="${tno}"
+      style="--gt:${GROUP_TINT[tno]||'#8b93a7'}"
+      title="${on?'再按一次取消':'這組做完了，點一下亮燈'}">
+      <span class="tb-bulb">${on?'💡':'○'}</span>
+      <span class="tb-gname">第 ${tno} 組</span>
+    </button>`;
+  }).join('');
+
+  const doneN = TS.filter(x=>t.done[x]).length;
+
+  board.innerHTML = `
+    <div class="tb-inner">
+      <div class="tb-head">
+        <div>
+          <div class="tb-title">${(t.title||'這一節的職位工作').replace(/</g,'&lt;')}</div>
+          <div class="tb-sub">${CO().name}　·　${c ? c.name : ''}</div>
+        </div>
+        <button class="tb-close" id="tb-close" title="關閉（Esc）">✕</button>
+      </div>
+      <div class="tb-roles" style="--n:${rs.length}">${roleCards}</div>
+      <div class="tb-foot">
+        <div class="tb-progress"><b id="tb-done">${doneN}</b> / ${TS.length} 組完成
+          <small>做完的組請老師點一下，燈就亮起來</small></div>
+        <div class="tb-lamps">${lamps}</div>
+      </div>
+    </div>`;
+
+  board.querySelector('#tb-close').onclick=closeTaskBoard;
+  board.querySelectorAll('.tb-lamp').forEach(b=>{
+    b.onclick=e=>{
+      const tno=b.dataset.tno, st=taskStore();
+      st.done[tno] = !st.done[tno];
+      save();
+      const lit = st.done[tno];
+      b.classList.toggle('on', lit);
+      b.querySelector('.tb-bulb').textContent = lit?'💡':'○';
+      const TS2=TABLES(), n=TS2.filter(x=>st.done[x]).length;
+      const d=$('#tb-done'); if(d) d.textContent=n;
+      if(lit) pop(e.clientX, e.clientY, GROUP_TINT[tno]||'#ffd700');
+      /* 全班都亮了 → 放彩虹禮炮，沿用彩虹貫通那一套視覺語言 */
+      if(lit && n===TS2.length){
+        const nm=celebrate();
+        toast(`全班都完成了！🌈　${nm||''}`, true);
+      }
+    };
+  });
+}
+
+function resetTaskLamps(){
+  const t=taskStore();
+  if(!Object.keys(t.done).length) return toast('目前沒有亮著的燈');
+  if(!confirm('把所有組的燈熄掉，重新開始一輪？')) return;
+  t.done={}; save();
+  if($('#taskboard').classList.contains('show')) buildTaskBoard();
+  toast('燈已全部熄掉');
+}
+
 /* ---------------- 13. UI 綁定 ---------------- */
 function refreshSelectors(){
   $('#sel-year').innerHTML=DB.years.map(y=>`<option ${y===DB.year?'selected':''}>${y}</option>`).join('');
@@ -1897,7 +2196,21 @@ function bind(){
     if(t.dataset.panel==='p-seat')  { renderSeats(); applyZoom(); }
     if(t.dataset.panel==='p-live')  renderScoreboard();
     if(t.dataset.panel==='p-roll')  renderRoll();
+    if(t.dataset.panel==='p-task')  renderTaskPanel();
+    if(t.dataset.panel==='p-roles') renderRoleCards();
   });
+
+  /* ---- 職位工作推送 ---- */
+  const tt=$('#task-title');
+  if(tt) tt.oninput=()=>{ taskStore().title=tt.value; save(); };
+  const bp=$('#btn-task-push');   if(bp) bp.onclick=pushTaskBoard;
+  const br=$('#btn-task-reset');  if(br) br.onclick=resetTaskLamps;
+  /* Esc 關掉投影看板。用捕獲階段，免得被別的 Esc 處理搶先。 */
+  document.addEventListener('keydown', e=>{
+    if(e.key==='Escape' && $('#taskboard') && $('#taskboard').classList.contains('show')){
+      e.stopPropagation(); closeTaskBoard();
+    }
+  }, true);
 
   $('#sel-rollsort').onchange=renderRoll;
   $('#btn-roll-allpresent').onclick=()=>{

@@ -629,3 +629,57 @@ body.compact main{padding-top:8px}
 .rmemo{flex:1 0 100%;width:auto;order:9}
 .rollrow .rtime{flex:0 0 auto}
 .rollrow .rbtns{flex:0 0 auto}
+
+/* ══════════════ 職位工作推送 ══════════════ */
+/* 編輯區：一個職位一列，左邊職位名、右邊工作內容 */
+.task-editor{display:grid;gap:10px;margin-top:12px;max-width:1000px}
+.task-row{display:grid;grid-template-columns:180px 1fr;gap:12px;align-items:start;
+  background:var(--card);border:1px solid var(--line);border-left:5px solid var(--rc);
+  border-radius:12px;padding:12px 14px}
+.task-role b{display:block;font-size:16px;color:var(--rc)}
+.task-role small{display:block;font-size:11px;color:var(--txt2);line-height:1.4;margin-top:2px}
+.task-input{width:100%;font-size:14px}
+@media (max-width:700px){ .task-row{grid-template-columns:1fr} }
+
+/* 全螢幕看板。z-index 500：要蓋過工具列（360）與提醒橫幅（400），
+   因為推出去的當下，投影幕上只該有這一件事。 */
+.taskboard{position:fixed;inset:0;z-index:500;display:none;
+  background:var(--bg);overflow:auto;padding:28px}
+.taskboard.show{display:block;animation:fade .2s ease}
+body.tb-open{overflow:hidden}
+.tb-inner{max-width:1600px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+.tb-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;
+  padding-bottom:14px;border-bottom:2px solid var(--line)}
+.tb-title{font-size:44px;font-weight:800;line-height:1.2}
+.tb-sub{font-size:18px;color:var(--txt2);margin-top:4px}
+.tb-close{width:52px;height:52px;flex:0 0 52px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:var(--card);color:var(--txt2);font-size:24px}
+.tb-close:hover{background:var(--danger);border-color:var(--danger);color:#fff}
+
+/* 職位卡：欄數跟著職位數走（四職位排四欄，六職位排三欄較好讀） */
+.tb-roles{display:grid;gap:14px;margin:18px 0;flex:1;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.tb-role{background:var(--card);border:2px solid var(--rc);border-radius:18px;padding:18px 20px;
+  display:flex;flex-direction:column;gap:10px}
+.tb-role-name{font-size:30px;font-weight:800;color:var(--rc);line-height:1.1}
+.tb-role-body{font-size:23px;line-height:1.55;white-space:normal}
+/* 沒填工作＝灰色。不是隱藏 —— 隱藏會讓學生以為「我這節沒事」。 */
+.tb-role.tb-blank{border-color:var(--line);opacity:.42}
+.tb-role.tb-blank .tb-role-name{color:var(--txt2)}
+.tb-role.tb-blank .tb-role-body{color:var(--txt2);font-size:20px}
+.tb-role.tb-blank small{font-size:15px;opacity:.8}
+
+/* 各組亮燈 */
+.tb-foot{border-top:2px solid var(--line);padding-top:14px}
+.tb-progress{font-size:17px;color:var(--txt2);margin-bottom:10px}
+.tb-progress b{font-size:30px;color:var(--ok)}
+.tb-progress small{margin-left:10px;font-size:14px}
+.tb-lamps{display:flex;gap:10px;flex-wrap:wrap}
+.tb-lamp{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;
+  min-width:104px;padding:12px 14px;border-radius:14px;font-family:inherit;
+  border:2px dashed var(--gt);background:transparent;color:var(--txt2);transition:.16s}
+.tb-lamp:hover{transform:translateY(-2px)}
+.tb-lamp.on{background:var(--gt);border-style:solid;color:#fff;
+  box-shadow:0 0 22px color-mix(in srgb,var(--gt) 60%,transparent)}
+.tb-bulb{font-size:30px;line-height:1}
+.tb-gname{font-size:15px;font-weight:700}

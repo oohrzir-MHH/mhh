@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>閱讀思考 · 課堂儀表板</title>
-<link rel="stylesheet" href="style.css?v=33">
+<link rel="stylesheet" href="style.css?v=35">
 </head>
 <body>
 
@@ -48,6 +48,7 @@
   <button class="tab" data-panel="p-live">⚡ 課堂互動</button>
   <button class="tab" data-panel="p-roll">📋 課堂點名</button>
   <button class="tab" data-panel="p-push">📡 推送題目</button>
+  <button class="tab" data-panel="p-task">📋 職位工作</button>
   <button class="tab" data-panel="p-roles">🎩 職位說明</button>
   <button class="tab" data-panel="p-stats">📊 統計分析</button>
   <button class="tab" data-panel="p-setup">⚙️ 名單與雲端</button>
@@ -260,6 +261,27 @@
 </section>
 
 <!-- ============ 職位說明 ============ -->
+<!-- ============ 職位工作推送 ============ -->
+<section id="p-task" class="panel">
+  <div class="panel-head">
+    <div>
+      <h2>職位工作 <span class="tag" id="task-course-tag">—</span></h2>
+      <p class="hint">課前先把每個職位這一節要做的事寫好，<b>會自動暫存</b>，上課按「推上投影幕」全螢幕顯示。
+        <b>留白的職位會顯示成灰色</b>（沒有指定任務，但職責還在）。
+        做完的組請老師點一下燈，全班亮完會放彩虹禮炮。</p>
+    </div>
+    <div class="row-btns">
+      <span class="hint" id="task-count">—</span>
+      <button class="btn btn-primary" id="btn-task-push">📽️ 推上投影幕</button>
+      <button class="btn btn-ghost" id="btn-task-reset">🔄 熄掉所有燈</button>
+    </div>
+  </div>
+  <label class="mini" style="max-width:640px">這一節的標題（會顯示在投影幕最上方）
+    <input type="text" id="task-title" class="ctl"
+      placeholder="例：第 3 堂　把濁度數據畫成圖"></label>
+  <div class="task-editor" id="task-editor"></div>
+</section>
+
 <section id="p-roles" class="panel">
   <div class="panel-head">
     <div><h2 id="roles-title">彩虹六職位（正1 / 正2）</h2>
@@ -483,13 +505,16 @@
   </div>
 </div>
 
+<!-- 職位工作全螢幕看板：推上投影幕時蓋滿畫面 -->
+<div class="taskboard" id="taskboard"></div>
+
 <canvas id="fx-canvas"></canvas>
 <div class="toast-wrap" id="toast-wrap"></div>
 
 <script src="xlsx.js?v=13"></script>
 <script src="qr.js?v=1"></script>
-<script src="app.js?v=26"></script>
-<script src="tools.js?v=5"></script>
+<script src="app.js?v=29"></script>
+<script src="tools.js?v=6"></script>
 <script type="module" src="push.js?v=5"></script>
 <script type="module" src="sync.js?v=1"></script>
 </body>
