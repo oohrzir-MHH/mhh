@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>閱讀思考 · 課堂儀表板</title>
-<link rel="stylesheet" href="style.css?v=37">
+<link rel="stylesheet" href="style.css?v=38">
 </head>
 <body>
 
@@ -49,6 +49,7 @@
   <button class="tab" data-panel="p-roll">📋 課堂點名</button>
   <button class="tab" data-panel="p-push">📡 推送題目</button>
   <button class="tab" data-panel="p-task">📋 職位工作</button>
+  <button class="tab" data-panel="p-cycle">🎤 報告循環</button>
   <button class="tab" data-panel="p-roles">🎩 職位說明</button>
   <button class="tab" data-panel="p-stats">📊 統計分析</button>
   <button class="tab" data-panel="p-setup">⚙️ 名單與雲端</button>
@@ -282,6 +283,35 @@
   <div class="task-editor" id="task-editor"></div>
 </section>
 
+<!-- ============ 報告循環 ============ -->
+<section id="p-cycle" class="panel">
+  <div class="panel-head">
+    <div>
+      <h2>報告循環 <span class="tag" id="cycle-course-tag">—</span></h2>
+      <p class="hint">一組報告時，台下不是「等」：
+        <b>剛報告完的那一組當評審</b>（深度回饋⊕給分）、
+        <b>下一個要上台的那一組計時</b>，其他組自由點讚與快速評分。
+        每報告完一組，三個角色同步往前推一格 —— <b>沒有一組是閒著的</b>。
+        回饋一律附句型（內容用 CER、表現用長頸鹿回饋法），否則全班都會寫「很好」。</p>
+    </div>
+    <div class="row-btns">
+      <label class="mini">每組報告（分）
+        <input type="number" id="cycle-minutes" class="ctl" min="1" max="60" step="1" style="width:74px"></label>
+      <button class="btn btn-ghost" id="btn-cycle-shuffle">🎲 重抽順序</button>
+      <button class="btn btn-ghost" id="btn-cycle-reset">🔄 清空本堂紀錄</button>
+      <button class="btn btn-primary" id="btn-cycle-open">📽️ 開始報告循環</button>
+    </div>
+  </div>
+
+  <div class="cy-status" id="cycle-status">—</div>
+
+  <h3 class="cy-h3">報告順序<small>用 ‹ › 搬動；白圈起點就是第 1 輪</small></h3>
+  <div class="cy-order" id="cycle-order"></div>
+
+  <h3 class="cy-h3">評審組的職位分工<small>會自動暫存；留白的職位在看板上顯示成灰色</small></h3>
+  <div class="task-editor" id="cycle-editor"></div>
+</section>
+
 <section id="p-roles" class="panel">
   <div class="panel-head">
     <div><h2 id="roles-title">彩虹六職位（正1 / 正2）</h2>
@@ -508,12 +538,16 @@
 <!-- 職位工作全螢幕看板：推上投影幕時蓋滿畫面 -->
 <div class="taskboard" id="taskboard"></div>
 
+<!-- 報告循環全螢幕看板 -->
+<div class="taskboard cycleboard" id="cycleboard"></div>
+
 <canvas id="fx-canvas"></canvas>
 <div class="toast-wrap" id="toast-wrap"></div>
 
 <script src="xlsx.js?v=13"></script>
 <script src="qr.js?v=1"></script>
-<script src="app.js?v=32"></script>
+<script src="app.js?v=33"></script>
+<script src="cycle.js?v=2"></script>
 <script src="tools.js?v=7"></script>
 <script type="module" src="push.js?v=5"></script>
 <script type="module" src="sync.js?v=1"></script>

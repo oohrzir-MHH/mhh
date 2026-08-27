@@ -708,3 +708,134 @@ body.tb-open{overflow:hidden}
 .mhh-pip-body .mhh-pop.show{display:block;transform:none}
 .mhh-pip-body .mhh-big{font-size:38px}
 .mhh-pip-body .mhh-sched{max-height:150px}
+
+/* ══════════════ 報告循環 ══════════════
+   看板沒有自己的遮罩層，沚用 .taskboard 的 z-index 500 與全螢幕行為，
+   只把裡面的版面換掉 —— 兩套全螢幕邏輯遲早會漂移。 */
+
+/* ── 設定分頁 ── */
+.cy-status{margin:4px 0 14px;padding:10px 14px;border-radius:12px;
+  background:var(--bg2);border:1px solid var(--line);font-size:15px;color:var(--txt2)}
+.cy-status b{font-size:19px;color:var(--txt)}
+.cy-h3{margin:18px 0 8px;font-size:15px;font-weight:800}
+.cy-h3 small{margin-left:10px;font-size:12px;font-weight:400;color:var(--txt2)}
+.cy-order{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.cy-chip{display:inline-flex;align-items:center;gap:2px;padding:4px 6px;border-radius:12px;
+  border:2px solid var(--gt);background:transparent;color:var(--txt);font-size:14px}
+.cy-chip.now{background:var(--gt);color:#fff}
+.cy-chip b{padding:0 6px;font-weight:700;white-space:nowrap}
+.cy-mv{width:26px;height:26px;border-radius:8px;cursor:pointer;padding:0;
+  border:1px solid var(--line);background:var(--card);color:var(--txt2);font-size:15px;line-height:1}
+.cy-mv:hover{background:var(--pri);border-color:var(--pri);color:#fff}
+
+/* ── 全螢幕看板 ── */
+.cycleboard{padding-bottom:64px}      /* 留給最下面的跑馬燈 */
+.cy-inner{max-width:1600px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.cy-round{font-size:26px;color:var(--txt2);font-weight:700}
+.cy-headbtn{display:flex;gap:8px;align-items:center;flex-shrink:0}
+
+/* 三個角色的大卡。一排三張，投影出去坐最後一排也讀得到。 */
+.cy-tri{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.cy-big{border:3px solid var(--gt);border-radius:20px;padding:16px 20px;background:var(--card);
+  display:flex;flex-direction:column;gap:6px}
+.cy-big-head{display:flex;align-items:center;gap:8px;font-size:17px;color:var(--txt2);font-weight:700}
+.cy-ic{font-size:24px}
+.cy-big-g{font-size:46px;font-weight:800;line-height:1.05;color:var(--gt)}
+.cy-big-sub{font-size:15px;color:var(--txt2);line-height:1.5;min-height:22px}
+.cy-big-body{margin-top:4px}
+.cy-note{font-size:16px;color:var(--txt2)}
+/* 報告中的那一組要一眼認出來 */
+.cy-big.cy-present{box-shadow:0 0 26px color-mix(in srgb,var(--gt) 55%,transparent)}
+
+.cy-clock-wrap{text-align:center}
+.cy-clock{font-size:64px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;
+  letter-spacing:1px}
+.cy-clock-wrap.over .cy-clock{color:var(--danger);animation:cy-blink 1s steps(2,start) infinite}
+@keyframes cy-blink{50%{opacity:.25}}
+.cy-clock-btns{display:flex;gap:6px;justify-content:center;margin-top:8px;flex-wrap:wrap}
+
+.cy-pin{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;
+  padding:10px 14px;border-radius:12px;background:var(--bg2);border:1px dashed var(--line);
+  font-size:13px;color:var(--txt2)}
+
+/* 折疊區塊。上課中一頁塞不下全部，而且不同階段要看的不一樣。 */
+.cy-sec{border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden}
+.cy-sec>summary{cursor:pointer;padding:12px 18px;font-size:18px;font-weight:800;
+  background:var(--bg2);user-select:none}
+.cy-sec>summary:hover{color:var(--pri)}
+.cy-sec>*:not(summary){padding:0 18px 16px}
+
+.cy-jobs{display:grid;gap:12px;padding-top:14px!important;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.cy-job{border:2px solid var(--rc);border-radius:14px;padding:12px 14px;background:var(--bg2)}
+.cy-job-name{font-size:21px;font-weight:800;color:var(--rc);margin-bottom:4px}
+.cy-job-body{font-size:17px;line-height:1.5}
+.cy-job.cy-blank{border-color:var(--line);opacity:.45}
+.cy-job.cy-blank .cy-job-name{color:var(--txt2)}
+
+.cy-grade{display:grid;gap:16px;padding-top:14px!important;
+  grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+.cy-dim{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--bg2)}
+.cy-dim-h{font-size:17px;font-weight:800;margin-bottom:8px}
+.cy-dim-h small{font-weight:400;color:var(--txt2);font-size:12px;margin-left:6px}
+.cy-starrow{display:flex;align-items:center;gap:2px;margin-bottom:10px}
+.cy-star{width:38px;height:38px;padding:0;border:0;background:transparent;cursor:pointer;
+  font-size:28px;line-height:1;color:var(--line);transition:.1s}
+.cy-star:hover{transform:scale(1.18)}
+.cy-star.on{color:#f0b429;text-shadow:0 0 10px rgba(240,180,41,.6)}
+.cy-sv{margin-left:8px;font-size:14px;color:var(--txt2);min-width:44px}
+.cy-f{display:block;margin-bottom:8px}
+.cy-f-t{display:block;font-size:14px;font-weight:700;margin-bottom:3px}
+.cy-f-t small{display:block;font-weight:400;font-size:12px;color:var(--txt2)}
+.cy-in{width:100%;font-size:14px}
+
+.cy-qa{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.cy-qa-in{display:grid;gap:8px;grid-template-columns:1fr 1fr auto;margin-bottom:8px}
+.cy-qa-row{display:flex;align-items:center;gap:6px;font-size:14px;padding:5px 8px;
+  border-radius:9px;background:var(--bg2);margin-bottom:5px}
+.cy-qa-row b{color:var(--pri)}
+.cy-qa-x{margin-left:auto;width:24px;height:24px;border-radius:50%;padding:0;cursor:pointer;
+  border:1px solid var(--line);background:var(--card);color:var(--txt2);font-size:12px}
+.cy-qa-x:hover{background:var(--danger);border-color:var(--danger);color:#fff}
+.cy-qa-empty,.cy-empty{font-size:14px;color:var(--txt2);padding:8px 0}
+@media (max-width:700px){ .cy-qa-in{grid-template-columns:1fr} }
+
+.cy-free{padding-top:14px!important;display:flex;flex-direction:column;gap:10px}
+.cy-tags{display:flex;gap:8px;flex-wrap:wrap}
+.cy-tag{padding:9px 15px;border-radius:999px;cursor:pointer;font-family:inherit;
+  font-size:16px;font-weight:700;border:2px solid var(--ok);background:transparent;color:var(--ok);
+  transition:.12s}
+.cy-tag.bad{border-color:var(--warn,#d9714f);color:var(--warn,#d9714f)}
+.cy-tag:hover{transform:translateY(-2px)}
+.cy-tag:active{transform:scale(.94)}
+.cy-free-say{display:flex;gap:8px}
+.cy-free-say .ctl{flex:1}
+
+/* ── 即時統計與排行榜 ── */
+.cy-stats{border:1px solid var(--line);border-radius:16px;background:var(--card);padding:14px 18px}
+.cy-stats-h{font-size:20px;font-weight:800;margin-bottom:10px}
+.cy-stats-h small{font-weight:400;font-size:12px;color:var(--txt2)}
+.cy-tab{width:100%;border-collapse:collapse;font-size:16px}
+.cy-tab th{text-align:left;font-size:12px;color:var(--txt2);font-weight:700;
+  padding:4px 8px;border-bottom:1px solid var(--line)}
+.cy-tab td{padding:7px 8px;border-bottom:1px solid var(--line)}
+.cy-tab tr.now{background:color-mix(in srgb,var(--gt) 14%,transparent)}
+.cy-rank{font-size:22px;width:56px}
+.cy-gcell{color:var(--gt);white-space:nowrap}
+.cy-total{font-size:22px;font-weight:800;color:var(--ok)}
+.cy-bar{display:inline-block;width:66px;height:7px;border-radius:4px;background:var(--line);
+  vertical-align:middle;margin-left:5px;overflow:hidden}
+.cy-bar i{display:block;height:100%;background:var(--pri)}
+@media (max-width:800px){ .cy-tab{font-size:13px} .cy-bar{display:none} }
+
+/* ── 跑馬燈：點一下就有東西橫著跑過螢幕，回饋才有「被看見」的獎賞 ── */
+.cy-marquee{position:fixed;left:0;right:0;bottom:0;height:52px;z-index:2;
+  background:var(--card);border-top:2px solid var(--pri);overflow:hidden;
+  display:flex;align-items:center}
+.cy-mq-track{display:flex;gap:34px;white-space:nowrap;padding-left:100%}
+@keyframes cy-mq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.cy-mq-i{font-size:20px;color:var(--txt)}
+.cy-mq-i b{color:var(--pri)}
+.cy-mq-idle{color:var(--txt2);font-size:17px}
+
+@media print{ .cycleboard{display:none!important} }

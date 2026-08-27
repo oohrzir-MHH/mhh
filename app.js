@@ -2212,6 +2212,9 @@ function bind(){
     if(t.dataset.panel==='p-roll')  renderRoll();
     if(t.dataset.panel==='p-task')  renderTaskPanel();
     if(t.dataset.panel==='p-roles') renderRoleCards();
+    /* 後加的分頁（cycle.js 等）自己掛進來，
+       不要每多一個分頁就回頭改 app.js 這一串 if。 */
+    if(typeof window.onPanelShow==='function') window.onPanelShow(t.dataset.panel);
   });
 
   /* ---- 職位工作推送 ---- */
