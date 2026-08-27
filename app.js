@@ -3,8 +3,12 @@
    六組蜂巢座位 × 彩虹職位（正1/正2）× 課堂即時加減分 × 雲端累積
    ========================================================================== */
 
-/* ---------------- 1. 彩虹六職位 ---------------- */
-const ROLES = [
+/* ---------------- 1. 職位（依課程類型有兩套） ----------------
+   高一 閱讀思考：彩虹六職位，職位綁在位子上、每輪轉一格。
+   高二 探究實作（水質）：四個「長」，原始設計是「做滿一學期不換」，
+     所以預設就停在第 1 輪；真要換人時把「職位輪次」切到第 2 輪即可
+     —— 輪動機制照舊沿用，不另外做一套分支。 */
+const ROLES_R6 = [
   { key:'red',    color:'--c1', light:'--c1l', name:'策略長',  en:'CEO · Chief Executive Officer',
     duty:['開場定調：今天這篇文章我們要解決什麼問題','分派任務、決定最後採用哪一個結論','時間到了負責「收攏」，不讓討論散掉'],
     say:'「我們先確認題目在問什麼——A 你先講你看到的證據。」'},
@@ -24,6 +28,52 @@ const ROLES = [
     duty:['當魔鬼代言人：這個推論有沒有漏洞？','找反例、找例外、找「作者沒說的那一面」','提醒「相關不等於因果」'],
     say:'「如果換成另一種情況，這個結論還成立嗎？」'}
 ];
+
+/* 高二 探究實作（水質）的四個「長」。
+   來源：`AI x 探究實作(水質)/01_Claude編制/06_第1堂_定題與職位/`
+     簡報 v4 第 37 頁「四個『長』：你是 leader，不是承包商」
+     ＋ 逐字稿 S8／S9（職場對應、課堂主責、期末報告主筆段落與配分）。
+
+   ★ 口頭禪（say）原始教材裡沒有，是依各自主責起草的，老師可自行改寫。
+   ★ 用 --c1..--c6 這六個顏色變數裡的四個，才能沿用既有的彩虹配色與淺色（正2）。 */
+const ROLES_R4 = [
+  { key:'pm',   color:'--c2', light:'--c2l', name:'場控長', en:'PM · 專案管理（🦶 腳）',
+    duty:['器材借還與清點、實驗桌動線','計時：每個環節剩幾分鐘','安全與清潔，收拾到能交還為止',
+          '期末報告主筆：一、研究動機　三、器材'],
+    say:'「器材我點過了，剩 5 分鐘，收東西的先開始。」'},
+  { key:'coo',  color:'--c1', light:'--c1l', name:'執行長', en:'COO · 營運（✋ 手）',
+    duty:['秤重、量水、實際動手操作','儀器校正、重複測量、控制變因','確保每一次的條件都一樣',
+          '期末報告主筆：三、方法與步驟（嚴謹規劃與高品質數據 30 分）'],
+    say:'「這一次的條件跟上一次一樣嗎？不一樣就要重測。」'},
+  { key:'qa',   color:'--c4', light:'--c4l', name:'記錄長', en:'QA · 品保（👁 眼）',
+    duty:['觀察、判定、填數據','把判定有爭議的地方記下來，不要偷偷決定','缺值、異常值要註明怎麼處理的',
+          '期末報告主筆：四、數據記錄'],
+    say:'「這一格到底算不算變色？兩個人看法不一樣，我先記下來。」'},
+  { key:'cio',  color:'--c5', light:'--c5l', name:'資訊長', en:'CIO · 資料分析（🧠 腦）',
+    duty:['拍照上傳、共編簡報','繪圖、算統計','把數據變成看得懂的圖表',
+          '期末報告主筆：五、結果圖表　六、討論（數據趨勢 30 ＋ 建立模型 18）'],
+    say:'「這張圖的橫軸是什麼？看不懂的圖等於沒做。」'}
+];
+
+/* 課程類型：決定用哪一套職位、預設哪一種座位配置。掛在班級上，切班級就自動換。 */
+const COURSES = {
+  read6: { name:'高一 閱讀思考', short:'📖 高一 閱讀思考', roles:ROLES_R6, layout:'hex6',
+           title:'彩虹六職位（正1 / 正2）',
+           note:'沒有「副手」—— 兩個都是正職，只差<b>深色＝正1、淺色＝正2</b>。'
+                +'職責完全相同，而且<b>各自有一盞燈</b>，兩個人都要開口這組才會貫通。' },
+  inq4:  { name:'高二 探究實作', short:'🔬 高二 探究實作', roles:ROLES_R4, layout:'quad9',
+           title:'四個「長」：你是 leader，不是承包商',
+           note:'老師給分工，是因為你在那方面天分較高，<b>由你帶頭</b>。'
+                +'「帶頭寫」不等於「一個人寫」—— 報告是一份，不是四份拼起來。<br>'
+                +'原始設計是<b>做滿一學期不換</b>，所以輪次預設停在第 1 輪；'
+                +'真要換人時把右上角「職位輪次」切到第 2 輪即可。' }
+};
+const DEF_COURSE = 'read6';
+function courseKey(){ const c=curClass();
+  return (c && COURSES[c.course]) ? c.course : DEF_COURSE; }
+function CO(){ return COURSES[courseKey()]; }
+/* 目前這個班用哪一套職位。所有讀 ROLES 的地方都改走這裡。 */
+function ROLESET(){ return CO().roles; }
 
 /* 蜂巢座位：0..11（每 30°，0 = 12 點鐘）。
    偶數 slot = 內圈（正1，直接貼著中心桌）；奇數 slot = 外圈（正2，卡在兩個正1中間） */
@@ -121,6 +171,8 @@ function curClass(){ return DB.classes[DB.activeClass]||null; }
    完全不用改，換配置時只是把指標換過去。 */
 function migrateLayouts(c){
   if(!c) return;
+  /* 課程類型：舊資料一律當高一閱讀思考（這套系統本來就是為它做的）。 */
+  c.course  = COURSES[c.course] ? c.course : DEF_COURSE;
   c.layout  = LAYOUTS[c.layout] ? c.layout : DEF_LAYOUT;
   c.layouts = c.layouts || {};
   /* 舊資料只有 c.seats，那份就是蜂巢的排法 */
@@ -128,6 +180,20 @@ function migrateLayouts(c){
   c.seats = c.layouts[c.layout];
 }
 function migrateAllLayouts(){ Object.values(DB.classes||{}).forEach(migrateLayouts); }
+
+/* 切換課程類型。連帶把座位配置換成該課程的預設排法
+   （高一→蜂巢 6 組、高二→四人 9 組），但老師之後仍可自由再切配置。 */
+function switchCourse(key){
+  if(!COURSES[key]) return;
+  const c=curClass();
+  if(!c){ toast('請先選擇 / 建立班級'); return; }
+  if(c.course===key) return;
+  c.course=key;
+  save();
+  switchLayout(COURSES[key].layout);      // 內含 renderSeats 等全部重繪
+  renderRoleCards(); renderLegend();
+  toast(`已切換到「${COURSES[key].name}」：${COURSES[key].roles.length} 個職位`);
+}
 
 /* 切換配置。切之前先把目前這份存回去，免得剛排好的位子掉了。 */
 function switchLayout(key){
@@ -169,9 +235,9 @@ function roleAtSlot(slot, round){
     second    = slot >= L.base;
     anchorIdx = second ? (slot - L.base) : slot;
   }
-  const n = ROLES.length;
+  const n = ROLESET().length;
   const roleIdx = ((anchorIdx + rotDir()*(round-1)) % n + n) % n;
-  return { role:ROLES[roleIdx], second, anchorIdx };
+  return { role:ROLESET()[roleIdx], second, anchorIdx };
 }
 /* 該組有沒有「正2」，決定標籤要不要標 ①②  */
 function roleLabel(slot, round, hasSecond){
@@ -489,13 +555,31 @@ document.addEventListener('click', ev=>{
 
 /* 座位配置的子分頁。畫在座位表面板最上方，切一下就換一間教室的排法。 */
 function renderLayoutTabs(){
+  /* 課程類型（決定用哪一套職位） */
+  const cbox=$('#course-tabs');
+  if(cbox){
+    const ck=courseKey();
+    cbox.innerHTML=`<span class="ltab-lead">課程</span>`+
+      Object.keys(COURSES).map(k=>{
+        const C=COURSES[k];
+        return `<button class="ltab course${k===ck?' on':''}" data-course="${k}"
+          title="${C.roles.length} 個職位：${C.roles.map(r=>r.name).join('、')}">${C.short}</button>`;
+      }).join('')+
+      `<span class="ltab-hint">${COURSES[ck].roles.length} 個職位：`+
+      `${COURSES[ck].roles.map(r=>r.name).join('、')}</span>`;
+    cbox.querySelectorAll('[data-course]').forEach(b=>{
+      b.onclick=()=>switchCourse(b.dataset.course);
+    });
+  }
+  /* 教室座位配置 */
   const box=$('#layout-tabs'); if(!box) return;
   const cur=layoutKey();
-  box.innerHTML=Object.keys(LAYOUTS).map(k=>{
-    const L=LAYOUTS[k];
-    return `<button class="ltab${k===cur?' on':''}" data-layout="${k}"
-      title="${L.hint}">${L.short}</button>`;
-  }).join('')+`<span class="ltab-hint">${LAYOUTS[cur].hint}</span>`;
+  box.innerHTML=`<span class="ltab-lead">教室</span>`+
+    Object.keys(LAYOUTS).map(k=>{
+      const L=LAYOUTS[k];
+      return `<button class="ltab${k===cur?' on':''}" data-layout="${k}"
+        title="${L.hint}">${L.short}</button>`;
+    }).join('')+`<span class="ltab-hint">${LAYOUTS[cur].hint}</span>`;
   box.querySelectorAll('[data-layout]').forEach(b=>{
     b.onclick=()=>{ if(b.dataset.layout!==layoutKey()) switchLayout(b.dataset.layout); };
   });
@@ -671,13 +755,13 @@ function renderLegend(){
   const note=document.createElement('div'); note.className='lg wide-lg';
   const seatSeq=[1,2,3].map(r=>roleAtSlot(0,r).role.name).join(' → ');
   const badgeSeq=[1,2,3].map(r=>{
-    const s=RING1_SLOTS.find(x=>roleAtSlot(x,r).role.name===ROLES[0].name);
+    const s=RING1_SLOTS.find(x=>roleAtSlot(x,r).role.name===ROLESET()[0].name);
     return (s===0?12:s)+'點';
   }).join(' → ');
   note.innerHTML=`<span style="color:var(--txt2)">
     <b>第 ${DB.round} 輪</b>　深色＝正1（內圈）　淺色＝正2（外圈）<br>
     坐在 12 點鐘的同學：<b>${seatSeq}</b>（第1→2→3輪）<br>
-    「${ROLES[0].name}」這塊牌子在桌上：<b>${badgeSeq}</b>
+    「${ROLESET()[0].name}」這塊牌子在桌上：<b>${badgeSeq}</b>
     　→ 牌子${rotDir()===1?'逆':'順'}時針移動</span>`;
   lg.appendChild(note);
 }
@@ -1210,7 +1294,7 @@ function renderStats(){
   bars('#bar-group', gmapPer, 'var(--pri)', null, ' 分/堂');
 
   const rmap={};
-  answers.forEach(r=>{ const ro=ROLES.find(x=>x.key===r.roleKey);
+  answers.forEach(r=>{ const ro=ROLESET().find(x=>x.key===r.roleKey);
     const k=ro?ro.name:(r.roleName||'其他'); rmap[k]=(rmap[k]||0)+1; });
   Object.keys(rmap).forEach(k=>rmap[k]=per(rmap[k]));
   bars('#bar-role', rmap, null, true, ' 次/堂');
@@ -1243,7 +1327,7 @@ function bars(sel,map,color,rainbow,unit){
   const max=Math.max(...ks.map(k=>map[k]))||1;
   el.innerHTML=ks.map(k=>{
     let cl=color||'var(--pri)';
-    if(rainbow){ const r=ROLES.find(x=>x.name===k); if(r) cl=`var(${r.color})`; }
+    if(rainbow){ const r=ROLESET().find(x=>x.name===k); if(r) cl=`var(${r.color})`; }
     return `<div class="barrow"><span>${k}</span>
       <span class="bartrack"><span class="barfill" style="width:${Math.max(map[k]/max*100,0)}%;background:${cl}"></span></span>
       <span class="barval">${map[k]}${unit||''}</span></div>`;
@@ -1602,7 +1686,7 @@ function ensureClass(){
   const n=($('#inp-newclass').value.trim())||prompt('請先輸入班級名稱（例如 115 高一忠）','');
   if(!n) return false;
   const id=uid(); DB.classes[id]={id,year:DB.year,name:n,students:[],seats:{},size:6,
-      layout:DEF_LAYOUT,layouts:{}};
+      course:DEF_COURSE,layout:DEF_LAYOUT,layouts:{}};
   DB.activeClass=id; $('#inp-newclass').value=''; save(); refreshSelectors();
   return true;
 }
@@ -1694,15 +1778,19 @@ function renderHelp(){
   </div>`;
 }
 function renderRoleCards(){
-  $('#role-cards').innerHTML=ROLES.map((r,i)=>`
+  const CS=CO(), rs=ROLESET();
+  const h=$('#roles-title'); if(h) h.textContent=CS.title;
+  const nt=$('#roles-note'); if(nt) nt.innerHTML=CS.note;
+  const dots=['🔴','🟠','🟡','🟢','🔵','🟣'];
+  $('#role-cards').innerHTML=rs.map((r,i)=>`
     <div class="role-card" style="border-left-color:var(${r.color})">
-      <h4 style="color:var(${r.color})">${['🔴','🟠','🟡','🟢','🔵','🟣'][i]} ${r.name}</h4>
+      <h4 style="color:var(${r.color})">${dots[i]||'⚪'} ${r.name}</h4>
       <div class="en">${r.en}</div>
       <ul>${r.duty.map(d=>`<li>${d}</li>`).join('')}</ul>
       <div class="say">口頭禪：${r.say}</div>
       <div class="dep">
-        <span class="chip" style="background:var(${r.color});color:#fff">${r.name}①　正1・內圈</span>
-        <span class="chip" style="background:var(${r.light});color:#10131a">${r.name}②　正2・外圈</span>
+        <span class="chip" style="background:var(${r.color});color:#fff">${r.name}①　正1</span>
+        <span class="chip" style="background:var(${r.light});color:#10131a">${r.name}②　正2</span>
         <div style="margin-top:6px">兩人職責完全相同，<b>各自有一盞燈</b>，都要發言這組才會貫通。</div>
       </div>
     </div>`).join('');
@@ -1955,7 +2043,7 @@ function bind(){
     const leftover=list.length ? rosterMatchesExistingClass(list) : null;
 
     const id=uid(); DB.classes[id]={id,year:DB.year,name:n,students:[],seats:{},size:6,
-      layout:DEF_LAYOUT,layouts:{}};
+      course:DEF_COURSE,layout:DEF_LAYOUT,layouts:{}};
     DB.activeClass=id; $('#inp-newclass').value='';
 
     if(list.length && !leftover){          // 真的是新貼上的名單 → 一起匯入

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>閱讀思考 · 課堂儀表板</title>
-<link rel="stylesheet" href="style.css?v=32">
+<link rel="stylesheet" href="style.css?v=33">
 </head>
 <body>
 
@@ -79,6 +79,8 @@
     </div>
   </div>
 
+  <!-- 課程類型：決定用哪一套職位（高一六職位／高二四職位） -->
+  <div class="layout-tabs" id="course-tabs"></div>
   <!-- 座位配置子分頁：同一班可能在不同教室上課，桌子排法不一樣 -->
   <div class="layout-tabs" id="layout-tabs"></div>
 
@@ -260,8 +262,8 @@
 <!-- ============ 職位說明 ============ -->
 <section id="p-roles" class="panel">
   <div class="panel-head">
-    <div><h2>彩虹六職位（正1 / 正2）</h2>
-    <p class="hint">沒有「副手」—— 兩個都是正職，只差<b>深色＝正1（內圈）、淺色＝正2（外圈）</b>。
+    <div><h2 id="roles-title">彩虹六職位（正1 / 正2）</h2>
+    <p class="hint" id="roles-note">沒有「副手」—— 兩個都是正職，只差<b>深色＝正1（內圈）、淺色＝正2（外圈）</b>。
       職責完全相同，而且<b>各自有一盞燈</b>，兩個人都要開口這組才會貫通。</p></div>
   </div>
   <div class="role-cards" id="role-cards"></div>
@@ -486,7 +488,7 @@
 
 <script src="xlsx.js?v=13"></script>
 <script src="qr.js?v=1"></script>
-<script src="app.js?v=25"></script>
+<script src="app.js?v=26"></script>
 <script src="tools.js?v=5"></script>
 <script type="module" src="push.js?v=5"></script>
 <script type="module" src="sync.js?v=1"></script>
