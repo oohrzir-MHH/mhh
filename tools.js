@@ -243,6 +243,10 @@ function applyMini(){
 function makeDraggable(handle, mover){
   handle.addEventListener('pointerdown', ev=>{
     if(ev.button!==undefined && ev.button!==0) return;
+    /* 把手裡面還住著「縮成小點」那顆按鈕。不擋掉的話，按它會先被這裡接走並
+       setPointerCapture，click 事件就被吞掉 —— 按鈕永遠沒反應。
+       （2026-08-25 使用者回報「可以移動但不能縮小」就是這個。） */
+    if(ev.target.closest && ev.target.closest('button')) return;
     const r = mover.getBoundingClientRect();
     const dx = ev.clientX - r.left, dy = ev.clientY - r.top;
     let moved = false;

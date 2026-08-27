@@ -104,6 +104,44 @@ function slotsForSize(n){
 function tableMembers(tno){
   const c=curClass(); return (c&&c.seats&&c.seats[tno])||[];
 }
+/* 位子夠不夠坐？不夠就自動長出灰階空位。
+
+   為什麼需要：一班超過 36 人時，六組各 6 個位子就不夠用，
+   而原本沒有任何辦法「多加一個位子」—— 只能靠自動排入重排，
+   老師想手動微調就卡死。現在只要人數比位子多，就自動補空位，
+   老師點一下填座號即可，多出來的空位可以打叉收掉。
+
+   一組最多 12 個（內圈 6 ＋ 外圈 6），這是蜂巢排列的物理上限。 */
+const MAX_PER_TABLE = 12;
+function ensureEnoughSeats(){
+  const c=curClass(); if(!c) return false;
+  c.seats=c.seats||{};
+  for(let t=1;t<=6;t++) c.seats[t]=c.seats[t]||[];
+  const need = (c.students||[]).length;
+  let changed=false, guard=0;
+  const total = () => [1,2,3,4,5,6].reduce((s,t)=>s+Math.max(c.seats[t].length,6),0);
+  while(total() < need && guard++ < 72){
+    /* 補在目前最少的那一組，維持各組人數平均 */
+    let best=null;
+    for(let t=1;t<=6;t++){
+      const len=Math.max(c.seats[t].length,6);
+      if(len>=MAX_PER_TABLE) continue;
+      if(!best || len<best.len) best={t,len};
+    }
+    if(!best) break;                       // 六組都滿 12 人了，補不下去
+    while(c.seats[best.t].length < best.len) c.seats[best.t].push(null);
+    c.seats[best.t].push(null); changed=true;
+  }
+  return changed;
+}
+/* 把某一組的第 idx 個空位收掉。只准收空的，有人的位子不能這樣消失。 */
+function dropSeatSlot(tno, idx){
+  const c=curClass(); if(!c||!c.seats||!c.seats[tno]) return;
+  if(c.seats[tno][idx]!=null) return;
+  c.seats[tno].splice(idx,1);
+  save(); renderSeats(); renderScoreboard(); renderRoll();
+  toast(`第 ${tno} 組收掉一個空位`);
+}
 function tableSlots(tno){ return slotsForSize(Math.max(tableMembers(tno).length,6)); }
 
 /* ---------------- 4. 名單 ---------------- */
@@ -222,13 +260,32 @@ function clearDropHints(){
   $$('#classroom .seat').forEach(x=>x.classList.remove('drop-on'));
 }
 
+/* 找出游標底下的座位（被拖的那個要跳過）。
+
+   ★ 這裡千萬不要用「把 el 設成 pointer-events:none 再 elementFromPoint」那一招。
+     el 這時正持有指標擷取（setPointerCapture），Chrome 一旦發現擷取目標變成
+     不可命中，就會直接解除擷取 —— 後續的 pointermove / pointerup 全部跑到別的
+     元素去，onUp 永遠不執行，放開手什麼事都沒發生。
+     2026-08-25 第一版就是栽在這裡：工具列拖得動（它沒改 pointerEvents），
+     座位拖不動，症狀差異剛好指向這一行。
+   改用 elementsFromPoint（複數）拿整疊命中結果，自己跳過 el 就好，不必動樣式。 */
+function seatUnder(x, y, self){
+  const stack = document.elementsFromPoint(x, y) || [];
+  for(const n of stack){
+    const s = n.closest ? n.closest('#classroom .seat') : null;
+    if(s && s!==self) return s;
+  }
+  return null;
+}
+
 function startSeatDrag(ev, el, tno, idx){
   const x0=ev.clientX, y0=ev.clientY;
   let dragging=false, lastTarget=null;
   dragFrom={table:tno, index:idx};
   seatDragMoved=false;
 
-  /* 指標擷取：手指／滑鼠滑出六邊形之外也還收得到事件 */
+  /* 指標擷取：手指／滑鼠滑出六邊形之外也還收得到事件。
+     監聽掛在 document 上而不是 el —— 就算擷取因故失效，事件仍然收得到。 */
   try{ el.setPointerCapture(ev.pointerId); }catch(e){}
 
   const onMove = e=>{
@@ -239,12 +296,7 @@ function startSeatDrag(ev, el, tno, idx){
       el.classList.add('dragging');
     }
     e.preventDefault();                                     // 觸控時不要順便捲動頁面
-    /* 反查現在浮在誰上面。被拖的那個自己要先讓開，否則永遠只查到自己。 */
-    const prev = el.style.pointerEvents;
-    el.style.pointerEvents='none';
-    const hit = document.elementFromPoint(e.clientX, e.clientY);
-    el.style.pointerEvents=prev;
-    const seat = hit && hit.closest ? hit.closest('#classroom .seat') : null;
+    const seat = seatUnder(e.clientX, e.clientY, el);
     if(seat!==lastTarget){
       clearDropHints();
       if(seat) seat.classList.add('drop-on');
@@ -253,27 +305,23 @@ function startSeatDrag(ev, el, tno, idx){
   };
 
   const onUp = e=>{
-    el.removeEventListener('pointermove', onMove);
-    el.removeEventListener('pointerup', onUp);
-    el.removeEventListener('pointercancel', onUp);
+    document.removeEventListener('pointermove', onMove, true);
+    document.removeEventListener('pointerup', onUp, true);
+    document.removeEventListener('pointercancel', onUp, true);
     try{ el.releasePointerCapture(ev.pointerId); }catch(err){}
     el.classList.remove('dragging');
     clearDropHints();
     if(!dragging){ dragFrom=null; return; }                 // 只是點一下，交給 onclick
-    const prev = el.style.pointerEvents;
-    el.style.pointerEvents='none';
-    const hit = document.elementFromPoint(e.clientX, e.clientY);
-    el.style.pointerEvents=prev;
-    const seat = hit && hit.closest ? hit.closest('#classroom .seat') : null;
-    if(seat && seat!==el){
+    const seat = seatUnder(e.clientX, e.clientY, el);
+    if(seat){
       swapSeats(dragFrom, {table:+seat.dataset.t, index:+seat.dataset.i});
     }
     dragFrom=null;
   };
 
-  el.addEventListener('pointermove', onMove);
-  el.addEventListener('pointerup', onUp);
-  el.addEventListener('pointercancel', onUp);
+  document.addEventListener('pointermove', onMove, true);
+  document.addEventListener('pointerup', onUp, true);
+  document.addEventListener('pointercancel', onUp, true);
 }
 
 /* 拖曳結束後瀏覽器還是會補一個 click，要把它吃掉，
@@ -289,6 +337,7 @@ document.addEventListener('click', ev=>{
 function renderSeats(){
   const wrap=$('#classroom'); wrap.innerHTML='';
   const c=curClass();
+  if(ensureEnoughSeats()) save();      // 人比位子多就先補足，避免有人沒座位可填
   $('#seat-class-tag').textContent = c ? `${DB.year} · ${c.name}` : '尚未建立班級';
   if(c) $('#inp-groupsize').value = c.size||6;
 
@@ -326,14 +375,21 @@ function renderSeats(){
       const rad=slot*30*Math.PI/180, R=rr.second?R2:R1;
       el.style.left=`calc(50% + ${(Math.sin(rad)*R).toFixed(1)}px)`;
       el.style.top =`calc(50% - ${(Math.cos(rad)*R).toFixed(1)}px)`;
+      /* 空位且這一組超過 6 個位子時，給一顆打叉鈕把多出來的空位收掉。
+         前 6 個是蜂巢的基本盤，收掉會讓版面破洞，所以不給收。 */
+      const canDrop = (no==null && slots.length>6);
       el.innerHTML=
         `<div class="s-in">`+
         `<div class="s-role" style="background:${col};color:${rr.second?'#10131a':'#fff'}">`+
           `${roleLabel(slot,DB.round,hasSecond)}</div>`+
         `<div class="s-main">${no==null?'＋':(studentName(no)||'—')}</div>`+
         `<div class="s-no">${no==null?'點我填號':'座號 '+no}</div>`+
-        `</div>`;
-      el.onclick=()=>openSeatModal(tno, idx, slot);
+        `</div>`+
+        (canDrop?`<button class="seat-x" title="收掉這個空位">✕</button>`:'');
+      el.onclick=e=>{
+        if(e.target.closest('.seat-x')){ e.stopPropagation(); dropSeatSlot(tno, idx); return; }
+        openSeatModal(tno, idx, slot);
+      };
 
       /* ---- 拖曳換位：直接把人拖到想要的職位上 ----
          職位是綁在「位子」上的，所以把兩個人對調＝兩個人的職位對調。
