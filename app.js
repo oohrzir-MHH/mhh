@@ -604,6 +604,7 @@ function renderSeats(){
   if(c) $('#inp-groupsize').value = c.size||6;
 
   const L = LO();
+  const openRing = !!c && (c.students||[]).length > L.tables * L.base;
   const M = L.kind==='hex' ? null : rectMetrics(L);
   const unitW = L.kind==='hex' ? UNIT_W : M.unitW;
   const unitH = L.kind==='hex' ? UNIT_H : M.unitH;
@@ -615,8 +616,20 @@ function renderSeats(){
 
   tableOrder().forEach(tno=>{
     const members = c ? tableMembers(tno) : [];
-    const slots = slotsForSize(Math.max(members.length, L.base));
-    const hasSecond = members.length > L.base;
+    /* openRing：全班人數超過「每組基本盤 x 組數」時，把每一組的外圈整圈攤開成灰色空位。
+
+       為什麼要這樣：原本外圈只有「真的有人坐」或「自動補位補出來的那幾格」才會出現，
+       所以 40 人的班自動排入之後 6 組全滿、畫面上一個灰色都沒有 ——
+       老師想把某個人挪到第 5 組的外圈，根本沒有可以點的目標，
+       只剩右上角那顆半透明的「+ 位子」，觸控螢幕上沒有 hover 更是等於看不見。
+       使用者兩次回報「第二圈依然沒有灰色可以點擊」講的就是這件事。
+
+       只在超過 36 人（六人組 x 6 組）時攤開，是因為人數在基本盤以內時
+       多出來的 6 個灰格只是雜訊，反而看不清楚誰坐哪裡。 */
+    const slots = slotsForSize(openRing ? L.max : Math.max(members.length, L.base));
+    /* 標不標 (1)(2) 要看「這一組畫出來的位子裡有沒有外圈」，不是看「坐了幾個人」。
+       否則外圈攤開後，坐滿 7 人的組標了(1)(2)、只坐 6 人的組沒標，同一畫面兩套規則。 */
+    const hasSecond = slots.some(s => roleAtSlot(s, DB.round).second);
     const tint = GROUP_TINT[tno] || '#8b93a7';
 
     const unit=document.createElement('div');
@@ -629,7 +642,7 @@ function renderSeats(){
     unit.appendChild(label);
 
     /* 主動加位子。放在組別標籤旁邊，老師想預留位子時不必先改名單。 */
-    if(c){
+    if(c && !openRing){
       const addb=document.createElement('button');
       addb.className='unit-add';
       addb.textContent='＋ 位子';
@@ -677,7 +690,8 @@ function renderSeats(){
       el.style.setProperty('--sc', col);
       /* 空位且這一組超過 6 個位子時，給一顆打叉鈕把多出來的空位收掉。
          前 6 個是蜂巢的基本盤，收掉會讓版面破洞，所以不給收。 */
-      const canDrop = (no==null && slots.length > L.base);
+      const stored = idx < members.length;          // 這一格真的存在資料裡嗎
+      const canDrop = (no==null && stored && !openRing && members.length > L.base);
       el.innerHTML=
         `<div class="s-in">`+
         `<div class="s-role" style="background:${col};color:${rr.second?'#10131a':'#fff'}">`+
@@ -2462,9 +2476,29 @@ function bind(){
   $('#chk-autosync').onchange=e=>{ DB.autoSync=e.target.checked; save(); };
   $('#btn-push').onclick=pushAll;
   $('#btn-pull').onclick=pullAll;
+  /* 本機這份 gas_code.js 的版本戳。改了 gas_code.js 就要同步改這裡，
+     否則「測試連線」會一直說線上是舊版。 */
+  const GAS_EXPECT='2026-08-27';
   $('#btn-test').onclick=async()=>{
     try{ const r=await gasPost({action:'ping'});
-      logSync(r.status==='success'?('✅ 連線正常，試算表：'+r.sheet):('❌ '+r.message)); }
+      if(r.status!=='success'){ logSync('❌ '+r.message); return; }
+      logSync('✅ 連線正常，試算表：'+r.sheet);
+      /* 舊版沒有 version 欄位，所以「沒回版本」本身就是「跑的是舊版」的證據。 */
+      if(!r.version){
+        logSync('⚠️ 線上跑的是舊版 GAS（連版本都沒回）。'+
+                '請把 gas_code.js 重貼進 Apps Script，再「管理部署作業 → 編輯 → 版本：新版本」。');
+      }else if(r.version!==GAS_EXPECT){
+        logSync(`⚠️ 線上是 ${r.version}，本機這份是 ${GAS_EXPECT} —— 請重新部署。`);
+      }else{
+        logSync(`✅ GAS 版本對得上（${r.version}），不用重新部署。`);
+      }
+      if(r.drive==='no'){
+        logSync('⚠️ Drive 還沒授權，作答手繪圖存不進去。'+
+                '請到 Apps Script 選函式 `authorizeDrive_` 按執行，依畫面允許一次。');
+      }else if(r.drive==='yes'){
+        logSync('✅ Drive 已授權，手繪圖可以歸檔。');
+      }
+    }
     catch(e){ logSync('❌ '+e.message); }
   };
   $('#btn-gencode').onclick=()=>{

@@ -131,7 +131,7 @@ code{background:rgba(127,127,127,.15);padding:1px 6px;border-radius:5px;font-siz
 .unit-add{position:absolute;right:14px;top:10px;z-index:5;
   padding:5px 12px;border-radius:9px;cursor:pointer;
   border:1px dashed var(--tint);background:transparent;color:var(--tint);
-  font-size:14px;font-weight:700;font-family:inherit;opacity:.4;transition:.12s}
+  font-size:14px;font-weight:700;font-family:inherit;opacity:.75;transition:.12s}
 .table-unit:hover .unit-add{opacity:1}
 .unit-add:hover{background:var(--tint);color:#fff;border-style:solid}
 @media print{ .unit-add{display:none!important} }
