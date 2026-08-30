@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>閱讀思考 · 課堂儀表板</title>
-<link rel="stylesheet" href="style.css?v=38">
+<title>MH⋯H ｜ 課堂儀表板</title>
+<link rel="stylesheet" href="style.css?v=47">
 </head>
 <body>
 
@@ -12,8 +12,8 @@
   <div class="brand">
     <span class="brand-logo">🌈</span>
     <div>
-      <h1>閱讀思考 · 課堂儀表板</h1>
-      <p class="brand-sub">六組蜂巢座位 × 彩虹職位 × 雲端累積加分</p>
+      <h1>MH⋯H ｜ 課堂儀表板</h1>
+      <p class="brand-sub">Where Minds Bond @ TNGS　·　座位 × 職位 × 計分 × 點名</p>
     </div>
   </div>
   <div class="topbar-ctrl">
@@ -22,6 +22,7 @@
         <select id="sel-year" class="ctl"></select>
         <button class="yrbtn" id="btn-year-add" title="新增學年度">＋</button>
         <button class="yrbtn" id="btn-year-edit" title="改目前學年度的名稱">✏️</button>
+        <button class="yrbtn" id="btn-year-del" title="刪掉目前這個學年度（只有在它底下一個班級都沒有時才刪得掉）">🗑️</button>
       </span>
     </label>
     <label class="mini">班級<select id="sel-class" class="ctl"></select></label>
@@ -55,7 +56,7 @@
   <button class="tab" data-panel="p-setup">⚙️ 名單與雲端</button>
   <button class="tab" data-panel="p-help">📖 加分機制</button>
   <button class="tab tab-collapse" id="btn-collapse"
-    title="收合最上方的狀態列，讓座位表一次看完（快捷鍵：H）">⌃ 收合上方</button>
+    title="收合標題底下的說明、按鈕列與分頁，讓座位表一次看完（快捷鍵：H）">⌃ 收合下方</button>
 </nav>
 
 <main>
@@ -65,7 +66,7 @@
   <div class="panel-head">
     <div>
       <h2>座位表 <span class="tag" id="seat-class-tag">—</span></h2>
-      <p class="hint">蜂巢排列：學生格就是六角形，直接貼著中心桌長出去。點任一格 → 只要輸入<b>座號</b>就自動帶出姓名。
+      <p class="hint" id="seat-hint-group">蜂巢排列：學生格就是六角形，直接貼著中心桌長出去。點任一格 → 只要輸入<b>座號</b>就自動帶出姓名。
         起點固定 <b>12 點鐘方向</b>，<b>學生不換位</b>，只有職位每輪轉一格。
         轉的方向用右上角「輪動方向」切換 —— 下面圖例會用<b>具體例子</b>告訴你現在是哪一種。</p>
     </div>
@@ -74,6 +75,7 @@
       <button class="btn" id="btn-autofill">⚡ 依座號自動排入</button>
       <button class="btn btn-primary" id="btn-export-png">🖼️ 下載座位表（橫向 A4 一頁）</button>
       <button class="btn" id="btn-export-xlsx">⬇️ 下載登記冊 Excel（正反兩頁）</button>
+      <button class="btn" id="btn-lockseat" title="排好之後鎖起來：空位整格消失，畫面與列印都乾淨">🔓 鎖定版面</button>
       <button class="btn btn-ghost" id="btn-clearseat">🧹 清空座位</button>
       <button class="btn btn-ghost" id="btn-print">🖨️ 直接列印座位表</button>
       <button class="btn" id="btn-truesize" title="放大到 24pt（32px）實際大小，畫面可捲動">🔠 24pt 實際大小</button>
@@ -88,10 +90,12 @@
 
   <div class="classbar" id="seat-classbar"></div>
 
+  <p class="hint" id="seat-hint-photo" style="display:none">化學課<b>不分組</b>：座位表就是你自己匯入的一張照片（拍教室、掃描手繪的都可以），<b>點圖可以放大</b>。<br>計分請到「⚡ 課堂互動」——那裡會列出<b>依座號</b>的格子，點一下 +1。抽籤打開就是<b>「只抽號碼」</b>那一套。</p>
   <div class="legend" id="seat-legend"></div>
 
   <div class="print-only" id="print-title"></div>
   <div class="classroom-scroll"><div class="classroom" id="classroom"></div></div>
+  <input type="file" id="sp-file" accept="image/*" style="display:none">
 
   <div class="podium">▲ 講　台 ▲</div>
 </section>
@@ -105,6 +109,10 @@
         <b>一個人一盞燈</b>，全組每個人都發言過 → 彩虹貫通 ⭐ 全組每人 +5，一堂課可無限次累積。</p>
     </div>
     <div class="row-btns">
+      <span class="layout-tabs" id="score-view-tabs" style="margin:0">
+        <button class="ltab on" data-sv="group">👥 依小組</button>
+        <button class="ltab" data-sv="byNo">🔢 依個人</button>
+      </span>
       <button class="btn btn-warn" id="btn-lottery">🎲 不得已才抽籤</button>
       <button class="btn btn-ghost" id="btn-undo">↩️ 復原上一筆</button>
       <button class="btn btn-danger" id="btn-clear-session">🧹 清空「本堂」累積</button>
@@ -218,6 +226,10 @@
         <label class="mini" style="margin-top:8px">選項（選擇題用，一行一個）
           <textarea id="q-choices" class="ctl" rows="3" placeholder="全球暖化是真的&#10;報導有偏誤&#10;資料不足以判斷"></textarea></label>
         <label class="mini" style="margin-top:8px">附圖（選填）</label>
+        <p class="hint" style="margin:0 0 6px">
+          題型選<b>「畫圖作答」</b>時，這張圖會<b>直接鋪成學生的畫布底圖</b>，
+          她們就在圖上圈、標、寫。其他題型則是顯示在題目下方。
+          <b>貼好後點一下預覽圖可以放大</b> —— 推出去之前先自己確認字讀不讀得出來。</p>
         <div class="imgdrop" id="q-imgdrop" tabindex="0">
           <div class="imgdrop-empty" id="q-imgempty">
             <b>直接 Ctrl+V 貼上截圖</b>
@@ -257,6 +269,20 @@
         <div id="seat-bind"><p class="hint">還沒有人綁定座號。</p></div>
       </div>
 
+      <div class="card">
+        <h3>⑤ 發布成績給學生</h3>
+        <p class="hint">按下去才會公布 —— <b>老師沒按，學生什麼都查不到</b>。
+          學生在手機上只看得到<b>自己的</b>個人總分與每堂平均，
+          以及<b>自己那一組</b>的總分與每堂平均。看不到別人的分數，也看不到全班排名。</p>
+        <p class="hint">分數的真相在雲端試算表（<code>Summary</code>／<code>ByClass</code> 兩個分頁）。
+          這裡發布的只是「給學生看的那一份快照」，發布之後再加的分要<b>再按一次</b>才會更新。</p>
+        <div class="row-btns">
+          <button class="btn btn-primary" id="btn-pub-grade">📊 發布本班成績</button>
+          <button class="btn btn-ghost btn-danger" id="btn-unpub-grade">🙈 收回（學生就查不到了）</button>
+        </div>
+        <p class="hint" id="pub-grade-state" style="margin-top:8px">尚未發布。</p>
+      </div>
+
     </div>
   </div>
 </section>
@@ -277,9 +303,22 @@
       <button class="btn btn-ghost" id="btn-task-reset">🔄 熄掉所有燈</button>
     </div>
   </div>
-  <label class="mini" style="max-width:640px">這一節的標題（會顯示在投影幕最上方）
-    <input type="text" id="task-title" class="ctl"
-      placeholder="例：第 3 堂　把濁度數據畫成圖"></label>
+  <!-- 一節課可以有三件事。各組進度有快有慢，所以每一件各記各的燈與分數。 -->
+  <div class="layout-tabs" id="task-set-tabs"></div>
+
+  <div class="task-meta">
+    <label class="mini" style="flex:1;min-width:280px">這一件的標題（會顯示在投影幕最上方）
+      <input type="text" id="task-title" class="ctl"
+        placeholder="例：第 3 堂　把濁度數據畫成圖"></label>
+    <label class="mini" style="width:190px">完成給幾分（全組每人）
+      <input type="number" id="task-pts" class="ctl" step="1" min="-10" max="10" value="1"></label>
+  </div>
+  <p class="hint" style="margin:2px 0 10px">
+    在投影幕上點亮某一組的燈 → <b>那一組每個人自動加這個分數</b>；
+    再點一次熄燈會<b>退回同樣的分數</b>（老師點錯了就直接點掉）。
+    填 <b>0</b> 就只亮燈不計分。「熄掉所有燈」是開下一輪，<b>不會</b>退分。<br>
+    <b>三件事各記各的分數與燈</b> —— 快的組可以一路亮到第三件，慢的組還在第一件，
+    投影幕上一眼看得出來。<b>沒填的那幾件不會推出去。</b></p>
   <div class="task-editor" id="task-editor"></div>
 </section>
 
@@ -357,9 +396,19 @@
       <p class="hint">每行一位：<code>座號,姓名</code>（Tab / 空白 / 逗號皆可，可整欄從試算表貼上）。匯入後會<b>自動排好座位</b>。</p>
       <div class="row-btns" style="margin-bottom:8px">
         <input type="text" id="inp-newclass" class="ctl" placeholder="班級名稱，例如 115 高一忠">
+        <select id="sel-newcourse" class="ctl" style="max-width:190px"
+          title="這個班級是哪一門課？建立之後也還能改"></select>
         <button class="btn" id="btn-addclass">➕ 新增班級</button>
         <button class="btn btn-danger btn-ghost" id="btn-delclass">🗑️ 刪除目前班級</button>
       </div>
+      <div class="row-btns" style="margin-bottom:8px">
+        <button class="btn btn-ok" id="btn-cloneclass">👥 用同一份名單，開這個班的另一門課</button>
+      </div>
+      <p class="hint" style="margin:0 0 10px">
+        同一個班可能同時上<b>閱讀思考、探究實作、化學</b>。
+        <b>分數是掛在「班級」上的</b> —— 一個班級只會有一份累積分數，
+        所以每門課要各開一個班級，才不會把三門課的分數加在一起。<br>
+        這顆按鈕會<b>複製名單</b>（不複製分數、點名、座位），你只要選這一份是哪一門課。</p>
       <textarea id="ta-roster" class="ctl mono" rows="10" placeholder="1,王小明&#10;2,陳美美&#10;3	林大同"></textarea>
       <div class="row-btns" style="margin-top:8px">
         <button class="btn btn-primary" id="btn-import">📥 匯入 / 覆蓋名單</button>
@@ -490,18 +539,54 @@
 <div class="modal" id="modal-lottery">
   <div class="modal-box">
     <h3>🎲 抽籤（不得已才用）</h3>
-    <p class="hint">優先抽「本堂尚未發言」的人。抽到的人一定有台階下 —— 從下面四張<b>求生卡</b>任選一張。
-      <b>每張卡，每組每堂課各限用一次</b>，用過會變灰。</p>
-    <div class="lottery-display" id="lottery-display">準備抽籤</div>
-    <div class="row-btns" style="justify-content:center">
-      <button class="btn btn-primary" id="btn-do-lottery">開始抽</button>
-      <label class="chk"><input type="checkbox" id="chk-only-silent" checked> 只抽尚未發言的人</label>
+
+    <!-- 兩種課堂不是同一件事：有分組討論的要抽「組內的某個職位」，
+         沒分組的（例如化學課手動排的座位表）只要抽號碼。分開，不要互相遷就。 -->
+    <div class="layout-tabs" id="lot-mode-tabs">
+      <button class="ltab on" data-lmode="group">🎩 分組討論（有職位）</button>
+      <button class="ltab" data-lmode="number">🔢 只抽號碼（沒分組）</button>
     </div>
-    <div class="lifelines" id="lifelines"></div>
+
+    <!-- ── A 分組模式 ── -->
+    <div id="lot-group">
+      <p class="hint">優先抽「本堂尚未發言」的人。抽到的人一定有台階下 —— 從下面四張<b>求生卡</b>任選一張。
+        <b>每張卡，每組每堂課各限用一次</b>，用過會變灰。</p>
+      <div class="lottery-display" id="lottery-display">準備抽籤</div>
+      <div class="row-btns" style="justify-content:center">
+        <button class="btn btn-primary" id="btn-do-lottery">開始抽</button>
+        <label class="chk"><input type="checkbox" id="chk-only-silent" checked> 只抽尚未發言的人</label>
+      </div>
+      <div class="lifelines" id="lifelines"></div>
+      <div class="row-btns" style="justify-content:center;margin-top:14px">
+        <button class="btn" id="btn-lottery-score">✅ 他回答了，＋1 分</button>
+        <button class="btn btn-ok" id="btn-lottery-plus">🌟 答得好，全組每人 +1</button>
+        <button class="btn btn-danger" id="btn-lottery-minus">❌ 答錯，全組每人 −1</button>
+      </div>
+    </div>
+
+    <!-- ── B 號碼模式 ── -->
+    <div id="lot-number" style="display:none">
+      <p class="hint">給沒有分組的課用：直接抽座號。可以給某幾號<b>多放幾張籤</b>（例如今天想多點到他），
+        也可以<b>抽過就不再抽</b>，一路抽到全班抽完。名單有匯入就會一起顯示姓名。</p>
+      <div class="lottery-display" id="lot-num-display">–</div>
+      <div class="row-btns" style="justify-content:center;align-items:flex-end">
+        <label class="mini" style="width:96px">從<input type="number" id="lot-lo" class="ctl" value="1" min="1"></label>
+        <label class="mini" style="width:96px">到<input type="number" id="lot-hi" class="ctl" value="36" min="1"></label>
+        <label class="chk"><input type="checkbox" id="lot-norepeat" checked> 抽過不再抽</label>
+        <button class="btn btn-primary" id="btn-lot-pick">開始抽</button>
+      </div>
+      <div class="row-btns" style="justify-content:center;align-items:flex-end;margin-top:8px">
+        <label class="mini" style="width:110px">給幾號<input type="number" id="lot-wn" class="ctl" min="1"></label>
+        <label class="mini" style="width:110px">放幾張籤<input type="number" id="lot-wt" class="ctl" min="0" value="2"></label>
+        <button class="btn" id="btn-lot-wset">設定權重</button>
+        <button class="btn btn-ghost" id="btn-lot-undo">↩︎ 收回上一抽</button>
+        <button class="btn btn-ghost" id="btn-lot-reset">🔄 重置</button>
+      </div>
+      <p class="hint" id="lot-wlist" style="text-align:center;margin:8px 0 2px">（全部各 1 張籤）</p>
+      <p class="hint" id="lot-drawn" style="text-align:center;margin:0">尚未抽過</p>
+    </div>
+
     <div class="row-btns" style="justify-content:center;margin-top:14px">
-      <button class="btn" id="btn-lottery-score">✅ 他回答了，＋1 分</button>
-      <button class="btn btn-ok" id="btn-lottery-plus">🌟 答得好，全組每人 +1</button>
-      <button class="btn btn-danger" id="btn-lottery-minus">❌ 答錯，全組每人 −1</button>
       <button class="btn btn-ghost" id="btn-close-lottery">關閉</button>
     </div>
   </div>
@@ -513,6 +598,9 @@
     <h3 id="seat-modal-title">輸入座號</h3>
     <input type="number" id="inp-seatno" class="ctl big" placeholder="座號">
     <div class="seat-preview" id="seat-preview">—</div>
+    <label class="mini" id="seat-role-wrap" style="margin-top:10px">這個位子的職務
+      <select id="sel-seatrole" class="ctl"></select></label>
+    <p class="hint" id="seat-role-hint" style="margin:4px 0 0"></p>
     <p class="hint" style="text-align:center;margin:10px 0 4px">或直接從本班名單點一位（<b>已就座的人會直接和這個位子對調</b>）</p>
     <input type="text" id="inp-seatsearch" class="ctl" placeholder="🔍 打姓名或座號篩選">
     <div class="pickgrid" id="seat-pick"></div>
@@ -525,6 +613,19 @@
 </div>
 
 <!-- 放大看單一作答 -->
+<!-- 圖片放大檢視（老師端）。作答的手繪圖與題目附圖共用這一個 —— 兩套會漂移。
+     投影出去要看得清楚學生標在哪裡，縮在卡片裡的縮圖不可能看得出來。 -->
+<div class="imgzoom" id="imgzoom">
+  <div class="iz-tip" id="iz-tip">滾輪縮放　·　拖曳移動　·　Esc 關閉</div>
+  <img id="iz-img" alt="放大檢視">
+  <div class="iz-bar">
+    <button class="btn" id="iz-out">－</button>
+    <button class="btn" id="iz-fit">符合畫面</button>
+    <button class="btn" id="iz-in">＋</button>
+    <button class="btn btn-ghost" id="iz-close">關閉</button>
+  </div>
+</div>
+
 <div class="modal" id="modal-ans">
   <div class="modal-box">
     <h3 id="modal-ans-title">作答</h3>
@@ -546,10 +647,10 @@
 
 <script src="xlsx.js?v=13"></script>
 <script src="qr.js?v=1"></script>
-<script src="app.js?v=33"></script>
-<script src="cycle.js?v=2"></script>
+<script src="app.js?v=47"></script>
+<script src="cycle.js?v=46"></script>
 <script src="tools.js?v=7"></script>
-<script type="module" src="push.js?v=5"></script>
+<script type="module" src="push.js?v=46"></script>
 <script type="module" src="sync.js?v=1"></script>
 </body>
 </html>

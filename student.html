@@ -60,7 +60,25 @@ h2{font-size:1.15rem;margin:0 0 4px}
 
 /* ---------- 題目 ---------- */
 .q{font-size:1.16rem;font-weight:700;line-height:1.65;white-space:pre-wrap;word-break:break-word}
-.qimg{width:100%;border-radius:10px;margin-top:12px;display:block}
+.qimg{width:100%;border-radius:10px;margin-top:12px;display:block;cursor:zoom-in}
+.qimghint{font-size:12px;color:var(--ink-2);text-align:center;margin:4px 0 0}
+
+/* 圖片放大檢視：老師推出來的圖常常是課本掃描或數據表，
+   在手機上縮成一欄根本看不清楚，所以一定要能全螢幕放大。
+   用 touch-action:none 自己接手雙指縮放 —— 交給瀏覽器預設會連整頁一起縮。 */
+.lbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:900;
+  display:none;touch-action:none;overflow:hidden}
+.lbox.on{display:block}
+.lbox img{position:absolute;left:0;top:0;transform-origin:0 0;
+  max-width:none;user-select:none;-webkit-user-drag:none}
+.lbox-bar{position:absolute;left:0;right:0;bottom:0;z-index:2;
+  display:flex;gap:8px;justify-content:center;padding:14px;
+  background:linear-gradient(transparent,rgba(0,0,0,.75))}
+.lbox-bar button{padding:11px 16px;border-radius:11px;border:0;
+  background:#ffffff;color:#111;font-size:15px;font-weight:800}
+.lbox-tip{position:absolute;left:0;right:0;top:0;z-index:2;padding:12px;
+  text-align:center;color:#fff;font-size:13px;
+  background:linear-gradient(rgba(0,0,0,.6),transparent)}
 .qlink{display:inline-block;margin-top:12px;color:var(--brand);font-weight:700;
   word-break:break-all;text-decoration:underline}
 .pill{display:inline-block;font-size:.72rem;padding:3px 10px;border-radius:99px;
@@ -92,6 +110,17 @@ input[type=number]{font-size:1.9rem;font-weight:800;text-align:center;padding:16
 .foot{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--line);
   padding:12px 16px calc(12px + var(--safe-b));display:flex;gap:10px}
 .foot .btn{flex:1}
+
+/* ---------- 我的分數 ---------- */
+.gcard{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);
+  padding:16px 18px;margin-top:14px;border:1.5px solid var(--line)}
+.gcard h3{margin:0 0 10px;font-size:1rem;color:var(--brand)}
+.grow{display:flex;justify-content:space-between;align-items:baseline;
+  padding:9px 0;border-top:1px solid var(--line)}
+.grow:first-of-type{border-top:0}
+.grow span{color:var(--ink-2);font-size:.88rem}
+.grow b{font-size:1.5rem;font-weight:800}
+.gnote{font-size:.78rem;color:var(--ink-2);margin-top:10px;line-height:1.6}
 
 .note{font-size:.82rem;color:var(--ink-2);margin-top:10px;line-height:1.6}
 .err{background:color-mix(in srgb,var(--bad) 12%,var(--card));border:1px solid var(--bad);
@@ -155,6 +184,22 @@ input[type=number]{font-size:1.9rem;font-weight:800;text-align:center;padding:16
     <span class="dot"></span>
     <h2 style="margin:0">已就緒</h2>
     <p class="sub">老師推送題目後<br>這頁會自動出現，不用重整。</p>
+    <button class="btn" id="btn-mygrade" style="margin-top:10px">📊 我的分數</button>
+  </div>
+</div>
+
+<!-- ══════════ 3.5 我的分數 ══════════ -->
+<div class="screen" id="s-grade">
+  <div class="top"><span class="logo">MH⋯H</span><span class="who" id="grade-who"></span></div>
+  <div class="body">
+    <h2>我的分數</h2>
+    <p class="sub" id="grade-sub">讀取中…</p>
+    <div id="grade-box"></div>
+    <div class="err" id="grade-err" style="display:none"></div>
+  </div>
+  <div class="foot">
+    <button class="btn" id="btn-grade-refresh">重新整理</button>
+    <button class="btn pri" id="btn-grade-back" style="flex:2">回上一頁</button>
   </div>
 </div>
 
@@ -165,6 +210,7 @@ input[type=number]{font-size:1.9rem;font-weight:800;text-align:center;padding:16
     <span class="pill" id="q-kind">題目</span>
     <div class="q" id="q-text" style="margin-top:10px"></div>
     <img class="qimg" id="q-img" style="display:none" alt="題目附圖">
+    <p class="qimghint" id="q-imghint" style="display:none">🔍 點圖片可以放大看</p>
     <a class="qlink" id="q-link" style="display:none" target="_blank" rel="noopener"></a>
 
     <div id="a-text" style="display:none;margin-top:16px">
@@ -176,7 +222,10 @@ input[type=number]{font-size:1.9rem;font-weight:800;text-align:center;padding:16
     <div id="a-choice" style="display:none"><div class="choices" id="choices"></div></div>
     <div id="a-draw" style="display:none">
       <div class="padwrap"><canvas id="pad"></canvas></div>
+      <p class="qimghint" id="pad-bghint" style="display:none">
+        老師的圖已經鋪在畫布上，直接在上面圈、標、寫</p>
       <div class="tools" id="tools"></div>
+      <input type="file" id="pad-photo" accept="image/*" style="display:none">
     </div>
 
     <div class="err" id="ans-err" style="display:none"></div>
@@ -184,6 +233,18 @@ input[type=number]{font-size:1.9rem;font-weight:800;text-align:center;padding:16
   <div class="foot">
     <button class="btn" id="btn-clearans">清除</button>
     <button class="btn pri" id="btn-send" style="flex:2">送出</button>
+  </div>
+</div>
+
+<!-- ══════════ 圖片放大檢視 ══════════ -->
+<div class="lbox" id="lbox">
+  <div class="lbox-tip">雙指縮放／雙擊放大　·　拖曳移動</div>
+  <img id="lbox-img" alt="放大檢視">
+  <div class="lbox-bar">
+    <button id="lbox-out">－</button>
+    <button id="lbox-fit">符合畫面</button>
+    <button id="lbox-in">＋</button>
+    <button id="lbox-close">關閉</button>
   </div>
 </div>
 
@@ -195,6 +256,7 @@ input[type=number]{font-size:1.9rem;font-weight:800;text-align:center;padding:16
     <h2 style="margin:0">已送出</h2>
     <p class="sub" id="done-sub">老師已經收到你的答案。</p>
     <button class="btn" id="btn-redo" style="margin-top:8px">我要修改答案</button>
+    <button class="btn" id="btn-mygrade2">📊 我的分數</button>
   </div>
 </div>
 
@@ -373,9 +435,15 @@ const KIND = { text:'文字作答', number:'數字作答', draw:'畫圖作答', 
 function renderQuestion(q){
   $('#q-kind').textContent = KIND[q.type] || '題目';
   $('#q-text').textContent = q.prompt || '';
-  const img = $('#q-img');
-  if(q.imageUrl){ img.src = q.imageUrl; img.style.display = 'block'; }
-  else img.style.display = 'none';
+  const img = $('#q-img'), ih = $('#q-imghint');
+  /* 畫圖題的圖會直接鋪成畫布底圖，上面再放一張一模一樣的縮圖只是佔掉半個螢幕，
+     而且學生會分不清該畫在哪一張上面。 */
+  if(q.imageUrl && q.type !== 'draw'){
+    img.src = q.imageUrl; img.style.display = 'block'; ih.style.display = '';
+  }else{
+    img.style.display = 'none'; ih.style.display = 'none';
+    img.removeAttribute('src');
+  }
   const lk = $('#q-link');
   if(q.linkUrl){ lk.href = q.linkUrl; lk.textContent = q.linkUrl; lk.style.display='inline-block'; }
   else lk.style.display = 'none';
@@ -385,7 +453,7 @@ function renderQuestion(q){
   err('#ans-err','');
 
   if(q.type === 'number'){ $('#a-number').style.display=''; $('#in-number').value=''; }
-  else if(q.type === 'draw'){ $('#a-draw').style.display=''; initPad(); }
+  else if(q.type === 'draw'){ $('#a-draw').style.display=''; initPad(q.imageUrl||null); }
   else if(q.type === 'choice'){
     $('#a-choice').style.display='';
     const box = $('#choices'); box.innerHTML=''; PICK = null;
@@ -403,17 +471,125 @@ function renderQuestion(q){
 }
 let PICK = null;
 
+/* ═══════════ 圖片放大檢視 ═══════════
+   自己算 transform，不用瀏覽器的頁面縮放：
+   頁面縮放會把作答欄跟按鈕一起放大，學生縮完就找不到「送出」在哪裡。 */
+const LB = { z:1, x:0, y:0, iw:0, ih:0 };
+function lboxOpen(src){
+  const box=$('#lbox'), im=$('#lbox-img');
+  im.onload=()=>{ LB.iw=im.naturalWidth; LB.ih=im.naturalHeight; lboxFit(); };
+  im.src=src; box.classList.add('on');
+  if(im.complete && im.naturalWidth){ LB.iw=im.naturalWidth; LB.ih=im.naturalHeight; lboxFit(); }
+}
+function lboxApply(){
+  const im=$('#lbox-img');
+  im.style.transform=`translate(${LB.x}px,${LB.y}px) scale(${LB.z})`;
+}
+function lboxFit(){
+  if(!LB.iw) return;
+  /* 扣掉底下工具列的高度，但視窗本身比工具列還矮時（橫放的小螢幕、
+     嵌在別的框裡）會扣成負的 —— 負的縮放會把圖上下顛倒過來。 */
+  const h=Math.max(120, innerHeight-70);
+  const z=Math.max(.02, Math.min(innerWidth/LB.iw, h/LB.ih));
+  LB.z=z; LB.x=(innerWidth-LB.iw*z)/2; LB.y=(h-LB.ih*z)/2;
+  lboxApply();
+}
+/* 以某個畫面座標為中心縮放 —— 不然放大後想看的地方會跑出畫面外 */
+function lboxZoomAt(f, cx, cy){
+  const nz=Math.max(.1, Math.min(12, LB.z*f));
+  const k=nz/LB.z;
+  LB.x = cx - (cx-LB.x)*k;
+  LB.y = cy - (cy-LB.y)*k;
+  LB.z = nz; lboxApply();
+}
+(function(){
+  const box=$('#lbox');
+  $('#lbox-close').onclick=()=>box.classList.remove('on');
+  $('#lbox-fit').onclick=lboxFit;
+  $('#lbox-in').onclick =()=>lboxZoomAt(1.4, innerWidth/2, innerHeight/2);
+  $('#lbox-out').onclick=()=>lboxZoomAt(1/1.4, innerWidth/2, innerHeight/2);
+
+  const pts=new Map(); let base=0, lastMid=null, lastTap=0;
+  const mid=()=>{ const a=[...pts.values()];
+    return [(a[0].x+a[1].x)/2,(a[0].y+a[1].y)/2]; };
+  const dist=()=>{ const a=[...pts.values()];
+    return Math.hypot(a[0].x-a[1].x, a[0].y-a[1].y); };
+
+  box.addEventListener('pointerdown', e=>{
+    if(e.target.closest('.lbox-bar')) return;
+    box.setPointerCapture(e.pointerId);
+    pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===2){ base=dist(); lastMid=mid(); }
+    else{
+      const now=Date.now();
+      if(now-lastTap<300) lboxZoomAt(LB.z>1.5?1/2:2, e.clientX, e.clientY);
+      lastTap=now;
+    }
+  });
+  box.addEventListener('pointermove', e=>{
+    if(!pts.has(e.pointerId)) return;
+    const prev=pts.get(e.pointerId);
+    pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===2){
+      const d=dist(), m=mid();
+      if(base){ lboxZoomAt(d/base, m[0], m[1]); base=d; }
+      if(lastMid){ LB.x+=m[0]-lastMid[0]; LB.y+=m[1]-lastMid[1]; lboxApply(); }
+      lastMid=m;
+    }else{
+      LB.x+=e.clientX-prev.x; LB.y+=e.clientY-prev.y; lboxApply();
+    }
+  });
+  const drop=e=>{ pts.delete(e.pointerId); if(pts.size<2){ base=0; lastMid=null; } };
+  box.addEventListener('pointerup', drop);
+  box.addEventListener('pointercancel', drop);
+  box.addEventListener('wheel', e=>{ e.preventDefault();
+    lboxZoomAt(e.deltaY<0?1.15:1/1.15, e.clientX, e.clientY); }, {passive:false});
+  addEventListener('keydown', e=>{ if(e.key==='Escape') box.classList.remove('on'); });
+
+  $('#q-img').onclick=function(){ if(this.src) lboxOpen(this.src); };
+})();
+
 /* ═══════════ 畫布 ═══════════ */
-const PAD_W = 1600, PAD_H = 1200;
+let PAD_W = 1600, PAD_H = 1200;
 const COLORS = ['#111111','#e05260','#2f7bd6','#2ea86a','#e8a13a','#8e5bd0'];
 let pad, pctx, strokes = [], cur = null, penColor = COLORS[0], penW = 6, erasing = false, padReady = false;
 
-function initPad(){
-  pad = $('#pad');
+/* 底圖：老師推的題目圖，或學生自己拍／選的照片。
+   畫布跟著底圖的長寬比走，不要硬塞進 4:3 —— 直式的課本照片被壓成橫的就沒法標了。
+   底圖存原圖（bgSrc）而不是「已經畫進畫布的樣子」：
+   橡皮擦要能擦掉筆跡而不是把底圖一起擦成白色，就必須每次重畫時重疊一次底圖。 */
+let BG = null, bgSrc = null;
+
+function padResize(w, h){
+  const max = 1600, sc = Math.min(1, max/Math.max(w,h));
+  PAD_W = Math.max(2, Math.round(w*sc));
+  PAD_H = Math.max(2, Math.round(h*sc));
   pad.width = PAD_W; pad.height = PAD_H;
   pad.style.aspectRatio = `${PAD_W}/${PAD_H}`;
+}
+
+function setPadBg(src, keepStrokes){
+  if(!src){ BG=null; bgSrc=null; padResize(1600,1200); if(!keepStrokes) strokes=[]; redraw(); return; }
+  const im = new Image();
+  im.onload = () => {
+    BG = im; bgSrc = src;
+    padResize(im.naturalWidth, im.naturalHeight);
+    if(!keepStrokes) strokes = [];
+    redraw();
+    const hint=$('#pad-bghint'); if(hint) hint.style.display='';
+  };
+  im.onerror = () => { BG=null; bgSrc=null; redraw(); };
+  im.src = src;
+}
+
+function initPad(bgUrl){
+  pad = $('#pad');
   pctx = pad.getContext('2d');
-  strokes = []; redraw();
+  strokes = []; BG = null; bgSrc = null;
+  padResize(1600, 1200);
+  redraw();
+  if(bgUrl) setPadBg(bgUrl);
+  const hint=$('#pad-bghint'); if(hint) hint.style.display = bgUrl ? '' : 'none';
   if(padReady) return;
   padReady = true;
 
@@ -443,6 +619,31 @@ function initPad(){
   ub.onclick = () => { strokes.pop(); redraw(); };
   tools.appendChild(ub);
 
+  /* 📷 學生自己放一張照片當底圖：拍實驗結果、拍手寫的計算過程、拍課本某一段，
+     再直接在上面圈重點。這就是「用圖片回饋」——
+     它跟老師推的底圖走同一條路（畫進同一張畫布、送出時一起帶走），
+     所以後端一行都不用改。 */
+  const pb = document.createElement('button');
+  pb.className='tool'; pb.textContent='📷 放照片';
+  pb.onclick = () => $('#pad-photo').click();
+  tools.appendChild(pb);
+
+  const zb = document.createElement('button');
+  zb.className='tool'; zb.textContent='🔍 放大看';
+  zb.onclick = () => lboxOpen(pad.toDataURL('image/png'));
+  tools.appendChild(zb);
+
+  $('#pad-photo').addEventListener('change', async e => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = '';                      // 同一張照片要能再選一次
+    if(!f || !/^image\//.test(f.type)) return;
+    const raw = await new Promise(r => { const fr=new FileReader();
+      fr.onload=()=>r(fr.result); fr.readAsDataURL(f); });
+    /* 保留已經畫的筆跡：學生常常是先畫了才想到要補一張照片 */
+    setPadBg(raw, true);
+    err('#ans-err','');
+  });
+
   const pos = ev => {
     const r = pad.getBoundingClientRect();
     return [ (ev.clientX - r.left) * PAD_W / r.width,
@@ -464,23 +665,136 @@ function initPad(){
 function syncTools(){
   const eb = $('#btn-eraser'); if(eb) eb.classList.toggle('on', erasing);
 }
+/* 筆跡畫在另一張透明畫布上再疊回去。
+   ★ 為什麼不直接在主畫布上用白色當橡皮擦：有底圖的時候，
+     白線會把底圖一起塗掉，學生一擦就多一道白疤，那不叫擦掉。
+     畫在透明層上用 destination-out 挖掉，底圖才會原樣露出來。 */
+let INK = null;
 function redraw(){
   pctx.fillStyle = '#fff'; pctx.fillRect(0,0,PAD_W,PAD_H);
-  pctx.lineCap = 'round'; pctx.lineJoin = 'round';
+  if(BG) pctx.drawImage(BG, 0, 0, PAD_W, PAD_H);
+
+  if(!INK) INK = document.createElement('canvas');
+  if(INK.width !== PAD_W || INK.height !== PAD_H){ INK.width = PAD_W; INK.height = PAD_H; }
+  const ic = INK.getContext('2d');
+  ic.clearRect(0,0,PAD_W,PAD_H);
+  ic.lineCap = 'round'; ic.lineJoin = 'round';
   strokes.forEach(s => {
-    pctx.strokeStyle = s.erase ? '#fff' : s.color;
-    pctx.lineWidth = s.w;
-    pctx.beginPath();
-    s.pts.forEach(([x,y],i) => i ? pctx.lineTo(x,y) : pctx.moveTo(x,y));
-    if(s.pts.length === 1) pctx.lineTo(s.pts[0][0]+.1, s.pts[0][1]+.1);
-    pctx.stroke();
+    ic.globalCompositeOperation = s.erase ? 'destination-out' : 'source-over';
+    ic.strokeStyle = s.color;
+    ic.lineWidth = s.w;
+    ic.beginPath();
+    s.pts.forEach(([x,y],i) => i ? ic.lineTo(x,y) : ic.moveTo(x,y));
+    if(s.pts.length === 1) ic.lineTo(s.pts[0][0]+.1, s.pts[0][1]+.1);
+    ic.stroke();
   });
+  ic.globalCompositeOperation = 'source-over';
+  pctx.drawImage(INK, 0, 0);
 }
+
+/* ═══════════ 我的分數（2026-08-30） ═══════════
+   老師按了「發布本班成績」才會有東西。
+   規則只讓學生讀 rooms/{code}/grades/{自己的座號}，所以看不到別人的分數，
+   也沒有全班排名 —— 排名投影在教室前面是一回事，寫進每個人的手機是另一回事。 */
+
+let BACKTO = 's-wait';
+
+async function loadGrade(){
+  const box = $('#grade-box'), sub = $('#grade-sub');
+  err('#grade-err',''); box.innerHTML = ''; sub.textContent = '讀取中…';
+  if(!ME || !MYSEAT){ sub.textContent = ''; return err('#grade-err','請先登入並選好自己的座號。'); }
+  let snap;
+  try{
+    snap = await getDoc(doc(db,'rooms',ROOM,'grades',String(MYSEAT)));
+  }catch(e){
+    sub.textContent = '';
+    return err('#grade-err', e.code === 'permission-denied'
+      ? '讀不到你的成績。可能是這個座號綁的不是你的帳號，請跟老師說。'
+      : ('讀取失敗：' + (e.code || e.message)));
+  }
+  if(!snap.exists()){
+    sub.textContent = '';
+    box.innerHTML = '<div class="gcard"><h3>老師還沒有公布</h3>'
+      + '<p class="gnote">分數要老師按「發布」之後才查得到。公布之後回來這裡重新整理就會出現。</p></div>';
+    return;
+  }
+  const g = snap.data();
+  const me = g.me || {}, gp = g.group || {};
+  sub.textContent = `${g.className || ''}　${g.no} 號 ${g.name || ''}`;
+  const t = (label, val, unit) =>
+    `<div class="grow"><span>${label}</span><b>${val}${unit || ''}</b></div>`;
+  const esc = x => String(x == null ? '' : x).replace(/</g,'&lt;');
+
+  /* ★ 2026-08-30：出缺席、作業分數、老師評語。
+     這三塊只有**試算表**裡有（老師在 `班·<班級>` 分頁上打的），
+     老師按「發布」時才會併進來。
+     ★ 沒有就整塊不顯示，不要顯示一排 0 ——
+       「老師還沒登記」和「你是零分」是完全不同的兩件事，
+       而看到 0 的學生會直接來問。 */
+  const at = g.attend || null, wk = g.work || null;
+  const attendCard = at ? `
+     <div class="gcard"><h3>出缺席</h3>
+       ${t('出席', at.present ?? 0, ' 堂')}
+       ${at.late      ? t('遲到',   at.late,     ' 堂') : ''}
+       ${at.absent    ? t('曠課',   at.absent,   ' 堂') : ''}
+       ${at.personal  ? t('事假',   at.personal, ' 堂') : ''}
+       ${at.sick      ? t('病假',   at.sick,     ' 堂') : ''}
+       ${at.official  ? t('公假',   at.official, ' 堂') : ''}
+       ${at.left      ? t('中途離開', at.left,   ' 次') : ''}
+       ${at.unmarked  ? t('還沒登記', at.unmarked,' 堂') : ''}
+       <p class="gnote">登記有誤請直接跟老師說，這一頁只能看、不能改。</p>
+     </div>` : '';
+
+  const workCard = (wk && (wk.score || wk.comment)) || g.teacherNote ? `
+     <div class="gcard"><h3>作業與評語</h3>
+       ${wk && wk.score ? t('作業分數', esc(wk.score), '') : ''}
+       ${wk && wk.comment ? `<p class="gnote"><b>作業評語</b><br>${esc(wk.comment)}</p>` : ''}
+       ${g.teacherNote ? `<p class="gnote"><b>老師的話</b><br>${esc(g.teacherNote)}</p>` : ''}
+     </div>` : '';
+
+  box.innerHTML =
+    `<div class="gcard"><h3>我自己</h3>
+       ${t('累積總分', me.total ?? 0, ' 分')}
+       ${t('每堂平均', me.avg ?? 0, ' 分')}
+       ${t('發言次數', me.say ?? 0, ' 次')}
+     </div>
+     ${attendCard}
+     ${workCard}
+     <div class="gcard"><h3>第 ${gp.table || '—'} 組</h3>
+       ${t('全組總分', gp.total ?? 0, ' 分')}
+       ${t('每堂平均', gp.avg ?? 0, ' 分')}
+       ${t('平均每人', gp.perMember ?? 0, ' 分')}
+       <p class="gnote">只要組上被指派任務的人把事情做完，<b>全組每個人都會拿到那一筆分數</b>。
+         所以組的分數不只是你一個人的事。</p>
+     </div>
+     <p class="gnote">統計到 <b>${g.sessions || 1}</b> 堂課，
+       老師最後一次公布：${g.publishedAt ? new Date(g.publishedAt).toLocaleString('zh-TW') : '—'}。
+       ${g.sheetAt ? `<br>成績表更新於 ${esc(g.sheetAt)}。` : ''}
+       公布之後老師再加的分，要等老師下次公布才會更新。</p>`;
+}
+
+$('#btn-mygrade').onclick = () => {
+  /* 記住是從哪一頁按進來的：作答到一半跑去看分數，回來要回到那一題。 */
+  BACKTO = document.querySelector('.screen.on')?.id || 's-wait';
+  show('s-grade');
+  $('#grade-who').textContent = $('#wait-who').textContent;
+  loadGrade();
+};
+$('#btn-mygrade2').onclick = $('#btn-mygrade').onclick;
+$('#btn-grade-refresh').onclick = loadGrade;
+$('#btn-grade-back').onclick = () => show(BACKTO);
 
 /* ═══════════ 送出 ═══════════ */
 $('#btn-clearans').onclick = () => {
   if(!CURQ) return;
-  if(CURQ.type === 'draw'){ strokes = []; redraw(); }
+  if(CURQ.type === 'draw'){
+    strokes = [];
+    /* 「清除」只清筆跡。老師推的底圖不該被學生清掉 ——
+       清掉就沒得畫了，而且他找不到方法把它弄回來。
+       學生自己放的照片才可以清掉（再按一次「放照片」換一張）。 */
+    if(bgSrc && bgSrc !== (CURQ.imageUrl||null)) setPadBg(CURQ.imageUrl||null, true);
+    redraw();
+  }
   else if(CURQ.type === 'number') $('#in-number').value = '';
   else if(CURQ.type === 'choice'){ PICK = null;
     $('#choices').querySelectorAll('.choice').forEach(x=>x.classList.remove('sel')); }
@@ -495,10 +809,15 @@ $('#btn-send').onclick = async () => {
     type: CURQ.type, submittedAt: serverTimestamp() };
 
   if(CURQ.type === 'draw'){
-    if(!strokes.length) return err('#ans-err','畫布還是空的，畫點東西再送出。');
-    let data = pad.toDataURL('image/png');
-    if(data.length > 900000) data = pad.toDataURL('image/jpeg', .92);
-    if(data.length > 950000) return err('#ans-err','圖太複雜了，請按「清除」重畫簡單一點。');
+    if(!strokes.length && !BG)
+      return err('#ans-err','畫布還是空的，畫點東西或放一張照片再送出。');
+    /* 有底圖（照片、課本掃描）時 PNG 會大到幾 MB，直接走 JPEG。
+       Firestore 單一文件 1MB 是硬上限，超過去是整筆送不出，不是變模糊。 */
+    let data = BG ? pad.toDataURL('image/jpeg', .88) : pad.toDataURL('image/png');
+    if(data.length > 900000) data = pad.toDataURL('image/jpeg', .75);
+    if(data.length > 950000) data = pad.toDataURL('image/jpeg', .55);
+    if(data.length > 950000)
+      return err('#ans-err','圖太大了，請換一張解析度低一點的照片，或按「清除」重畫簡單一點。');
     payload.drawing = data;
   } else if(CURQ.type === 'number'){
     const v = $('#in-number').value.trim();

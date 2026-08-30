@@ -426,8 +426,15 @@ code{background:rgba(127,127,127,.15);padding:1px 6px;border-radius:5px;font-siz
   padding:0 6px;white-space:nowrap;opacity:.8}
 .legend .wide-lg{flex-basis:100%;line-height:1.75}
 
-/* ========== 收合上方狀態列 ========== */
-body.compact .topbar{display:none}
+/* ========== 收合：收的是「下方」的說明與設定列 ==========
+   ★ 2026-08-30 修正方向。上一版收的是最上面那條 .topbar（學年度／班級／輪次／日期），
+     結果投影到一半要換班級、改日期，就得先展開再收一次。
+     那條是老師整堂課都在用的，不能收。
+
+     真正該讓位的是**標題底下那一整片**：說明文字、按鈕列、課程與配置分頁、
+     班級橫列、圖例 —— 那些是「排位子之前」用的，排好之後一次都不會再碰，
+     卻佔掉座位表一半的高度。 */
+body.compact .topbar{padding-top:8px;padding-bottom:8px}
 body.compact .tabs{position:sticky;top:0;z-index:90;
   box-shadow:0 2px 10px rgba(0,0,0,.18)}
 .tab-collapse{margin-left:auto;opacity:.72;font-size:12.5px}
@@ -574,6 +581,9 @@ body.mhh-flash::after{content:'';position:fixed;inset:0;z-index:399;pointer-even
 body.compact .panel-head .hint,
 body.compact .panel-head .row-btns,
 body.compact .legend,
+body.compact #course-tabs,
+body.compact #layout-tabs,
+body.compact .classbar,
 body.compact .brand-sub{display:none!important}
 body.compact .panel-head{margin-bottom:6px}
 body.compact .panel-head h2{font-size:17px;margin:0}
@@ -768,7 +778,31 @@ body.tb-open{overflow:hidden}
 .cy-jobs{display:grid;gap:12px;padding-top:14px!important;
   grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
 .cy-job{border:2px solid var(--rc);border-radius:14px;padding:12px 14px;background:var(--bg2)}
-.cy-job-name{font-size:21px;font-weight:800;color:var(--rc);margin-bottom:4px}
+.cy-job-who{font-size:14px;font-weight:800;color:var(--txt);margin:1px 0 5px}
+.cy-job-who small{font-weight:600;color:var(--txt2)}
+.cy-job-name{font-size:21px;font-weight:800;color:var(--rc);margin-bottom:2px}
+
+/* 三張大卡片：每個人一行「職位 ＋ 名字 ＋ 這一輪負責什麼」。
+   ★ 字要夠大 —— 這是投影到全班看的，最後一排也要讀得到。 */
+.cy-duties{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+.cy-duty{padding:4px 8px;border-radius:8px;border-left:4px solid var(--rc);
+  background:color-mix(in srgb,var(--rc) 10%,transparent)}
+.cy-duty-h{display:block;font-size:15px;font-weight:800;color:var(--txt)}
+.cy-duty-h b{color:var(--rc);margin-right:6px}
+.cy-duty-b{display:block;font-size:13.5px;line-height:1.45;color:var(--txt2)}
+.cy-duty-b i{opacity:.6}
+
+/* 設定頁：三個角色各一個可收合區塊 */
+.cy-assign{border:1px solid var(--line);border-radius:12px;padding:6px 12px;margin-bottom:10px}
+.cy-assign>summary{cursor:pointer;font-size:16px;font-weight:800;padding:6px 0}
+
+/* 舊版：名字 ＋ 這一輪的職位（第六輪起改用 .cy-duty） */
+.cy-mems{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.cy-mem{display:inline-flex;align-items:baseline;gap:4px;padding:2px 8px;border-radius:8px;
+  font-size:12.5px;font-weight:700;color:var(--rc);
+  border:1px solid color-mix(in srgb,var(--rc) 45%,transparent);
+  background:color-mix(in srgb,var(--rc) 12%,transparent)}
+.cy-mem b{font-size:15px;color:var(--txt)}
 .cy-job-body{font-size:17px;line-height:1.5}
 .cy-job.cy-blank{border-color:var(--line);opacity:.45}
 .cy-job.cy-blank .cy-job-name{color:var(--txt2)}
@@ -839,3 +873,193 @@ body.tb-open{overflow:hidden}
 .cy-mq-idle{color:var(--txt2);font-size:17px}
 
 @media print{ .cycleboard{display:none!important} }
+
+/* ══════════ 職位任務計分（2026-08-30） ══════════ */
+.task-meta{ display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;
+  max-width:860px; margin-bottom:2px; }
+.tb-pts{ color:#ffd76a; }
+
+/* ══════════ 圖片放大檢視（2026-08-30） ══════════
+   z-index 950：要蓋過作答彈窗（modal），但低於全螢幕看板的 tb/cy 那一層。 */
+.imgzoom{position:fixed;inset:0;background:rgba(8,10,16,.94);z-index:950;
+  display:none;overflow:hidden;touch-action:none}
+.imgzoom.show{display:block}
+.imgzoom img{position:absolute;left:0;top:0;transform-origin:0 0;
+  max-width:none;user-select:none;-webkit-user-drag:none;background:#fff}
+.iz-bar{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:16px;
+  display:flex;gap:10px;justify-content:center;
+  background:linear-gradient(transparent,rgba(0,0,0,.72))}
+.iz-tip{position:absolute;left:0;right:0;top:0;z-index:2;padding:12px;
+  text-align:center;color:#e8ecf5;font-size:13px;
+  background:linear-gradient(rgba(0,0,0,.6),transparent)}
+.anscard img{cursor:zoom-in}
+#q-imgprev{cursor:zoom-in}
+
+/* ══════════ 職位任務：一節三件事（2026-08-30） ══════════
+   一排燈 = 一件事。三排一起看得到，才分得出誰做到第幾件。 */
+.tb-sets{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+.tb-set{padding:7px 16px;border-radius:11px;cursor:pointer;font-family:inherit;
+  font-size:16px;font-weight:700;border:2px solid var(--line);
+  background:transparent;color:var(--txt2)}
+.tb-set.on{background:var(--pri);border-color:var(--pri);color:#fff}
+.tb-foothint{font-size:14px;color:var(--txt2);margin-bottom:10px}
+.tb-row{padding:8px 0 10px;border-top:1px dashed var(--line)}
+.tb-row:first-of-type{border-top:0}
+/* 正在講的那一件整排提亮，其餘壓暗但仍看得見 —— 看不見就失去「一眼看進度」的意義 */
+.tb-row.cur .tb-rowhead b:first-child{color:var(--pri)}
+.tb-row:not(.cur){opacity:.72}
+.tb-rowhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  font-size:15px;color:var(--txt2);margin-bottom:6px}
+.tb-rowhead b:first-child{font-size:19px;color:var(--txt)}
+.tb-rowdone{margin-left:auto}
+.tb-rowdone b{font-size:22px;color:var(--ok)}
+/* 三排燈要塞得下，所以比原本單排的小一號 */
+.tb-row .tb-lamp{min-width:88px;padding:8px 12px}
+.tb-row .tb-bulb{font-size:24px}
+
+/* ★ 三排燈一定要看得到，否則「一眼看出誰做到第幾件」就失效了。
+   原本 .taskboard 是整頁捲動、職位卡 flex:1 會把燈區推到畫面外 ——
+   投影出去的第一印象就是「只有兩件事」。
+   改成：整個看板固定滿版不捲，職位卡區自己捲，燈區永遠貼在底下不被壓縮。 */
+.taskboard.show{display:flex}
+.taskboard{padding:22px 28px}
+.tb-inner{width:100%;height:100%;min-height:0}
+.tb-head, .tb-sets, .tb-foot{flex:0 0 auto}
+.tb-roles{min-height:0;overflow:auto;margin:14px 0}
+.tb-foot{max-height:46vh;overflow:auto}
+
+/* 件數多的時候，職位卡讓一點空間出來給燈 */
+.tb-inner.sets-2 .tb-role-name,
+.tb-inner.sets-3 .tb-role-name{font-size:25px}
+.tb-inner.sets-2 .tb-role-body{font-size:21px}
+.tb-inner.sets-3 .tb-role-body{font-size:20px;line-height:1.45}
+.tb-inner.sets-3 .tb-role{padding:13px 16px;gap:6px}
+.tb-inner.sets-3 .tb-title{font-size:36px}
+
+/* 鎖定後的座位：不是可以拖的東西了，游標要說實話 */
+.seat.locked{cursor:default}
+
+/* 報告循環：內容回饋的句型組切換 */
+.cy-form{display:inline-block;width:auto;min-width:150px;margin:0 8px;
+  padding:4px 10px;font-size:15px;vertical-align:middle}
+
+/* ══════════ 化學課：照片座位表 ＋ 依座號計分（2026-08-30） ══════════ */
+.classroom.photo{display:block;width:100%;transform:none}
+.sp-box{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.sp-box img{width:100%;height:auto;display:block;border-radius:14px;
+  border:1px solid var(--line);background:#fff;cursor:zoom-in}
+.sp-bar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.sp-drop{max-width:660px;margin:0 auto;min-height:260px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;text-align:center;padding:32px 24px;
+  border:2px dashed var(--line);border-radius:16px;background:var(--card);
+  transition:border-color .15s ease,background .15s ease}
+.sp-drop:hover,.sp-drop.over,.sp-drop:focus-visible{border-color:var(--pri);background:var(--bg2,var(--card))}
+.sp-drop b{font-size:19px}
+.sp-drop span{color:var(--txt2)}
+.sp-drop small{color:var(--txt2);font-size:13px;line-height:1.7;margin-top:6px}
+
+/* 依座號計分：一人一格，塞得下整班 */
+.nogrid{display:grid;gap:9px;
+  grid-template-columns:repeat(auto-fill,minmax(148px,1fr))}
+.nostu{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:8px;
+  padding:11px 12px;border-radius:12px;cursor:pointer;
+  background:var(--card);border:1px solid var(--line);transition:.14s}
+.nostu:hover{transform:translateY(-2px);border-color:var(--pri)}
+.nostu.spoke{border-color:var(--ok)}
+.nostu.zero{opacity:.72}
+.nono{font-family:ui-monospace,monospace;font-size:13px;color:var(--txt2);
+  min-width:26px;text-align:right;font-variant-numeric:tabular-nums}
+.noname{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nopts{font-weight:800;font-size:18px;font-variant-numeric:tabular-nums}
+
+/* 依個人排列時仍要看得出組別 */
+.nogrp{display:block;font-size:11px;color:var(--txt2);font-weight:400;margin-top:1px}
+#score-view-tabs{display:inline-flex;gap:6px;padding:0;border:0}
+#score-view-tabs .ltab{padding:7px 13px;font-size:14px}
+
+/* ══════════ 職位工作看板：一件事一個區塊，燈在事情旁邊（2026-08-30 改版） ══════════ */
+.tb-headbtns{display:flex;gap:8px;align-items:center;flex:0 0 auto}
+.tb-mini{padding:9px 14px;border-radius:10px;cursor:pointer;font-family:inherit;
+  font-size:15px;font-weight:700;border:1px solid var(--line);
+  background:var(--card);color:var(--txt2)}
+.tb-mini:hover{border-color:var(--pri);color:var(--txt)}
+.tb-blocks{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;
+  gap:12px;margin-top:14px;padding-right:4px}
+.tb-block{border:1px solid var(--line);border-radius:16px;padding:12px 16px 14px;
+  background:var(--card);flex:0 0 auto}
+.tb-block.folded{padding-bottom:12px;opacity:.86}
+.tb-bhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.tb-fold{width:34px;height:34px;flex:0 0 34px;border-radius:9px;cursor:pointer;
+  border:1px solid var(--line);background:transparent;color:var(--txt2);
+  font-size:16px;align-self:center}
+.tb-fold:hover{border-color:var(--pri);color:var(--txt)}
+.tb-bno{font-size:20px;white-space:nowrap}
+.tb-btitle{font-size:20px;font-weight:700;color:var(--pri);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46vw}
+.tb-bdone{margin-left:auto;font-size:15px;color:var(--txt2);white-space:nowrap}
+.tb-bdone b{font-size:22px;color:var(--ok)}
+.tb-block .tb-lamps{display:flex;gap:9px;flex-wrap:wrap}
+.tb-block .tb-lamp{min-width:84px;padding:7px 11px}
+.tb-block .tb-bulb{font-size:22px}
+.tb-block .tb-roles{margin:12px 0 0;overflow:visible}
+.tb-block.folded .tb-roles{display:none}
+
+/* ══════ 一個「職位 × 組別」一盞燈（2026-08-30 第六輪）══════
+   一個職位一列，右邊全班各組各一盞。六職位 × 六組 = 36 盞，
+   而且同一個投影幕可能有三件事在跑，所以燈做小、只放組號。
+   右邊留一條窄的任務摘要，老師不必展開職位卡就知道這一列在驗收什麼。 */
+.tb-block .tb-lamps{display:flex;flex-direction:column;gap:5px}
+.tb-rrow{display:flex;align-items:center;gap:8px;padding:4px 7px;border-radius:10px;
+  border:1px solid color-mix(in srgb,var(--rc) 30%,transparent);
+  background:color-mix(in srgb,var(--rc) 7%,transparent)}
+.tb-rrow.all{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 13%,transparent)}
+.tb-rall{flex:0 0 104px;padding:4px 6px;border-radius:8px;cursor:pointer;font-family:inherit;
+  border:1px solid color-mix(in srgb,var(--rc) 50%,transparent);background:transparent;
+  color:var(--rc);display:flex;flex-direction:column;align-items:flex-start;gap:0}
+.tb-rall b{font-size:15px;font-weight:800;white-space:nowrap}
+.tb-rall small{font-size:11px;font-weight:700;color:var(--txt2)}
+.tb-rall:hover{background:var(--rc);color:#fff}
+.tb-rall:hover b,.tb-rall:hover small{color:#fff}
+.tb-cells{display:flex;gap:4px;flex-wrap:wrap}
+.tb-cell{width:52px;padding:4px 0;border-radius:8px;cursor:pointer;font-family:inherit;
+  display:flex;flex-direction:column;align-items:center;gap:0;
+  border:1px solid var(--line);background:var(--bg2);color:var(--txt2);transition:.12s}
+.tb-cell:hover{border-color:var(--gt)}
+.tb-cell.on{background:color-mix(in srgb,var(--gt) 26%,transparent);
+  border-color:var(--gt);color:var(--txt)}
+.tb-cell .tb-bulb{font-size:15px;line-height:1.1}
+.tb-cell-g{font-size:11px;font-weight:800}
+.tb-rtask{flex:1;min-width:0;font-size:12px;color:var(--txt2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb-notask{opacity:.55}
+
+/* ══════ 舊版：一個位子一盞燈（保留樣式，2026-08-30 第六輪起不再產生）══════
+   六組 × 六個人 = 36 盞，而且同一個投影幕上可能同時有三件事在跑，
+   所以每一盞都要小。一組一列：左邊組名，右邊那一組的人。
+   顏色用「那個人的職位色」，跟座位表、計分板是同一套色，
+   老師掃過去就知道哪一個職位還沒亮。 */
+.tb-block .tb-lamps{display:flex;flex-direction:column;gap:6px}
+.tb-grow{display:flex;align-items:stretch;gap:8px;padding:5px 7px;border-radius:11px;
+  border:1px solid color-mix(in srgb,var(--gt) 34%,transparent);
+  background:color-mix(in srgb,var(--gt) 8%,transparent)}
+.tb-grow.all{border-color:var(--ok);
+  background:color-mix(in srgb,var(--ok) 14%,transparent)}
+.tb-gall{flex:0 0 92px;border-radius:9px;cursor:pointer;font-family:inherit;
+  border:1px solid color-mix(in srgb,var(--gt) 55%,transparent);
+  background:transparent;color:var(--gt);font-size:14px;font-weight:800;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.tb-gall small{font-size:12px;font-weight:700;color:var(--txt2)}
+.tb-gall:hover{background:var(--gt);color:#fff}
+.tb-gall:hover small{color:#fff}
+.tb-slots{flex:1;display:flex;flex-wrap:wrap;gap:5px}
+.tb-slot{flex:1 1 118px;max-width:190px;display:flex;align-items:center;gap:5px;
+  padding:5px 8px;border-radius:9px;cursor:pointer;font-family:inherit;text-align:left;
+  border:1px solid var(--line);background:var(--bg2);color:var(--txt2);transition:.12s}
+.tb-slot:hover{border-color:var(--rc)}
+.tb-slot.on{background:color-mix(in srgb,var(--rc) 22%,transparent);
+  border-color:var(--rc);color:var(--txt)}
+.tb-slot .tb-bulb{font-size:16px;line-height:1}
+.tb-slot-r{font-size:12px;font-weight:800;color:var(--rc);white-space:nowrap}
+.tb-slot-n{font-size:13px;font-weight:700;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}

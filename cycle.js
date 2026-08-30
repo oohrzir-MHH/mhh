@@ -69,8 +69,34 @@ function cycleKey(){
 
    為什麼要有預設：老師課前不一定有時間填，空的分工等於沒有這個功能。
    為什麼還是可以改：每個班的習慣不一樣，而且四職位那一套本來就是起草的。 */
-const ASSIGN_DEF = {
-  read6: {
+/* ★ 2026-08-30（第六輪）：分工從「只有評審組」擴成**三個角色都有**，
+   而且**三門課都有**（原本 chem 根本沒有 key，化學課開起來是一整片空白）。
+
+   為什麼要擴：投影幕上寫「策略長」而沒寫「策略長這一輪要做什麼」，
+   學生得自己回想職責表 —— 而職位每一輪都會轉，回想錯的人整段就白坐著。
+   報告組與計時組本來也各有各的事（誰主講、誰控時、誰記問答），
+   只給評審組分工，等於默認另外兩組「上台就好」。
+
+   結構：ASSIGN_DEF[課程][角色][職位] = 這一輪你要做的事
+     角色 = present（報告組）/ judge（評審組）/ timer（計時組）
+
+   ★ 預設值是起草的，老師可以在「報告循環」設定頁改，改完存進 cycleStore().assign。 */
+const CY_SIDES = [
+  { k:'present', t:'報告組', ic:'🎤' },
+  { k:'judge',   t:'評審組', ic:'⚖️' },
+  { k:'timer',   t:'計時組', ic:'⏱️' }
+];
+
+const ASSIGN_R6 = {
+  present: {
+    red:    '主講開場 30 秒：我們這一組的主張是什麼，一句話講完',
+    orange: '負責「證據」那一段：把數字或原文唸出來，不要只說「資料顯示」',
+    yellow: '負責「推理」那一段：證據為什麼撐得住這個主張',
+    green:  '準備接一個提問，答不出來就說「我不知道，但我會去查什麼」',
+    blue:   '顧投影／學習單，翻頁與指出現在講到哪一段',
+    indigo: '收尾 20 秒：我們這個結論**只能撐到哪裡**'
+  },
+  judge: {
     red:    '主持這一輪回饋：決定我們這組最後給幾分、由誰上台講評',
     orange: '控時，並確保「每個人都講到一句」—— 沒開口的人由你點名',
     yellow: '代表上台講評 30 秒：一個具體優點 ＋ 一個請求 ＋ 一個問題',
@@ -78,13 +104,53 @@ const ASSIGN_DEF = {
     blue:   '把台上的「問與答」逐句記下來：誰問的、他怎麼答的',
     indigo: '找一個「他們沒說的那一面」，提出一個真問題（不是考他）'
   },
-  inq4: {
-    pm:  '控時，並確保「每個人都講到一句」—— 沒開口的人由你點名',
-    coo: '表現評分：用長頸鹿四步（觀察／感受／需要／請求）寫回饋',
-    qa:  '把台上的「問與答」逐句記下來：誰問的、他怎麼答的',
-    cio: '內容評分：圖表看不看得懂、數據撐不撐得住他們的結論'
+  timer: {
+    red:    '盯著台上，把我們等一下要修的地方記下來（我們是下一組）',
+    orange: '報時：剩 1 分鐘出聲提醒台上',
+    yellow: '確認我們這組等一下誰先講、誰接第二段',
+    green:  '檢查我們的證據還缺什麼，現在補得完的就補',
+    blue:   '把台上被問倒的問題抄下來 —— 那題等一下很可能也會問我們',
+    indigo: '想我們自己的弱點：等一下最可能被問的是哪一句'
   }
 };
+
+const ASSIGN_DEF = {
+  read6: ASSIGN_R6,
+  /* 化學借用六職位那一套（COURSES.chem.roles 就是 ROLES_R6）。
+     化學不分組，這一頁多半用不到，但**不能沒有** ——
+     沒有 key 的話開起來是一整片空白，看起來像功能壞了。 */
+  chem: ASSIGN_R6,
+  inq4: {
+    present: {
+      pm:  '主講實驗設計：我們控制了哪些變因，為什麼是這幾個',
+      coo: '主講操作與數據：我們改了什麼、量到什麼',
+      qa:  '主講判定標準：哪一格算變色、有爭議的怎麼處理',
+      cio: '主講圖表：這張圖的橫軸縱軸是什麼、看出什麼趨勢'
+    },
+    judge: {
+      pm:  '控時，並確保「每個人都講到一句」—— 沒開口的人由你點名',
+      coo: '表現評分：用長頸鹿四步（觀察／感受／需要／請求）寫回饋',
+      qa:  '把台上的「問與答」逐句記下來：誰問的、他怎麼答的',
+      cio: '內容評分：圖表看不看得懂、數據撐不撐得住他們的結論'
+    },
+    timer: {
+      pm:  '報時：剩 1 分鐘出聲提醒台上',
+      coo: '確認我們這組的器材與數據都備好了（我們是下一組）',
+      qa:  '把台上被問倒的問題抄下來 —— 那題等一下很可能也會問我們',
+      cio: '檢查我們的圖表現在放出來看不看得懂'
+    }
+  }
+};
+
+/* 這個課程、這個角色、這個職位，這一輪要做的事。
+   老師改過就用老師的，沒改過用預設。**三門課、三個角色都保證有東西可回。** */
+function assignOf(ck, side, roleKey){
+  const s = cycleStore();
+  const a = (s.assign[ck] && s.assign[ck][side]) || {};
+  if(a[roleKey] !== undefined) return a[roleKey];
+  const d = (ASSIGN_DEF[ck] && ASSIGN_DEF[ck][side]) || {};
+  return d[roleKey] || '';
+}
 
 function cycleStore(){
   DB.cycles = DB.cycles || {};
@@ -95,7 +161,8 @@ function cycleStore(){
     s = DB.cycles[k] = {
       order: TS.slice(), idx: 0, minutes: 5,
       pin: { present:null, judge:null, timer:null },   // 老師手動指定，null＝自動
-      assign: {}, scores: [], fb: [], likes: [], doneRounds: []
+      assign: {}, scores: [], fb: [], likes: [], doneRounds: [],
+      form: DEF_FORM
     };
   }
   /* 換座位配置後組數會變（六組 ⇄ 九組），順序表要跟著補齊，
@@ -104,8 +171,18 @@ function cycleStore(){
   s.order = s.order.filter(t=>TS.includes(t)).concat(TS.filter(t=>!set.has(t)));
   if(s.idx >= s.order.length) s.idx = 0;
   s.assign = s.assign || {};
+  if(!CONTENT_FORMS[s.form]) s.form = DEF_FORM;   // 舊資料沒有這個欄位
   const ck = courseKey();
-  if(!s.assign[ck]) s.assign[ck] = Object.assign({}, ASSIGN_DEF[ck] || {});
+  s.assign[ck] = s.assign[ck] || {};
+  /* 舊格式：s.assign[ck] 直接就是「評審組」的 {職位: 文字}。
+     現在多了一層角色，所以把它整包搬進 judge。
+     判斷方式：裡面找不到 present/judge/timer 這三個 key，就是舊的。 */
+  const A = s.assign[ck];
+  const isNew = CY_SIDES.some(x => A[x.k] !== undefined);
+  if(!isNew && Object.keys(A).length){
+    s.assign[ck] = { judge: A };
+  }
+  CY_SIDES.forEach(x => { s.assign[ck][x.k] = s.assign[ck][x.k] || {}; });
   return s;
 }
 
@@ -145,6 +222,23 @@ const NVC = [   /* 長頸鹿回饋法（非暴力溝通四步）。順序不能�
     ph:'下次可以請你……嗎？' }
 ];
 
+/* 追問卡四格（2026-08-30 新增，W6/W7 用）。
+   跟 CER 的差別：CER 是「拆解他說了什麼」，追問卡是「壓一下看它會不會垮」。
+   第三格才是這張卡的重點 —— 提出一個具體的反例條件，
+   逼講的人去想「我的結論撐得住這個情況嗎」。
+   第四格把球丟回去：不是「我不同意」，而是「要我同意，你還缺什麼」，
+   這樣被追問的那一組拿到的是一件做得到的事，不是一句否定。 */
+const PROBE = [
+  { k:'claim', t:'① 他的主張', hint:'先用你自己的話說一遍，不要照抄投影片',
+    ph:'他們主張……' },
+  { k:'basis', t:'② 他憑什麼', hint:'他拿什麼來撐？數據、案例、還是「大家都知道」',
+    ph:'他們憑的是……' },
+  { k:'probe', t:'③ 我的追問', hint:'★ 這一格是關鍵：舉一個具體的情況，問它還成不成立',
+    ph:'如果……，你的結論還成立嗎？' },
+  { k:'need',  t:'④ 要我接受，我需要看到', hint:'具體到他下次做得出來，不要寫「更多證據」',
+    ph:'要我接受，我需要看到……' }
+];
+
 const CER = [   /* 論證檢核。第三格才是重點：證據「撐得到哪裡」。 */
   { k:'claim', t:'主張 C', hint:'我聽到你們的主張是什麼',
     ph:'你們的主張是……' },
@@ -153,6 +247,18 @@ const CER = [   /* 論證檢核。第三格才是重點：證據「撐得到哪�
   { k:'reas',  t:'推理 R', hint:'★ 這一格才是關鍵：它撐得到哪裡、撐不到哪裡',
     ph:'我認為這個證據撐得到／撐不到……，因為……' }
 ];
+
+/* 內容面向要用哪一套句型，由老師每一輪自己選。
+   ★ 為什麼不直接換掉 CER：兩套練的不是同一件事，
+     而且課程不同週次要用不同的那一套（W6/W7 用追問卡）。
+     換掉的話，之前的週次就沒得用了。 */
+const CONTENT_FORMS = {
+  cer:   { name:'CER 論證檢核', fields:CER,
+           note:'用 CER 檢查，不要只寫「很好」' },
+  probe: { name:'追問卡四格',   fields:PROBE,
+           note:'壓一下看它會不會垮 —— 重點在第三格的「如果……」' }
+};
+const DEF_FORM = 'cer';
 
 /* 其他組的快速標籤。刻意有正有負 —— 全部都是好話的按鈕沒有資訊量。 */
 const TAGS = [
@@ -189,16 +295,26 @@ function renderCyclePanel(){
     };
   });
 
-  /* 評審組的職位分工 */
-  box.innerHTML = rs.map(r=>`
-    <div class="task-row" style="--rc:var(${r.color})">
-      <div class="task-role"><b>${r.name}</b><small>${r.en}</small></div>
-      <textarea class="ctl task-input" data-role="${r.key}" rows="2"
-        placeholder="${r.name}在「評審組」的時候要做什麼？留白＝這個職位沒有指定任務">${
-          (s.assign[ck][r.key]||'').replace(/</g,'&lt;')}</textarea>
-    </div>`).join('');
+  /* ★ 三個角色各一區塊。報告組、計時組本來也各有各的事，
+     只給評審組分工等於默認另外兩組「上台就好」。 */
+  box.innerHTML = CY_SIDES.map(sd=>`
+    <details class="cy-assign" ${sd.k==='judge'?'open':''}>
+      <summary>${sd.ic} ${sd.t}的分工 —— 每個職位一件事</summary>
+      ${rs.map(r=>`
+        <div class="task-row" style="--rc:var(${r.color})">
+          <div class="task-role"><b>${r.name}</b><small>${r.en}</small></div>
+          <textarea class="ctl task-input" data-side="${sd.k}" data-role="${r.key}" rows="2"
+            placeholder="${r.name}在「${sd.t}」的時候要做什麼？留白＝沿用預設">${
+              assignOf(ck, sd.k, r.key).replace(/</g,'&lt;')}</textarea>
+        </div>`).join('')}
+    </details>`).join('');
   box.querySelectorAll('.task-input').forEach(inp=>{
-    inp.oninput=()=>{ cycleStore().assign[courseKey()][inp.dataset.role]=inp.value; save(); };
+    inp.oninput=()=>{
+      const st=cycleStore(), k=courseKey();
+      st.assign[k][inp.dataset.side] = st.assign[k][inp.dataset.side] || {};
+      st.assign[k][inp.dataset.side][inp.dataset.role]=inp.value;
+      save();
+    };
   });
 
   const st = $('#cycle-status');
@@ -271,23 +387,81 @@ function bigCard(kind, icon, title, tno, sub, body){
   </div>`;
 }
 
-function memberLine(tno){
+/* ★ 2026-08-30（第六輪）：投影幕上不只是名字＋職位，
+   還要直接寫出「你這一輪負責什麼」。
+
+   為什麼：職位每一輪都會轉。只投「策略長　王小明」，王小明得自己回想
+   策略長在「報告組」的時候要做什麼 —— 而那張職責表在另一個分頁。
+   回想錯的人，整段報告就白坐著。把事情寫在名字旁邊，沒有人需要回想。
+
+   side = present / judge / timer，決定要取哪一套分工。三門課都有預設值。 */
+function seatsOf(tno){
   const raw = tableMembers(tno) || [];
-  const ns = raw.filter(x=>x!=null);
-  if(!ns.length) return '<small>這組還沒有人</small>';
-  return '<small>' + ns.map(n=>studentName(n)||('座號'+n)).join('、') + '</small>';
+  if(!raw.filter(x=>x!=null).length) return [];
+  const slots = tableSlots(tno);
+  const hasSecond = raw.filter(x=>x!=null).length > 6;
+  const out = [];
+  raw.forEach((no,idx)=>{
+    if(no==null) return;
+    const rr = seatRole(tno, idx, slots[idx]);
+    out.push({
+      no, idx,
+      name: studentName(no) || ('座號'+no),
+      role: rr.role,
+      second: !!rr.second,
+      label: seatRoleLabel(tno, idx, slots[idx], hasSecond)
+    });
+  });
+  return out;
 }
+
+function memberLine(tno, side){
+  const list = seatsOf(tno);
+  if(!list.length) return '<small>這組還沒有人</small>';
+  const ck = courseKey();
+  return '<div class="cy-duties">' + list.map(x=>{
+    const job = side ? assignOf(ck, side, x.role.key) : '';
+    return `<div class="cy-duty" style="--rc:var(${x.second ? x.role.light : x.role.color})">
+      <span class="cy-duty-h"><b>${x.label}</b>${esc(x.name)}</span>
+      <span class="cy-duty-b">${
+        job ? esc(job) : '<i>這一輪沒有指定任務 —— 你的職責還在，支援同組</i>'}</span>
+    </div>`;
+  }).join('') + '</div>';
+}
+
 
 function buildBoard(){
   const board = $('#cycleboard'); if(!board) return;
   const s = cycleStore(), R = roles(), rs = ROLESET(), ck = courseKey();
   const c = curClass(), TS = TABLES();
 
+  /* ★ 2026-08-30：職位卡要寫出「這個職位今天是誰」。
+     只寫「記錄長要做什麼」，台下的學生得先在腦子裡算一次
+     「這一輪轉到我了嗎？我是不是記錄長？」—— 而職位每一輪都會轉，
+     算錯的人整段報告就白坐著。名字寫上去，就沒有人需要算。
+     ★ 職位一律走 seatRole()，老師指定過的職務才對得上座位表。 */
+  const whoHas = (tno, key) => {
+    if(!tno) return [];
+    const ms = tableMembers(tno) || [], slots = tableSlots(tno);
+    const hasSecond = ms.filter(x=>x!=null).length>6;
+    const out=[];
+    ms.forEach((no,idx)=>{
+      if(no==null) return;
+      const rr = seatRole(tno, idx, slots[idx]);
+      if(rr.role.key!==key) return;
+      out.push(`${studentName(no)||('座號'+no)}<small>　${
+        seatRoleLabel(tno, idx, slots[idx], hasSecond)}</small>`);
+    });
+    return out;
+  };
+
   /* 評審組的職位分工卡：把「這一組去評分」拆成每個人一份不重疊的工作 */
   const jobCards = rs.map(r=>{
-    const txt = (s.assign[ck][r.key]||'').trim();
+    const txt = (assignOf(ck,'judge',r.key)||'').trim();
+    const who = whoHas(R.judge, r.key);
     return `<div class="cy-job${txt?'':' cy-blank'}" style="--rc:var(${r.color})">
       <div class="cy-job-name">${r.name}</div>
+      <div class="cy-job-who">${who.length ? who.join('、') : '<small>這一輪沒有人在這個職位</small>'}</div>
       <div class="cy-job-body">${
         txt ? txt.replace(/</g,'&lt;').replace(/\n/g,'<br>')
             : '這一輪沒有指定任務<br><small>你的職責還在，支援同組</small>'}</div>
@@ -325,11 +499,11 @@ function buildBoard(){
     </div>
 
     <div class="cy-tri">
-      ${bigCard('present','🎤','報告組', R.present, memberLine(R.present),
+      ${bigCard('present','🎤','報告組', R.present, memberLine(R.present,'present'),
         '<div class="cy-note">台上進行中</div>')}
-      ${bigCard('judge','⚖️','評審組（剛報告完）', R.judge, memberLine(R.judge),
+      ${bigCard('judge','⚖️','評審組（剛報告完）', R.judge, memberLine(R.judge,'judge'),
         '<div class="cy-note">深度回饋 ＋ 給分，每個職位都有工作</div>')}
-      ${bigCard('timer','⏱️','計時組（下一個上台）', R.timer, memberLine(R.timer),
+      ${bigCard('timer','⏱️','計時組（下一個上台）', R.timer, memberLine(R.timer,'timer'),
         `<div class="cy-clock-wrap" id="cy-clock-wrap">
            <div class="cy-clock" id="cy-clock">${mmss(left)}</div>
            <div class="cy-clock-btns">
@@ -359,10 +533,15 @@ function buildBoard(){
       <summary>📝 評審組給分與回饋（給第 ${R.present} 組）</summary>
       <div class="cy-grade">
         <div class="cy-dim">
-          <div class="cy-dim-h">實質內容　<small>用 CER 檢查，不要只寫「很好」</small></div>
+          <div class="cy-dim-h">實質內容
+            <select class="ctl cy-form" id="cy-form" title="這一輪的內容回饋要用哪一套句型">
+              ${Object.keys(CONTENT_FORMS).map(k=>
+                `<option value="${k}"${k===s.form?' selected':''}>${CONTENT_FORMS[k].name}</option>`).join('')}
+            </select>
+            <small>${CONTENT_FORMS[s.form].note}</small></div>
           <div class="cy-starrow" data-row="content">${stars('content')}
             <span class="cy-sv" id="cy-sv-content">—</span></div>
-          ${fields(CER,'content')}
+          ${fields(CONTENT_FORMS[s.form].fields,'content')}
         </div>
         <div class="cy-dim">
           <div class="cy-dim-h">台風與簡報表現　<small>長頸鹿回饋法：先講事實，再講請求</small></div>
@@ -421,6 +600,21 @@ function wireBoard(){
   const s = cycleStore();
 
   $('#cy-close').onclick = closeBoard;
+
+  /* 換句型組要整個重畫欄位。已經打了一半的字會不見 ——
+     這是刻意的：兩套的格子對不起來，硬搬過去只會搬出四不像。
+     所以有東西時先問一聲。 */
+  const fsel = $('#cy-form');
+  if(fsel) fsel.onchange = ()=>{
+    const typed = [...document.querySelectorAll('.cy-in[data-g="content"]')]
+      .some(t=>t.value.trim());
+    if(typed && !confirm('換一套句型會清掉「實質內容」這幾格已經打的字。\n（台風那幾格不受影響。）確定要換嗎？')){
+      fsel.value = cycleStore().form; return;
+    }
+    cycleStore().form = fsel.value; save();
+    buildBoard();
+  };
+
   $('#cy-prev').onclick  = ()=>step(-1);
   $('#cy-next').onclick  = ()=>step(1);
 
