@@ -11,6 +11,7 @@ import { doc, collection, setDoc, updateDoc, deleteDoc,
 import { auth, db, DOMAIN, TEA_KEY, teachers, isTeacher } from './mhh-fb.js';
 
 const LS_KEY = 'rt_dashboard_v1';
+const GAS_SESSION_KEY = 'mhh_gas_token_session_v1';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g,
@@ -20,7 +21,8 @@ let TEA = null, ROOM = null, UNSUB = null, ANSWERS = {}, CURQ = null;
 
 /* ---------- 本機名單 ---------- */
 function localDB(){
-  try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; }
+  try { const d=JSON.parse(localStorage.getItem(LS_KEY)) || {};
+        d.gasToken=sessionStorage.getItem(GAS_SESSION_KEY)||''; return d; }
   catch(e){ return {}; }
 }
 function activeClass(){
@@ -29,8 +31,14 @@ function activeClass(){
 }
 /* 6 位數字代碼。原本是英數混合，但學生要在手機上手打 ——
    數字鍵盤快得多，也不會有 O/0、I/1 看錯的問題。 */
+function roomScope(classId){
+  const d = localDB();
+  const c = (d.classes && d.classes[classId]) || {};
+  return [d.year || c.year || '', classId || '', d.session || '']
+    .map(v => encodeURIComponent(String(v))).join('__');
+}
 function roomCodeFor(classId){
-  const k = 'mhh_room_' + classId;
+  const k = 'mhh_room_v2_' + roomScope(classId);
   let c = localStorage.getItem(k);
   if(!c || !/^\d{6}$/.test(c)){
     c = String(Math.floor(100000 + Math.random() * 900000));
@@ -42,13 +50,24 @@ function roomCodeFor(classId){
 /* 學生端網址前綴。手機連不到老師電腦的 localhost，
    所以要能改成區網 IP 或正式的 GitHub Pages 網址。 */
 const BASE_KEY = 'mhh_base_url';
+const PROD_BASE = 'https://oohrzir-mhh.github.io/mhh/';
 function baseUrl(){
   const saved = (localStorage.getItem(BASE_KEY) || '').trim();
-  if(saved) return saved.replace(/\/*$/, '') + '/';
-  return location.origin + location.pathname.replace(/[^/]*$/, '');
+  const raw = saved || (location.hostname === 'localhost' ? PROD_BASE
+    : location.origin + location.pathname.replace(/[^/]*$/, ''));
+  try{
+    const u = new URL(raw, location.href);
+    if(!/^https?:$/.test(u.protocol)) throw new Error('bad protocol');
+    u.search = ''; u.hash = '';
+    if(!u.pathname.endsWith('/')) u.pathname += '/';
+    return u.href;
+  }catch(e){ return PROD_BASE; }
 }
 function studentUrl(code){
-  return baseUrl() + 'student.html?r=' + code;
+  const u = new URL('student.html', baseUrl());
+  u.searchParams.set('v', '2');
+  u.searchParams.set('r', String(code));
+  return u.href;
 }
 function log(msg, bad){
   const el = $('#push-log'); if(!el) return;
@@ -154,7 +173,7 @@ $('#btn-open-room')?.addEventListener('click', async () => {
   const code = roomCodeFor(c.id);
   try{
     await setDoc(doc(db,'rooms',code), {
-      code, classId: c.id, className: c.name, year: d.year || '',
+      code, classId: c.id, className: c.name, year: d.year || '', session: d.session || '',
       teacherEmail: TEA.email, teacherUid: TEA.uid,
       roster: (c.students||[]).map(s => ({ no: Number(s.no), name: s.name || '' })),
       open: true, question: null, updatedAt: serverTimestamp()

@@ -32,7 +32,7 @@ function localDB(){
   catch(e){ return null; }
 }
 function writeLocal(obj){
-  localStorage.setItem(LS_KEY, JSON.stringify(obj));
+  localStorage.setItem(LS_KEY, JSON.stringify({ ...obj, gasToken:'' }));
 }
 
 function status(msg, kind){
@@ -64,7 +64,7 @@ async function push(reason){
     status('同步中…', 'busy');
 
     /* ① 設定（不含班級與紀錄，那兩塊另外放） */
-    const { classes, records, ...settings } = DB;
+    const { classes, records, gasToken, ...settings } = DB;
     await setDoc(doc(db, 'workspaces', WORKSPACE), {
       ...settings,
       updatedAt: Date.now(),
@@ -137,7 +137,7 @@ async function pull(){
   ch.forEach(d => (d.data().items || []).forEach(r => records.push(r)));
   records.sort((a, b) => String(a.ts).localeCompare(String(b.ts)));
 
-  delete settings.updatedBy; delete settings.device;
+  delete settings.updatedBy; delete settings.device; delete settings.gasToken;
   return { ...settings, classes, records };
 }
 

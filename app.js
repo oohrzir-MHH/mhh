@@ -213,6 +213,7 @@ const RAINBOW_BONUS = 5;   // 彩虹貫通，全組每人加分
 
 /* ---------------- 2. 狀態 ---------------- */
 const LS_KEY = 'rt_dashboard_v1';
+const GAS_SESSION_KEY = 'mhh_gas_token_session_v1';
 let DB = {
   years:['115'], year:'115',
   classes:{},   // id -> {id,year,name,students:[{no,name}],seats:{table:[no,...]},size}
@@ -236,9 +237,14 @@ function save(){
      一律把 c.seats 寫回 c.layouts —— 只有這裡是所有變更的必經之路。 */
   const c = DB.classes[DB.activeClass];
   if(c){ c.layouts = c.layouts || {}; c.layouts[c.layout || DEF_LAYOUT] = c.seats || {}; }
-  DB.updatedAt=Date.now(); localStorage.setItem(LS_KEY, JSON.stringify(DB));
+  DB.updatedAt=Date.now();
+  if(DB.gasToken) sessionStorage.setItem(GAS_SESSION_KEY, DB.gasToken);
+  else sessionStorage.removeItem(GAS_SESSION_KEY);
+  /* GAS 金鑰只活在本分頁，不寫進永久 localStorage。 */
+  localStorage.setItem(LS_KEY, JSON.stringify(Object.assign({}, DB, {gasToken:''})));
 }
-function load(){ try{ const raw=localStorage.getItem(LS_KEY); if(raw) DB=Object.assign(DB,JSON.parse(raw)); }
+function load(){ try{ const raw=localStorage.getItem(LS_KEY); if(raw) DB=Object.assign(DB,JSON.parse(raw));
+                       DB.gasToken=sessionStorage.getItem(GAS_SESSION_KEY)||''; }
                  catch(e){ console.warn('讀取本機資料失敗',e); }
                  migrateAllLayouts(); }
 function curClass(){ return DB.classes[DB.activeClass]||null; }
@@ -3676,7 +3682,7 @@ function bind(){
   };
   function logBackup(m){ const el=$('#backup-log'); if(el) el.textContent=m; toast(m); }
 
-  $('#btn-backup').onclick=()=>dl(new Blob([JSON.stringify(DB,null,2)],{type:'application/json'}),
+  $('#btn-backup').onclick=()=>dl(new Blob([JSON.stringify(Object.assign({},DB,{gasToken:''}),null,2)],{type:'application/json'}),
     `課堂儀表板備份_${todayStr()}.json`);
   $('#file-restore').onchange=e=>{
     const f=e.target.files[0]; if(!f) return;

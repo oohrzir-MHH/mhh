@@ -1,0 +1,18 @@
+.teacher-gate {
+  position: fixed; inset: 0; z-index: 2147483647; display: grid; place-items: center;
+  padding: 24px; color: #182033;
+  background: radial-gradient(circle at 20% 15%, rgba(97,130,255,.22), transparent 34%), radial-gradient(circle at 85% 80%, rgba(42,190,155,.18), transparent 36%), #f4f6fb;
+}
+.teacher-gate[hidden] { display: none !important; }
+.teacher-gate-card { width:min(420px,100%); box-sizing:border-box; padding:34px; border:1px solid #dce2f0; border-radius:22px; background:rgba(255,255,255,.96); box-shadow:0 24px 70px rgba(25,40,80,.18); }
+.teacher-gate-logo { font-size:42px; }
+.teacher-gate h1 { margin:12px 0 8px; font-size:28px; }
+.teacher-gate p { margin:0 0 22px; line-height:1.65; color:#5c667c; }
+.teacher-gate label { display:block; margin-bottom:8px; font-weight:700; }
+.teacher-gate input,.teacher-gate button { width:100%; min-height:50px; box-sizing:border-box; border-radius:12px; font:inherit; }
+.teacher-gate input { padding:0 15px; border:1px solid #bdc7db; font-size:20px; letter-spacing:.18em; }
+.teacher-gate input:focus { outline:3px solid rgba(75,109,244,.23); border-color:#4b6df4; }
+.teacher-gate button { margin-top:14px; border:0; color:white; background:#4b6df4; font-weight:800; cursor:pointer; }
+.teacher-gate button:disabled { opacity:.6; cursor:wait; }
+.teacher-gate .teacher-gate-status { min-height:1.5em; margin:13px 0 0; color:#b3261e; }
+.teacher-gate .teacher-gate-status.ok { color:#13795b; }

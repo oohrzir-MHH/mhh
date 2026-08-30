@@ -158,9 +158,16 @@ input[type=number]{font-size:1.9rem;font-weight:800;text-align:center;padding:16
     <p class="sub" id="login-room">—</p>
     <button class="btn pri big" id="btn-login" style="max-width:330px;margin-top:12px">
       使用學校帳號登入</button>
+    <div id="room-entry" style="display:none;width:min(330px,100%);margin-top:8px">
+      <p class="note">QR 無法使用時，可直接輸入老師畫面上的六位教室代碼：</p>
+      <input type="text" id="inp-room" inputmode="numeric" maxlength="6"
+        autocomplete="one-time-code" placeholder="例如：123456" aria-label="六位教室代碼">
+      <button class="btn big" id="btn-room-enter" style="margin-top:8px">進入教室</button>
+    </div>
     <p class="note" style="max-width:330px">
       請用 <b>@tngs.tn.edu.tw</b> 的學校帳號。<br>
-      <b>只有第一次要登入</b>，之後這台裝置會直接進入。</p>
+      <b>只有第一次要登入</b>，之後這台裝置會直接進入。<br>
+      若目前是在 LINE、相機掃碼器或其他 App 內開啟，請先選「在 Safari／Chrome 開啟」。</p>
     <div class="err" id="login-err" style="display:none"></div>
   </div>
 </div>
@@ -263,8 +270,8 @@ input[type=number]{font-size:1.9rem;font-weight:800;text-align:center;padding:16
 <script type="module">
 import { initializeApp }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
-         getRedirectResult, onAuthStateChanged, signOut }
+import { getAuth, GoogleAuthProvider, signInWithPopup,
+         onAuthStateChanged, signOut }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { getFirestore, doc, collection, getDoc, setDoc, onSnapshot, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
@@ -310,11 +317,11 @@ let SENTQ = null;     // 已送出的 qid
 /* ═══════════ 啟動 ═══════════ */
 if(!ROOM){
   show('s-login');
-  err('#login-err', '網址少了教室代碼。\n請重新掃描老師提供的 QR Code，或向老師索取連結。');
+  err('#login-err', '網址少了教室代碼。請輸入老師畫面上的六位數字。');
   $('#btn-login').disabled = true;
+  $('#room-entry').style.display = '';
 } else {
   $('#login-room').textContent = `教室代碼　${ROOM}`;
-  getRedirectResult(auth).catch(()=>{});
   onAuthStateChanged(auth, async u => {
     if(!u){ show('s-login'); return; }
     if(!(u.email || '').endsWith('@' + DOMAIN)){
@@ -331,16 +338,32 @@ if(!ROOM){
   });
 }
 
+function enterByCode(){
+  const code = String($('#inp-room').value || '').replace(/\D/g, '');
+  if(!/^\d{6}$/.test(code)) return err('#login-err', '請輸入完整的六位教室代碼。');
+  const u = new URL(location.href);
+  u.search = '';
+  u.searchParams.set('v', '2');
+  u.searchParams.set('r', code);
+  location.replace(u.href);
+}
+$('#btn-room-enter').onclick = enterByCode;
+$('#inp-room').addEventListener('keydown', e => { if(e.key === 'Enter') enterByCode(); });
+
 $('#btn-login').onclick = async () => {
   err('#login-err', '');
   const p = new GoogleAuthProvider();
   p.setCustomParameters({ hd: DOMAIN, prompt: 'select_account' });
   try { await signInWithPopup(auth, p); }
   catch(e){
-    if(/popup-blocked|popup-closed|cancelled-popup/.test(e.code)){
-      try { await signInWithRedirect(auth, p); return; } catch(_){}
+    const code = e.code || '';
+    if(/popup-blocked|popup-closed|cancelled-popup|web-storage-unsupported/.test(code)){
+      return err('#login-err', '登入視窗被目前的瀏覽器攔下。\n\n請用右上角選單改成「在 Safari 開啟」或「在 Chrome 開啟」，再按一次登入。不要在 LINE／掃碼器內建瀏覽器登入。');
     }
-    err('#login-err', `登入失敗\n${e.code}\n\n如果訊息提到「管理員」或「已封鎖」，請告訴老師 —— 這是學校端的設定問題，不是你的錯。`);
+    if(/unauthorized-domain/.test(code)){
+      return err('#login-err', '這個網站尚未加入 Firebase 授權網域。請把畫面交給老師處理。');
+    }
+    err('#login-err', `登入失敗\n${code || e.message}\n\n請確認使用學校帳號；若仍失敗，把這段錯誤截圖給老師。`);
   }
 };
 
