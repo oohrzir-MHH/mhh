@@ -37,11 +37,21 @@ function roomScope(classId){
   return [d.year || c.year || '', classId || '', d.session || '']
     .map(v => encodeURIComponent(String(v))).join('__');
 }
+function stableRoomCode(scope){
+  /* FNV-1a：同一組 scope 在任何瀏覽器都會算出同一個六位數字。 */
+  let hash = 2166136261;
+  for(let i=0; i<scope.length; i++){
+    hash ^= scope.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return String(100000 + ((hash >>> 0) % 900000));
+}
 function roomCodeFor(classId){
-  const k = 'mhh_room_v2_' + roomScope(classId);
+  const scope = roomScope(classId);
+  const k = 'mhh_room_v3_' + scope;
   let c = localStorage.getItem(k);
   if(!c || !/^\d{6}$/.test(c)){
-    c = String(Math.floor(100000 + Math.random() * 900000));
+    c = stableRoomCode(scope);
     localStorage.setItem(k, c);
   }
   return c;

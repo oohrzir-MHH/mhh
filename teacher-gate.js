@@ -8,7 +8,7 @@
   const scripts=[
     ['xlsx.js?v=13',false],['qrcode-generator.js?v=1',false],['qr-adapter.js?v=1',false],
     ['app.js?v=48',false],['cycle.js?v=46',false],['tools.js?v=7',false],
-    ['push.js?v=48',true],['sync.js?v=2',true]
+    ['push.js?v=49',true],['sync.js?v=2',true]
   ];
   const gate=document.getElementById('teacher-gate');
   const form=document.getElementById('teacher-gate-form');
