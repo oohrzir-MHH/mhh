@@ -87,12 +87,27 @@ function log(msg, bad){
   el.innerHTML = `<span style="color:${bad?'var(--danger)':'inherit'}">${esc(msg)}</span>`;
 }
 
-/* ---------- 登入 ---------- */
+/* ---------- 登入 ----------
+   ★ 2026-09-03（第五輪）修正：拿掉 hd: DOMAIN。
+     hd 會叫 Google 在登入視窗就只接受 @tngs.tn.edu.tw 的帳號 ——
+     老師自己常用個人 Gmail（例如 oohrzir@gmail.com）登入時，
+     會直接被 Google 擋在登入視窗裡，變成「連老師自己都推不出題目」。
+     student.html／grades.html 那一輪已經拿掉這個限制，這裡當時漏改了。
+     真正決定誰是老師的是 mhh-fb.js 的 isTeacher() 與 Firestore 規則的
+     isTeacher()，不是靠 Google 登入視窗擋網域，拿掉 hd 不會變得比較不安全。 */
 $('#btn-tea-login')?.addEventListener('click', async () => {
   const p = new GoogleAuthProvider();
-  p.setCustomParameters({ hd: DOMAIN, prompt: 'select_account' });
+  p.setCustomParameters({ prompt: 'select_account' });
   try { await signInWithPopup(auth, p); }
-  catch(e){ log('登入失敗：' + e.code, true); }
+  catch(e){
+    const code = e.code || '';
+    if(/popup-blocked|popup-closed|cancelled-popup|web-storage-unsupported/.test(code)
+       || /missing initial state/i.test(e.message || '')){
+      log('登入視窗被瀏覽器擋下，或瀏覽器封鎖了登入需要的暫存資料（sessionStorage）。\n\n請改用 Safari 或 Chrome 直接開啟本頁（不要透過 LINE／App 內建瀏覽器），並確認沒有開「無痕瀏覽」；iPhone 可以試著到「設定 → Safari → 防止跨網站追蹤」先關掉再登入一次。', true);
+      return;
+    }
+    log('登入失敗：' + (code || e.message), true);
+  }
 });
 $('#btn-tea-logout')?.addEventListener('click', () => signOut(auth));
 
