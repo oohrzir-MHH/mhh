@@ -8,6 +8,7 @@
   const scripts=[
     ['xlsx.js?v=13',false],['qrcode-generator.js?v=1',false],['qr-adapter.js?v=1',false],
     ['app.js?v=51',false],['cycle.js?v=46',false],['tools.js?v=7',false],
+    ['seat-student-view.js?v=1',false],
     ['push.js?v=50',true],['sync.js?v=2',true]
   ];
   const gate=document.getElementById('teacher-gate');
@@ -23,9 +24,19 @@
       if(data&&data.gasToken){ data.gasToken=''; localStorage.setItem(DB_KEY,JSON.stringify(data)); }
     }catch(e){ console.warn('無法清除舊版永久金鑰',e); }
   }
-  function clearGasToken(){
+  /* ★ 2026-09-03 修正：pagehide 不可以再刪 sessionStorage。
+     pagehide 在 location.reload() 也會觸發，而 sync.js 從雲端還原資料
+     正是用 reload 套用 —— 舊寫法會讓每一次「匯入雲端」都被踢回密碼欄。
+     pagehide 只負責 scrub localStorage 裡的舊版永久金鑰（那才是要清的東西）；
+     sessionStorage 本來就會跟著分頁一起消失，不需要在這裡動手。
+     真的要上鎖走 window.mhhTeacherLock()。 */
+  function scrubOnPagehide(){
+    scrubPersistedGasToken();
+  }
+  function lockTeacher(){
     try{ sessionStorage.removeItem(GAS_SESSION_KEY); sessionStorage.removeItem(UNLOCK_KEY); }catch(e){}
     scrubPersistedGasToken();
+    location.reload();
   }
   function addScript(src,module){
     return new Promise((resolve,reject)=>{
@@ -67,6 +78,7 @@
     sessionStorage.setItem(UNLOCK_KEY,'1'); loadDashboard();
   });
   scrubPersistedGasToken();
-  addEventListener('pagehide',clearGasToken);
+  addEventListener('pagehide',scrubOnPagehide);
+  window.mhhTeacherLock=lockTeacher;
   if(sessionStorage.getItem(UNLOCK_KEY)==='1') loadDashboard(); else input.focus();
 })();
