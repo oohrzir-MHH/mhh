@@ -1078,8 +1078,12 @@ body.tb-open{overflow:hidden}
 /* 這一堂發言過的人，整格描一圈綠邊，跟計分板那面同一個視覺語彙。 */
 .seat.scoring.spoke .s-in{box-shadow:0 0 0 3px var(--ok) inset}
 
-/* 累積分數。用等寬數字，分數跳動時整排不會左右晃。 */
-.seat .s-pts{font-variant-numeric:tabular-nums;font-size:1.15em;color:var(--txt)}
+/* 累積分數。用等寬數字，分數跳動時整排不會左右晃。
+   ★ 2026-09-03：字級再放大一級 —— 老師是站在教室後面看投影的，
+   這個數字要能一眼掃過全班，不能跟座號一樣大小。 */
+.seat .s-pts{font-variant-numeric:tabular-nums;font-size:1.5em;font-weight:800;color:var(--txt)}
+/* 補空格的格子：只佔位，不畫任何東西 */
+.table-unit.table-gap{background:none;border:none;box-shadow:none;pointer-events:none}
 
 /* 扣分鈕。放右下角，跟收空位的 ✕（正上方）分得開，
    免得上課手忙腳亂時按錯 —— 那兩個動作的後果差很多。

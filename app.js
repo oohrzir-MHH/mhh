@@ -229,9 +229,18 @@ function LO(){
   if(!n || n === base.tables || n > base.tables) return base;
   /* LO() 在每次重繪裡會被叫上百次，所以做一層快取。 */
   if(_loCache && _loCache.key === key && _loCache.n === n) return _loCache.lo;
+  /* ★ 2026-09-03 修：空位要留在「離講台最遠」的那一列。
+     order 是由後往前排的（[9,8,7,...,1]，第 1 組在右下角、最靠近講台）。
+     組數不是每列桌數的整數倍時，直接濾掉會讓**最後一列**（＝最靠近講台那一列）
+     變短 —— 8 組排成 3/3/2，講台前面缺兩張桌子，看起來像教室前排沒人坐。
+     在陣列**開頭**補幾個空格，缺口就被推到畫面最上面（教室最後面）。
+     8 組 → [空,8,7 / 6,5,4 / 3,2,1]，講台那一列是滿的。 */
+  const filtered = (base.order || []).filter(t => t <= n);
+  const perRow   = base.perRow || 3;
+  const pad      = (perRow - (filtered.length % perRow)) % perRow;
   const lo = Object.assign({}, base, {
     tables: n,
-    order: (base.order || []).filter(t => t <= n)
+    order: new Array(pad).fill(null).concat(filtered)
   });
   _loCache = { key, n, lo };
   return lo;
@@ -514,9 +523,16 @@ function rectRowLen(n, row){ return row === 0 ? Math.ceil(n/2) : Math.floor(n/2)
 /* 全班最寬的那一排有幾個人 —— 用來決定一桌要留多寬。
    不直接用 L.max（4）是因為：全班都只坐 4 人時，
    留 4 格的寬度會讓每個位子被縮到很小，投影出去看不清楚。 */
-function rectMaxSide(cls){
+function rectMaxSide(cls, openRing){
   const L = LO();
   if(L.grow !== 'row') return L.side;
+  /* ★ 2026-09-03 修：這裡是「第 5 個人壓到隔壁組」的元凶。
+     全班人數超過「組數 × 每組基本人數」時，renderSeats 會把每一組
+     都攤開成 L.max 個位子（openRing），也就是一排 4 個。
+     但這個函式原本只看「目前實際坐了幾個人」算出一排 3 個，
+     於是桌子只留了 3 格的寬度，第 4 格的座位就整個溢出到隔壁組上面。
+     攤開時一律用滿編寬度，畫的位子數與留的寬度才會是同一套算法。 */
+  if(openRing) return Math.floor(L.max / 2);
   const c = cls || curClass();
   let mx = L.side;
   if(c && c.seats) TABLES().forEach(t=>{
@@ -1115,7 +1131,7 @@ function renderSeats(){
   syncSeatLockBtn();          // 切班級時按鈕要跟著換成該班的狀態
   syncSeatModeUI();
   const openRing = !!c && (c.students||[]).length > L.tables * L.base;
-  const maxSide = L.kind==='hex' ? 0 : rectMaxSide(c);
+  const maxSide = L.kind==='hex' ? 0 : rectMaxSide(c, openRing);
   const M = L.kind==='hex' ? null : rectMetrics(L, maxSide);
   const unitW = L.kind==='hex' ? UNIT_W : M.unitW;
   const unitH = L.kind==='hex' ? UNIT_H : M.unitH;
@@ -1126,6 +1142,16 @@ function renderSeats(){
   wrap.dataset.cw=canvasW;
 
   tableOrder().forEach(tno=>{
+    /* null＝這一格沒有桌子（組數不足一整列時補的空格，見 LO()）。
+       還是要放一個等大的空 div，否則格線會塌掉，
+       剩下的桌子會往左擠、缺口跑到最靠近講台那一列。 */
+    if(tno == null){
+      const gap=document.createElement('div');
+      gap.className='table-unit table-gap';
+      gap.style.height=unitH+'px';
+      wrap.appendChild(gap);
+      return;
+    }
     const members = c ? tableMembers(tno) : [];
     /* openRing：全班人數超過「每組基本盤 x 組數」時，把每一組的外圈整圈攤開成灰色空位。
 
@@ -2563,6 +2589,7 @@ function downloadSeatingPNG(view){
   };
 
   order.forEach((tno,i)=>{
+    if(tno == null) return;              // 空格：位置照樣佔掉，只是不畫東西
     const col=i%cols, row=Math.floor(i/cols);
     const ux=ox+col*unitW*s, uy=oy+row*unitH*s;
     const cx=ux+unitW*s/2, cy=uy+unitH*s/2;
