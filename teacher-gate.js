@@ -7,9 +7,9 @@
   const PIN_HASH='0ffe1abd1a08215353c233d6e009613e95eec4253832a761af28ff37ac5a150c';
   const scripts=[
     ['xlsx.js?v=13',false],['qrcode-generator.js?v=1',false],['qr-adapter.js?v=1',false],
-    ['app.js?v=51',false],['cycle.js?v=46',false],['tools.js?v=7',false],
+    ['app.js?v=52',false],['cycle.js?v=46',false],['tools.js?v=7',false],
     ['seat-student-view.js?v=1',false],
-    ['push.js?v=50',true],['sync.js?v=2',true]
+    ['push.js?v=52',true],['sync.js?v=2',true]
   ];
   const gate=document.getElementById('teacher-gate');
   const form=document.getElementById('teacher-gate-form');

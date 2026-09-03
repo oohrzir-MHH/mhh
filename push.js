@@ -75,7 +75,7 @@ function baseUrl(){
 }
 function studentUrl(code){
   const u = new URL('student.html', baseUrl());
-  u.searchParams.set('v', '2');
+  u.searchParams.set('v', '4');
   u.searchParams.set('r', String(code));
   return u.href;
 }
@@ -199,16 +199,44 @@ if(baseBox){
    老師開學第一天就想貼到 Google Classroom。 */
 (function(){ const gu = $('#grade-url'); if(gu) gu.value = gradeUrl(); })();
 
+/* 組別／職位（2026-09-03 第六輪新增）——
+   算法直接借用 app.js 已經寫好、算過的 roleAtSlot／roleLabel／LO，
+   不在這裡另外重算一次規則，兩邊才不會算出不一樣的答案。
+   app.js 是傳統 <script>（不是 module），function 宣告會掛在 window 上；
+   teacher-gate.js 保證 app.js 一定比 push.js 先載入完，所以這裡讀得到。
+   算不出來（app.js 還沒載完、或這個班還沒排位子）就整段跳過，
+   roster 照樣有 no/name，只是少 table/role 這兩欄，不影響原本的功能。 */
+function seatPositionsByNo(c, round){
+  const out = {};
+  try{
+    if(typeof window.roleAtSlot !== 'function' || typeof window.roleLabel !== 'function') return out;
+    Object.keys(c.seats || {}).forEach(t => {
+      const arr = c.seats[t] || [];
+      const hasSecond = arr.some((no,i) => no != null && window.roleAtSlot(i, round).second);
+      arr.forEach((no, idx) => {
+        if(no == null) return;
+        out[String(no)] = { table: Number(t), role: window.roleLabel(idx, round, hasSecond) };
+      });
+    });
+  }catch(e){ console.warn('組別/職位算不出來，roster 就先不帶這兩欄', e); }
+  return out;
+}
+
 $('#btn-open-room')?.addEventListener('click', async () => {
   const c = activeClass();
   if(!c) return log('請先選擇班級。', true);
   const d = localDB();
   const code = roomCodeFor(c.id);
+  const pos = seatPositionsByNo(c, d.round || 1);
   try{
     await setDoc(doc(db,'rooms',code), {
       code, classId: c.id, className: c.name, year: d.year || '', session: d.session || '',
       teacherEmail: TEA.email, teacherUid: TEA.uid,
-      roster: (c.students||[]).map(s => ({ no: Number(s.no), name: s.name || '' })),
+      roster: (c.students||[]).map(s => {
+        const p = pos[String(s.no)];
+        return { no: Number(s.no), name: s.name || '',
+                 table: p ? p.table : null, role: p ? p.role : '' };
+      }),
       open: true, question: null, updatedAt: serverTimestamp()
     }, { merge:true });
     ROOM = code;

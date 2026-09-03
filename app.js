@@ -189,11 +189,18 @@ const LAYOUTS = {
      跟他旁邊那個基本位共用職位，用既有的正1／正2（①②）機制表示。
      一排 4 人由左到右是 [A②, A①, B①, B②]，成對相鄰，左右對稱。
      grow:'row' 只掛在這一個配置上，hex6r 的側邊位維持原樣不動。 */
+  /* ★ 2026-09-03（第八輪）修正：order 要走「連續路徑」，
+     相鄰號碼在畫面上一定要是相鄰的桌子，逐組報號不會突然跳到對角。
+     三列（或以上）時每一列的左右方向要輪流交替（蛇形／Ｓ形），
+     不能每一列都同一個方向——同方向的話，換列銜接處就會整排跳過去。
+     舊版 quad9 中間那一列 [6,5,4] 跟前後兩列同方向，就是這裡跳號的原因：
+     前排 3(左)接中排該是「同一欄、往上」的 4，結果中排 4 卻排在最右邊。
+     兩列（hex6）本來就只能交替一次，原本就是對的，沒有動。 */
   quad9: { name:'四人 9 組',  short:'▦ 四人 9 組',  kind:'rect', grow:'row',
-           tables:9, perRow:3, side:2, base:4, max:8, order:[9,8,7,6,5,4,3,2,1],
+           tables:9, perRow:3, side:2, base:4, max:8, order:[9,8,7,4,5,6,3,2,1],
            hint:'一橫列三組、共三列。每組面對面各坐 2 人；第 5 人起往同一排的左右加，一排最多 4 人。' },
   hex6r: { name:'六人 6 組',  short:'▤ 六人 6 組',  kind:'rect',
-           tables:6, perRow:2, side:3, base:6, max:8, order:[6,5,4,3,2,1],
+           tables:6, perRow:2, side:3, base:6, max:8, order:[6,5,3,4,2,1],
            hint:'一橫列兩組、共三列。每組面對面各坐 3 人；第 7、8 人坐左右側邊。' },
   /* ★ 2026-09-03：把「老師自己匯入一張座位圖」從化學課專屬，
      變成任何課程都選得到的第 4 種配置。
@@ -221,26 +228,44 @@ function groupCountOf(c){
   const n = c && c.groupCount;
   return (typeof n === 'number' && n >= 1) ? n : null;
 }
+/* ★ 2026-09-03（第八輪）：桌號排列改成「算出來」而不是「濾掉再補洞」。
+   舊寫法是把一份寫死的 9 格 order 陣列濾掉超過組數的號碼、再在陣列開頭
+   補空格湊成整列——組數剛好是整列倍數（6、9 組）時湊巧沒事，
+   但組數卡在列與列之間（例如 4、5、7、8 組）時，濾掉的號碼位置
+   會亂掉，逐組報號會突然跳到對角的桌子，不是「隔壁桌」。
+
+   現在改成每次都用 snakeOrder() 從頭算：第 1 組固定在右下角（最靠近
+   講台），沿著同一列走到底，再往後（畫面上方）跳一列繼續走——但跳列時
+   一定是「同一欄，正上方」，不是跳到另一邊，走法像蛇一樣 Ｓ 形繞，
+   相鄰號碼保證是相鄰的桌子。缺口固定留在最後一列（離講台最遠、
+   蛇形路徑真正的尾端），跟原本「空桌留在最後」的設計是同一個結論，
+   只是換一種不會跳號的算法達成。 */
+function snakeOrder(n, perRow){
+  if(!n || n < 1) return [];
+  const numRows = Math.ceil(n / perRow);
+  const grid = Array.from({length:numRows}, () => new Array(perRow).fill(null));
+  for(let i = 0; i < n; i++){
+    const table = i + 1;
+    const frontRow = Math.floor(i / perRow);     // 0＝最靠近講台那一列
+    const offset   = i % perRow;
+    const rtl = (frontRow % 2 === 0);            // 偶數列（含最前列）：從右往左塞
+    const col = rtl ? (perRow - 1 - offset) : offset;
+    grid[numRows - 1 - frontRow][col] = table;   // order 陣列是「由後往前」
+  }
+  return grid.flat();
+}
 let _loCache = null;
 function LO(){
   const key = layoutKey(), base = LAYOUTS[key];
   if(base.kind === 'photo') return base;
-  const n = groupCountOf(curClass());
-  if(!n || n === base.tables || n > base.tables) return base;
+  const n = groupCountOf(curClass()) || base.tables;
+  if(n > base.tables) return base;
   /* LO() 在每次重繪裡會被叫上百次，所以做一層快取。 */
   if(_loCache && _loCache.key === key && _loCache.n === n) return _loCache.lo;
-  /* ★ 2026-09-03 修：空位要留在「離講台最遠」的那一列。
-     order 是由後往前排的（[9,8,7,...,1]，第 1 組在右下角、最靠近講台）。
-     組數不是每列桌數的整數倍時，直接濾掉會讓**最後一列**（＝最靠近講台那一列）
-     變短 —— 8 組排成 3/3/2，講台前面缺兩張桌子，看起來像教室前排沒人坐。
-     在陣列**開頭**補幾個空格，缺口就被推到畫面最上面（教室最後面）。
-     8 組 → [空,8,7 / 6,5,4 / 3,2,1]，講台那一列是滿的。 */
-  const filtered = (base.order || []).filter(t => t <= n);
-  const perRow   = base.perRow || 3;
-  const pad      = (perRow - (filtered.length % perRow)) % perRow;
+  const perRow = base.perRow || 3;
   const lo = Object.assign({}, base, {
     tables: n,
-    order: new Array(pad).fill(null).concat(filtered)
+    order: snakeOrder(n, perRow)
   });
   _loCache = { key, n, lo };
   return lo;
