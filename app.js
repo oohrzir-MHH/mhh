@@ -117,6 +117,12 @@ function withCourse(name, ck){
 }
 /* 這個課程用哪一種座位表／計分方式。沒寫就是原本的分組模式。 */
 function seatMode(){ return CO().seatMode || 'group'; }
+/* 座位表是不是「一張照片」—— 兩種來源：化學課程本身，或選了 photo 配置。
+   兩者畫面完全一樣，所以底下一律用這一個判斷，不要各問各的。 */
+function isPhotoSeat(){
+  const c = curClass();
+  return seatMode() === 'photo' || (c && c.layout === 'photo');
+}
 function scoreMode(){ return CO().scoreMode || 'group'; }
 
 /* 計分板要「依小組」還是「依個人」排。
@@ -176,18 +182,81 @@ const LAYOUTS = {
   hex6:  { name:'蜂巢 6 組',  short:'🐝 蜂巢 6 組',  kind:'hex',
            tables:6, perRow:3, base:6, max:12, order:[4,5,6,3,2,1],
            hint:'六角形蜂巢，一桌六人圍坐，第 7 人起補外圈。' },
-  quad9: { name:'四人 9 組',  short:'▦ 四人 9 組',  kind:'rect',
-           tables:9, perRow:3, side:2, base:4, max:6, order:[9,8,7,6,5,4,3,2,1],
-           hint:'一橫列三組、共三列。每組面對面各坐 2 人；第 5、6 人坐左右側邊。' },
+  /* ★ 2026-09-03：四人 9 組改成「往同一排的左右長」。
+     使用者要的是：多出來的人不要坐到與黑板垂直的側邊，而是接在原本
+     那一排的左右，一排最多坐到 4 人 → 一組上限 8 人。
+     並且「鄰近的位子預設同職位」——所以每一排長出來的人，
+     跟他旁邊那個基本位共用職位，用既有的正1／正2（①②）機制表示。
+     一排 4 人由左到右是 [A②, A①, B①, B②]，成對相鄰，左右對稱。
+     grow:'row' 只掛在這一個配置上，hex6r 的側邊位維持原樣不動。 */
+  quad9: { name:'四人 9 組',  short:'▦ 四人 9 組',  kind:'rect', grow:'row',
+           tables:9, perRow:3, side:2, base:4, max:8, order:[9,8,7,6,5,4,3,2,1],
+           hint:'一橫列三組、共三列。每組面對面各坐 2 人；第 5 人起往同一排的左右加，一排最多 4 人。' },
   hex6r: { name:'六人 6 組',  short:'▤ 六人 6 組',  kind:'rect',
            tables:6, perRow:2, side:3, base:6, max:8, order:[6,5,4,3,2,1],
-           hint:'一橫列兩組、共三列。每組面對面各坐 3 人；第 7、8 人坐左右側邊。' }
+           hint:'一橫列兩組、共三列。每組面對面各坐 3 人；第 7、8 人坐左右側邊。' },
+  /* ★ 2026-09-03：把「老師自己匯入一張座位圖」從化學課專屬，
+     變成任何課程都選得到的第 4 種配置。
+     原本這件事綁在課程類型上（COURSES.chem 的 seatMode:'photo'），
+     閱讀思考想用實驗桌／單人座的排法就完全沒有辦法。
+     照片模式沒有格子座標，所以加減分一律回到「⚙️ 依座號」那一面計分。 */
+  photo: { name:'匯入座位圖',  short:'🖼️ 匯入座位圖', kind:'photo',
+           tables:1, perRow:1, base:1, max:1, order:[1],
+           hint:'老師自己拍或畫的座位圖。實驗桌、單人座、特殊排法都可以。' }
 };
 const DEF_LAYOUT = 'hex6';
 
 function layoutKey(){ const c=curClass();
   return (c && LAYOUTS[c.layout]) ? c.layout : DEF_LAYOUT; }
-function LO(){ return LAYOUTS[layoutKey()]; }
+
+/* ---- 組數可以自己填（2026-09-03）----
+   為什麼需要：配置寫死 9 組／6 組，但一個班不見得有那麼多人。
+   32 人硬分 9 組，畫面上會多出兩三張空桌子，投影出去很難看，
+   自動排入也會排出「每組 3 人」這種老師沒有要的分法。
+
+   存在班級上（c.groupCount），因為每個班人數不一樣。
+   只改「畫幾組」，其餘（每組上限、排列起點、職位輪動）全部照舊 ——
+   order 只是把大於組數的號碼濾掉，第 1 組仍然在右下角。 */
+function groupCountOf(c){
+  const n = c && c.groupCount;
+  return (typeof n === 'number' && n >= 1) ? n : null;
+}
+let _loCache = null;
+function LO(){
+  const key = layoutKey(), base = LAYOUTS[key];
+  if(base.kind === 'photo') return base;
+  const n = groupCountOf(curClass());
+  if(!n || n === base.tables || n > base.tables) return base;
+  /* LO() 在每次重繪裡會被叫上百次，所以做一層快取。 */
+  if(_loCache && _loCache.key === key && _loCache.n === n) return _loCache.lo;
+  const lo = Object.assign({}, base, {
+    tables: n,
+    order: (base.order || []).filter(t => t <= n)
+  });
+  _loCache = { key, n, lo };
+  return lo;
+}
+function setGroupCount(n){
+  const c = curClass(); if(!c) return;
+  const base = LAYOUTS[layoutKey()];
+  n = Math.max(1, Math.min(base.tables, parseInt(n,10) || base.tables));
+  const cap = n * base.max, need = (c.students||[]).length;
+  if(need > cap){
+    return alert(`分 ${n} 組的話最多只坐得下 ${cap} 人（每組上限 ${base.max}），`+
+                 `這個班有 ${need} 人。\n請把組數調大一點。`);
+  }
+  c.groupCount = n; _loCache = null;
+  /* 被砍掉的那幾組如果還有人坐著，人會憑空消失 —— 先把他們收回來重排。 */
+  const orphan = [];
+  Object.keys(c.seats||{}).forEach(t=>{
+    if(Number(t) > n){ (c.seats[t]||[]).forEach(x=>{ if(x!=null) orphan.push(x); });
+                       delete c.seats[t]; }
+  });
+  save(); renderSeats(); renderScoreboard(); renderRoll();
+  if(orphan.length) toast(`已改成 ${n} 組。第 ${n} 組之後的 ${orphan.length} 人要重排，`+
+                          '請按「依座號自動排入」或手動填。');
+  else toast(`已改成 ${n} 組`);
+}
 /* 邏輯用：由小到大的組別編號。畫面用：tableOrder() 的排列順序。 */
 function TABLES(){ const L=LO();
   return Array.from({length:L.tables},(_,i)=>i+1); }
@@ -213,14 +282,15 @@ const RAINBOW_BONUS = 5;   // 彩虹貫通，全組每人加分
 
 /* ---------------- 2. 狀態 ---------------- */
 const LS_KEY = 'rt_dashboard_v1';
-const GAS_SESSION_KEY = 'mhh_gas_token_session_v1';
 let DB = {
   years:['115'], year:'115',
   classes:{},   // id -> {id,year,name,students:[{no,name}],seats:{table:[no,...]},size}
   activeClass:null, round:1, session: todayStr(),
   records:[],   // 見 addRecord()
   gasUrl:'', gasToken:'', autoSync:false, theme:'dark', zoom:1,
-  rotDir:1      // +1＝學生職位順著職位表走；-1＝職位牌在桌上順時針移動
+  /* ★ 2026-09-03：預設改成 -1（職位牌在桌上順時針移動）。
+     使用者指定：先想像牌子在桌上走，那是老師實際擺教具的動作。 */
+  rotDir:-1     // +1＝學生職位順著職位表走；-1＝職位牌在桌上順時針移動
 };
 
 function todayStr(){ const d=new Date();
@@ -237,14 +307,9 @@ function save(){
      一律把 c.seats 寫回 c.layouts —— 只有這裡是所有變更的必經之路。 */
   const c = DB.classes[DB.activeClass];
   if(c){ c.layouts = c.layouts || {}; c.layouts[c.layout || DEF_LAYOUT] = c.seats || {}; }
-  DB.updatedAt=Date.now();
-  if(DB.gasToken) sessionStorage.setItem(GAS_SESSION_KEY, DB.gasToken);
-  else sessionStorage.removeItem(GAS_SESSION_KEY);
-  /* GAS 金鑰只活在本分頁，不寫進永久 localStorage。 */
-  localStorage.setItem(LS_KEY, JSON.stringify(Object.assign({}, DB, {gasToken:''})));
+  DB.updatedAt=Date.now(); localStorage.setItem(LS_KEY, JSON.stringify(DB));
 }
-function load(){ try{ const raw=localStorage.getItem(LS_KEY); if(raw) DB=Object.assign(DB,JSON.parse(raw));
-                       DB.gasToken=sessionStorage.getItem(GAS_SESSION_KEY)||''; }
+function load(){ try{ const raw=localStorage.getItem(LS_KEY); if(raw) DB=Object.assign(DB,JSON.parse(raw)); }
                  catch(e){ console.warn('讀取本機資料失敗',e); }
                  migrateAllLayouts(); }
 function curClass(){ return DB.classes[DB.activeClass]||null; }
@@ -361,7 +426,9 @@ function switchLayout(key){
 
      所以：**目標配置完全沒有人時，直接依座號自動排入。**
      只在「完全空」時才做 —— 排過的那一份是老師手動調的，絕對不能覆蓋。 */
-  const empty = !TABLES().some(t=>((c.seats[t])||[]).some(x=>x!=null));
+  /* 照片配置沒有格子可以排，autofill 對它毫無意義 */
+  const empty = key!=='photo' &&
+                !TABLES().some(t=>((c.seats[t])||[]).some(x=>x!=null));
   if(empty && (c.students||[]).length){
     autofillSeats(true);                 // silent：不要再跳一個 toast
   }
@@ -394,6 +461,12 @@ function roleAtSlot(slot, round){
   if(L.kind === 'hex'){
     anchorIdx = Math.floor(slot/2);
     second    = slot % 2 === 1;
+  }else if(L.grow === 'row'){
+    /* 往同排長：多出來的人跟旁邊那個基本位共用職位（＝正2）。
+       上排第 3 格貼上排第 2 格(slot1)、第 4 格貼上排第 1 格(slot0)，下排同理。 */
+    const m = rectRowSlot(slot);
+    second    = m.i >= 2;
+    anchorIdx = second ? (m.row*2 + (m.i === 2 ? 1 : 0)) : slot;
   }else{
     second    = slot >= L.base;
     anchorIdx = second ? (slot - L.base) : slot;
@@ -421,6 +494,38 @@ function roleColor(slot, round){
   const r = roleAtSlot(slot, round);
   return cssVar(r.second ? r.role.light : r.role.color);
 }
+/* ---- 方桌「往同排長」的排列規則（quad9，2026-09-03）----
+   slot 0..3 是基本盤：0,1 上排，2,3 下排，四個不同職位。
+   slot 4..7 是多出來的人，上下排交替補，每個都貼著一個基本位並共用它的職位。
+     4 → 上排第 3 個（貼 slot1）   5 → 下排第 3 個（貼 slot3）
+     6 → 上排第 4 個（貼 slot0）   7 → 下排第 4 個（貼 slot2）
+   交替補是為了讓兩排人數盡量一樣，不會一排 4 人、對面只有 2 人。 */
+function rectRowSlot(slot){
+  if(slot < 4) return { row: slot < 2 ? 0 : 1, i: slot % 2 };
+  const k = slot - 4;
+  return { row: k % 2, i: 2 + Math.floor(k / 2) };
+}
+/* 一排 p 個人時，第 i 個座位畫在左起第幾格。
+   p=4 時是 [1,2,3,0] —— i0(A①) 在第 2 格、i3(A②) 補到最左邊，
+   排出來才會是 A②A①B①B②，同職位兩人相鄰。 */
+function rectRowCol(p, i){ return p >= 4 ? [1,2,3,0][i] : i; }
+/* 這一組畫 n 個位子時，上排／下排各幾個 */
+function rectRowLen(n, row){ return row === 0 ? Math.ceil(n/2) : Math.floor(n/2); }
+/* 全班最寬的那一排有幾個人 —— 用來決定一桌要留多寬。
+   不直接用 L.max（4）是因為：全班都只坐 4 人時，
+   留 4 格的寬度會讓每個位子被縮到很小，投影出去看不清楚。 */
+function rectMaxSide(cls){
+  const L = LO();
+  if(L.grow !== 'row') return L.side;
+  const c = cls || curClass();
+  let mx = L.side;
+  if(c && c.seats) TABLES().forEach(t=>{
+    const n = Math.min(Math.max(((c.seats[t])||[]).length, L.base), L.max);
+    mx = Math.max(mx, Math.ceil(n/2));
+  });
+  return Math.min(mx, Math.floor(L.max/2));
+}
+
 /* n 人要用哪些 slot。
    蜂巢：先排滿 6 個內圈正1，第 7 人起依序補外圈正2
    方桌：slot 就是座位序，0..side-1 上排、side..base-1 下排、base 起是左右側邊 */
@@ -448,11 +553,13 @@ function toggleSeatLock(){
   const c=curClass(); if(!c) return alert('請先選擇班級');
   c.seatLocked = !c.seatLocked; save();
   renderSeats(); syncSeatLockBtn();
-  toast(c.seatLocked ? '版面已鎖定：空位隱藏，不能再拖動' : '已解除鎖定：空位回來了，可以繼續排');
+  toast(c.seatLocked
+    ? '已進入上課模式：點姓名 +1、點右下角「−」扣 1，空位隱藏、不能再拖動'
+    : '已回到排座位模式：空位回來了，點座位是填座號');
 }
 /* 化學模式下，一半的座位表工具是沒有意義的（自動排入、鎖定、每組人數…），
    留在畫面上只會讓人以為壞掉了。整批收起來，切回別的課程就會回來。 */
-const GROUP_ONLY_SEAT_UI = ['#btn-autofill','#btn-lockseat','#btn-clearseat',
+const GROUP_ONLY_SEAT_UI = ['#lbl-groupcount','#btn-autofill','#btn-lockseat','#btn-clearseat',
                             '#btn-export-png','#btn-truesize','#layout-tabs',
                             '#seat-legend','#seat-hint-group','#btn-print','.podium'];
 /* 新增班級用的課程下拉。選項就是 COURSES —— 以後多一門課，這裡自動跟著長。 */
@@ -465,7 +572,7 @@ function renderNewCourseSelect(){
 }
 
 function syncSeatModeUI(){
-  const photo = seatMode()==='photo';
+  const photo = isPhotoSeat();
   GROUP_ONLY_SEAT_UI.forEach(sel=>{
     const el=$(sel); if(el) el.style.display = photo ? 'none' : '';
   });
@@ -480,10 +587,10 @@ function syncSeatModeUI(){
 function syncSeatLockBtn(){
   const b=$('#btn-lockseat'); if(!b) return;
   const on=seatLocked();
-  b.textContent = on ? '🔒 已鎖定' : '🔓 鎖定版面';
+  b.textContent = on ? '🔒 上課模式（點姓名加分）' : '🔓 鎖定版面（上課模式）';
   b.classList.toggle('btn-ok', on);
-  b.title = on ? '解除鎖定，讓空位回來繼續排'
-               : '排好之後鎖起來：空位整格消失，畫面與列印都乾淨';
+  b.title = on ? '目前是上課模式：點姓名 +1、點右下角「−」扣 1。\n按這裡解除，回到排座位。'
+               : '排好之後鎖起來＝進入上課模式：空位整格消失，點姓名就是加分。';
 }
 
 /* ---- 照片座位表（2026-08-30，化學課用）----
@@ -728,7 +835,12 @@ function rosterWarn(list){
 /* silent=true：切座位配置時自動補位用。
    那時候是「順手幫老師排好」，不是老師自己按的按鈕 ——
    跳 alert 會把切配置變成兩步，跳 toast 會蓋掉 switchLayout 自己的那一則。 */
-function autofillSeats(silent){
+/* fromLast：人數不能整除組數時，多出來的那幾個人要塞給哪幾組。
+     true  → 從最後一組往前（第 9、8、7… 組先多一人）
+     false → 從第一組往後（第 1、2、3… 組先多一人）
+   使用者 2026-09-03 指定：每次自動排入都當場問，不設預設值 ——
+   因為這件事沒有「通常都對」的答案，看的是那一堂課的名單怎麼分。 */
+function autofillSeats(silent, fromLast){
   const c=curClass(); if(!c) return silent?false:alert('請先選擇 / 建立班級');
   const list=[...c.students].sort((a,b)=>a.no-b.no), n=list.length;
   if(!n) return silent?false:alert('請先匯入名單');
@@ -737,15 +849,27 @@ function autofillSeats(silent){
   if(n>cap) return alert(`「${L.name}」每組上限 ${L.max} 人，${L.tables} 組最多 ${cap} 人。
 目前 ${n} 人，請換一種座位配置。`);
   const base=Math.floor(n/L.tables), extra=n%L.tables;
+  /* 只有真的除不盡、而且是老師自己按的時候才問。
+     除得盡就沒有「多出來的人」，問了是白問；silent 是切配置時順手排的，不能打斷。 */
+  if(!silent && extra > 0 && fromLast === undefined){
+    fromLast = confirm(
+      `${n} 人分 ${L.tables} 組，每組 ${base} 人之後還多 ${extra} 人。\n`+
+      `這 ${extra} 個人要編到哪幾組？\n\n`+
+      `【確定】從最後一組開始 —— 第 ${L.tables} 組往前，共 ${extra} 組各多一人。\n`+
+      `【取消】從第一組開始 —— 第 1 組往後，共 ${extra} 組各多一人。`);
+  }
   c.seats={}; let i=0;
-  for(let t=1;t<=L.tables;t++){ const cnt=base+(t<=extra?1:0);
+  for(let t=1;t<=L.tables;t++){
+    const bigger = fromLast ? (t > L.tables - extra) : (t <= extra);
+    const cnt=base+(bigger?1:0);
     c.seats[t]=list.slice(i,i+cnt).map(s=>s.no); i+=cnt; }
   if(c.layouts) c.layouts[c.layout||DEF_LAYOUT]=c.seats;
   c.size=base+(extra?1:0);
   const gs=$('#inp-groupsize'); if(gs) gs.value=c.size;
   if(silent) return true;
   save(); renderSeats(); renderScoreboard();
-  toast(`已依座號平均排入：每組 ${base}${extra?'～'+(base+1):''} 人`);
+  toast(`已依座號平均排入：每組 ${base}${extra?'～'+(base+1):''} 人`
+        + (extra ? `（多的 ${extra} 人編在${fromLast?'最後':'最前'}幾組）` : ''));
   return true;
 }
 
@@ -767,9 +891,12 @@ const RSEAT_W = 224, RSEAT_H = 118;
 const RSIDE_W = 170, RSIDE_H = 150;      // 側邊位：窄而高，暗示與黑板垂直
 const RTABLE_H = 104, RGAP = 12, RTOP = 34;
 
-function rectMetrics(L){
-  const innerW = L.side * RSEAT_W;
-  const padL   = RSIDE_W + RGAP + 8;
+function rectMetrics(L, maxSide){
+  /* maxSide：這個班最寬的一排有幾個人。往同排長的配置沒有側邊位，
+     所以左右不必再留 RSIDE_W 的空間。 */
+  const row    = L.grow === 'row' ? (maxSide || L.side) : L.side;
+  const innerW = row * RSEAT_W;
+  const padL   = L.grow === 'row' ? 8 : (RSIDE_W + RGAP + 8);
   const unitW  = innerW + 2*padL;
   const unitH  = RTOP + RSEAT_H*2 + RTABLE_H + RGAP*2 + 18;
   return { innerW, padL, unitW, unitH };
@@ -778,11 +905,20 @@ function rectMetrics(L){
    0..side-1     上排（與黑板平行）
    side..base-1  下排（與黑板平行）
    base, base+1  左、右側邊（與黑板垂直，人數溢出時才出現） */
-function rectSeatPos(L, slot){
-  const M = rectMetrics(L);
+function rectSeatPos(L, slot, n, maxSide){
+  const M = rectMetrics(L, maxSide);
   const topY   = RTOP + RSEAT_H/2;
   const tableY = RTOP + RSEAT_H + RGAP + RTABLE_H/2;
   const botY   = RTOP + RSEAT_H + RGAP*2 + RTABLE_H + RSEAT_H/2;
+  if(L.grow === 'row'){
+    /* 每一排都置中：一排 2 人的組跟一排 4 人的組，桌子中線對得齊。 */
+    const m    = rectRowSlot(slot);
+    const p    = Math.max(rectRowLen(n || L.base, m.row), 1);
+    const col  = rectRowCol(p, m.i);
+    const rowW = p * RSEAT_W;
+    return { x: M.padL + (M.innerW - rowW)/2 + RSEAT_W*(col + 0.5),
+             y: m.row === 0 ? topY : botY, side:false };
+  }
   if(slot < L.side)
     return { x: M.padL + RSEAT_W*(slot + 0.5), y: topY, side:false };
   if(slot < L.base)
@@ -952,10 +1088,16 @@ function renderSeats(){
   if(ensureEnoughSeats()) save();      // 人比位子多就先補足，避免有人沒座位可填
   $('#seat-class-tag').textContent = c ? `${DB.year} · ${clsLabel(c)}` : '尚未建立班級';
   if(c) $('#inp-groupsize').value = c.size||6;
+  /* 「分幾組」的上限跟著配置走（蜂巢 6、四人 9、六人 6） */
+  const gcEl=$('#inp-groupcount'), gcBase=LAYOUTS[layoutKey()];
+  if(gcEl && gcBase.kind!=='photo'){
+    gcEl.max = gcBase.tables;
+    gcEl.value = groupCountOf(c) || gcBase.tables;
+  }
 
   /* 化學課：座位表是一張照片，不走底下整套桌子的幾何。
      放在最前面 return —— 底下每一行都在算桌子的位置，對照片模式全是白工。 */
-  if(seatMode()==='photo'){
+  if(isPhotoSeat()){
     renderLayoutTabs();
     $('#seat-class-tag').textContent = c ? `${DB.year} · ${clsLabel(c)}` : '尚未建立班級';
     renderSeatPhoto();
@@ -973,7 +1115,8 @@ function renderSeats(){
   syncSeatLockBtn();          // 切班級時按鈕要跟著換成該班的狀態
   syncSeatModeUI();
   const openRing = !!c && (c.students||[]).length > L.tables * L.base;
-  const M = L.kind==='hex' ? null : rectMetrics(L);
+  const maxSide = L.kind==='hex' ? 0 : rectMaxSide(c);
+  const M = L.kind==='hex' ? null : rectMetrics(L, maxSide);
   const unitW = L.kind==='hex' ? UNIT_W : M.unitW;
   const unitH = L.kind==='hex' ? UNIT_H : M.unitH;
   const canvasW = unitW*L.perRow + 24;
@@ -1028,7 +1171,12 @@ function renderSeats(){
     }else{
       /* 方桌本體。畫成長方形而不是六角形，老師才看得出這是哪一間教室的排法。 */
       const tb=document.createElement('div'); tb.className='tablewrap';
-      tb.style.width=M.innerW+'px'; tb.style.height=RTABLE_H+'px';
+      /* 往同排長：桌子只畫到「這一組實際最寬那一排」，
+         4 人的組不會拖著一張 4 格寬的空桌子。 */
+      const deskW = L.grow==='row'
+        ? Math.max(rectRowLen(slots.length,0), rectRowLen(slots.length,1), 1) * RSEAT_W
+        : M.innerW;
+      tb.style.width=deskW+'px'; tb.style.height=RTABLE_H+'px';
       tb.style.left=(M.padL + M.innerW/2)+'px';
       tb.style.top =(RTOP + RSEAT_H + RGAP + RTABLE_H/2)+'px';
       tb.innerHTML=`<b>${tno}</b>`;
@@ -1047,7 +1195,7 @@ function renderSeats(){
         el.style.left=`calc(50% + ${(Math.sin(rad)*R).toFixed(1)}px)`;
         el.style.top =`calc(50% - ${(Math.cos(rad)*R).toFixed(1)}px)`;
       }else{
-        const p=rectSeatPos(L, slot);
+        const p=rectSeatPos(L, slot, slots.length, maxSide);
         el.className='seat rect'+(no==null?' empty':'')+(rr.second?' ring2':'')
                      +(p.side?' seat-side':'');
         el.style.width =(p.side?RSIDE_W:RSEAT_W)+'px';
@@ -1063,16 +1211,46 @@ function renderSeats(){
          前 6 個是蜂巢的基本盤，收掉會讓版面破洞，所以不給收。 */
       const stored = idx < members.length;          // 這一格真的存在資料裡嗎
       const canDrop = (no==null && stored && !openRing && members.length > L.base);
+      /* 上課模式下第三行改成顯示累積分數 —— 老師抬頭就看得到誰還是 0 分。
+         發言過的人整格加一個亮邊（.spoke），跟計分板那面同一個視覺語彙。 */
+      const pts   = (locked && no!=null) ? cumPointsOf(no) : null;
+      const spoke = (locked && no!=null) && speakCount(sessionRecords(), no) > 0;
+      if(spoke) el.classList.add('spoke');
+      if(locked && no!=null) el.classList.add('scoring');
       el.innerHTML=
         `<div class="s-in">`+
         `<div class="s-role" style="background:${col};color:${rr.second?'#10131a':'#fff'}">`+
           `${seatRoleLabel(tno,idx,slot,hasSecond)}${rr.fixed?' ✎':''}</div>`+
         `<div class="s-main">${no==null?'＋':(studentName(no)||'—')}</div>`+
-        `<div class="s-no">${no==null?'點我填號':'座號 '+no}</div>`+
+        `<div class="s-no">${no==null?'點我填號'
+           : (locked ? `${no}號 <b class="s-pts">${pts}</b>分` : '座號 '+no)}</div>`+
         `</div>`+
-        (canDrop?`<button class="seat-x" title="收掉這個空位">✕</button>`:'');
+        (canDrop?`<button class="seat-x" title="收掉這個空位">✕</button>`:'')+
+        ((locked && no!=null)?`<button class="seat-minus" title="扣 1 分">−</button>`:'');
+      /* ---- 鎖定＝上課模式：座位表本身就是計分板（2026-09-03）----
+         為什麼把它掛在「鎖定」上而不是另做一顆按鈕：
+         這兩件事本來就是同一個時間點發生的 —— 排完座位、鎖起來、開始上課。
+         而且未鎖定時空位還在，點下去必須是「填座號」，不可能同時又是加分；
+         鎖定之後空位整個消失，畫面上剩下的每一格都是一個真人，
+         點下去只可能有一個意思。
+
+         走的是 addPoint()，跟計分板那一面完全同一條路 ——
+         組別、職位、彩虹貫通、上傳試算表全部照舊，不會長出第二套帳。 */
       el.onclick=e=>{
         if(e.target.closest('.seat-x')){ e.stopPropagation(); dropSeatSlot(tno, idx); return; }
+        if(e.target.closest('.seat-minus')){
+          e.stopPropagation();
+          addPoint(no, tno, slot, -1, 'deduct', '座位表扣分');
+          renderSeats();
+          toast(`${studentName(no)||no} −1`);
+          return;
+        }
+        if(locked && no!=null){
+          addPoint(no, tno, slot, 1, 'answer', '座位表加分');
+          renderSeats();
+          pop(e.clientX, e.clientY, '#4f8cff');
+          return;
+        }
         openSeatModal(tno, idx, slot);
       };
 
@@ -1335,6 +1513,11 @@ function addRecord(o){
   DB.records.push(rec); save();
   if(DB.autoSync) pushOne(rec);
   return rec;
+}
+/* 某個人的累積分數。計分板與座位表都要用，抽出來才不會兩邊算法不一樣。 */
+function cumPointsOf(no){
+  return cumRecords().filter(r=>String(r.no)===String(no))
+                     .reduce((a,r)=>a+r.points,0);
 }
 function addPoint(no, table, slot, pts, type='answer', note=''){
   const hasSecond=tableMembers(table).length>6;
@@ -2302,9 +2485,18 @@ function sheetName(s){ return s.replace(/[\\\/\?\*\[\]:]/g,'_').slice(0,31); }
 
 /* ---------------- 11b. 座位表下載（A4 橫向、一頁的 PNG）----------------
    直接畫在 canvas 上，含班級抬頭、六張蜂巢桌、講台。200 dpi 可直接列印。 */
-function downloadSeatingPNG(){
+/* view：'teacher' = 講台在下方（老師站在台上看到的樣子，原本就是這一種）
+          'student' = 講台在上方、整張圖轉 180°（學生坐在位子上抬頭看到的樣子）
+
+   為什麼是轉 180° 而不是只左右鏡像：老師與學生是面對面的。
+   從老師視角轉成學生視角，左右要對調，前後也要對調 —— 兩個一起做就是轉 180°。
+   只做左右鏡像的話，最靠近講台的那一列在圖上還是在最下面，
+   學生拿著圖找自己的位子會整個前後顛倒。
+   ★ 文字不跟著翻。翻的是「位子的座標」，不是像素，所以姓名職稱一律正的。 */
+function downloadSeatingPNG(view){
   const cls=curClass();
   if(!cls) return alert('請先選擇班級');
+  const flip = view === 'student';
   const L=LO(), hex = L.kind==='hex';
   const DPI=200, W=Math.round(297/25.4*DPI), H=Math.round(210/25.4*DPI);   // 2339 × 1654
   const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
@@ -2318,23 +2510,27 @@ function downloadSeatingPNG(){
   g.font=`bold 52px ${FONT}`;
   g.fillText(`${DB.year} 學年度　${clsLabel(cls)}　座位表`, W/2, M+26);
   g.font=`26px ${FONT}`; g.fillStyle='#555';
-  g.fillText(`第 ${DB.round} 輪職位　·　${L.name}　·　日期 ______ / ______　共 ${cls.students.length} 人`,
+  g.fillText(`第 ${DB.round} 輪職位　·　${L.name}　·　${flip?'學生視角（講台在上）':'老師視角（講台在下）'}　·　日期 ______ / ______　共 ${cls.students.length} 人`,
              W/2, M+78);
 
   /* 版面：沿用畫面上的幾何，等比縮到可用區域。
      ★ 欄數與一桌的尺寸都要跟著座位配置走 ——
        以前這裡寫死 3 欄與蜂巢尺寸，換成九宮格或方桌就整個跑掉。 */
-  const RM = hex ? null : rectMetrics(L);
+  const maxSide = hex ? 0 : rectMaxSide(cls);
+  const RM = hex ? null : rectMetrics(L, maxSide);
   const unitW = hex ? UNIT_W : RM.unitW;
   const unitH = hex ? UNIT_H : RM.unitH;
   const cols  = L.perRow || 3;
-  const order = tableOrder();
+  /* 學生視角：把整個排列反過來 —— 反轉 order 等於把格子陣列轉 180°，
+     第 1 組從右下角跑到左上角，正是學生從對面看過來的順序。 */
+  const order = flip ? tableOrder().slice().reverse() : tableOrder();
   const rows  = Math.ceil(order.length / cols);
 
   const areaW=W-M*2, areaH=H-M*2-TITLE_H-PODIUM_H;
   const modelW=unitW*cols+16, modelH=unitH*rows+8;
   const s=Math.min(areaW/modelW, areaH/modelH);
-  const ox=(W-modelW*s)/2, oy=M+TITLE_H;
+  /* 學生視角時講台移到抬頭下面，座位區整個往下讓出講台的高度 */
+  const ox=(W-modelW*s)/2, oy=M+TITLE_H+(flip?PODIUM_H:0);
 
   const hexPath=(cx,cy,w,h)=>{           // 平頂正六邊形
     g.beginPath();
@@ -2395,7 +2591,8 @@ function downloadSeatingPNG(){
         const no=raw[idx]; if(no==null) return;
         const rr=seatRole(tno, idx, slot);
         const R=(rr.second?R2:R1)*s, rad=slot*30*Math.PI/180;
-        const x=cx+Math.sin(rad)*R, y=cy-Math.cos(rad)*R;
+        const fs=flip?-1:1;                       // 轉 180°＝兩軸同時取負
+        const x=cx+fs*Math.sin(rad)*R, y=cy-fs*Math.cos(rad)*R;
         const col2=seatRoleColor(tno, idx, slot);
         hexPath(x,y,hw,hh); g.fillStyle=col2; g.fill();
         hexPath(x,y,hw-14*s,hh-14*s); g.fillStyle='#fff'; g.fill();
@@ -2403,8 +2600,15 @@ function downloadSeatingPNG(){
       });
     }else{
       /* 方桌：桌子是一條橫的長方形，座位在上下兩排，溢出的人坐左右側邊 */
-      const tW=RM.innerW*s, tH=RTABLE_H*s;
-      const tX=ux+RM.padL*s, tY=uy+(RTOP+RSEAT_H+RGAP)*s;
+      const nDraw=slots.length;
+      const deskCols = L.grow==='row'
+        ? Math.max(rectRowLen(nDraw,0), rectRowLen(nDraw,1), 1)
+        : L.side;
+      const tW=(L.grow==='row'? deskCols*RSEAT_W : RM.innerW)*s, tH=RTABLE_H*s;
+      const tX=ux+(RM.padL + (RM.innerW - (L.grow==='row'? deskCols*RSEAT_W : RM.innerW))/2)*s;
+      /* 桌子也要跟著轉，否則學生視角的桌子會離兩排座位一邊近一邊遠 */
+      const deskTop = RTOP+RSEAT_H+RGAP;
+      const tY=uy+(flip ? (unitH - deskTop - RTABLE_H) : deskTop)*s;
       g.beginPath(); g.roundRect(tX, tY, tW, tH, 12*s);
       g.fillStyle='#f2f4f8'; g.fill();
       g.lineWidth=3; g.strokeStyle=GROUP_TINT[tno]; g.stroke();
@@ -2415,9 +2619,12 @@ function downloadSeatingPNG(){
       slots.forEach((slot,idx)=>{
         const no=raw[idx]; if(no==null) return;
         const rr=seatRole(tno, idx, slot);
-        const p=rectSeatPos(L, slot);
+        const p=rectSeatPos(L, slot, nDraw, maxSide);
         const w=(p.side?RSIDE_W:RSEAT_W)*s, h=(p.side?RSIDE_H:RSEAT_H)*s;
-        const x=ux+p.x*s, y=uy+p.y*s;
+        /* 學生視角：把座位相對「一桌的中心」轉 180° */
+        const px = flip ? (unitW - p.x) : p.x;
+        const py = flip ? (unitH - p.y) : p.y;
+        const x=ux+px*s, y=uy+py*s;
         const col2=seatRoleColor(tno, idx, slot);
         g.beginPath(); g.roundRect(x-w/2, y-h/2, w-6*s, h-6*s, 14*s);
         g.fillStyle=col2; g.fill();
@@ -2428,18 +2635,19 @@ function downloadSeatingPNG(){
     }
   });
 
-  /* 講台 */
-  const pw=Math.min(760, W*0.42), py=H-M-PODIUM_H/2;
+  /* 講台。老師視角在最下面，學生視角在抬頭正下方。 */
+  const pw=Math.min(760, W*0.42);
+  const py = flip ? (M+TITLE_H+PODIUM_H/2) : (H-M-PODIUM_H/2);
   g.strokeStyle='#444'; g.lineWidth=3; g.setLineDash([]);
   g.beginPath(); g.roundRect(W/2-pw/2, py-38, pw, 76, 14); g.stroke();
   g.fillStyle='#333'; g.textAlign='center'; g.textBaseline='middle';
   g.font=`bold 40px ${FONT}`;
-  g.fillText('▲　講　台　▲', W/2, py);
+  g.fillText(flip?'▼　講　台　▼':'▲　講　台　▲', W/2, py);
 
   cv.toBlob(b=>{
     if(!b) return toast('產生圖檔失敗，請再試一次', false);
-    dl(b, `${DB.year}_${clsLabel(cls)}_座位表_第${DB.round}輪_${todayStr()}.png`);
-    toast('座位表已下載（A4 橫向 200dpi，可直接列印）');
+    dl(b, `${DB.year}_${clsLabel(cls)}_座位表_${flip?'學生視角':'老師視角'}_第${DB.round}輪_${todayStr()}.png`);
+    toast(`座位表已下載（${flip?'學生視角':'老師視角'}，A4 橫向 200dpi）`);
   },'image/png');
 }
 
@@ -3336,6 +3544,8 @@ function bind(){
 
   $('#inp-groupsize').onchange=e=>{ const c=curClass(); if(!c) return;
     c.size=Math.max(4,Math.min(12,parseInt(e.target.value,10)||6)); save(); renderSeats(); };
+  const gc=$('#inp-groupcount');
+  if(gc) gc.onchange=e=>setGroupCount(e.target.value);
   $('#btn-autofill').onclick=()=>{
     const c=curClass();
     const seated=c&&TABLES().some(t=>((c.seats||{})[t]||[]).some(x=>x!=null));
@@ -3634,7 +3844,16 @@ function bind(){
   };
   $('#btn-export-xlsx').onclick=exportRegisterXlsx;
   $('#btn-export-xlsx2').onclick=exportRegisterXlsx;
-  $('#btn-export-png').onclick=downloadSeatingPNG;
+  /* 下載前先問視角。用 confirm 是配合這個專案既有的做法（rosterWarn 也是），
+     不必為了兩個選項再開一個 modal。 */
+  $('#btn-export-png').onclick=()=>{
+    if(!curClass()) return alert('請先選擇班級');
+    const teacher = confirm(
+      '要下載哪一種視角的座位表？\n\n'+
+      '【確定】老師視角 —— 講台在下方，就是你現在畫面上看到的樣子。\n'+
+      '【取消】學生視角 —— 講台在上方、左右前後對調，發給學生看的。');
+    downloadSeatingPNG(teacher ? 'teacher' : 'student');
+  };
   $('#btn-lockseat').onclick=toggleSeatLock;
 
   /* ---- 清理：空班級、同年度重名班級 ---- */
@@ -3682,7 +3901,7 @@ function bind(){
   };
   function logBackup(m){ const el=$('#backup-log'); if(el) el.textContent=m; toast(m); }
 
-  $('#btn-backup').onclick=()=>dl(new Blob([JSON.stringify(Object.assign({},DB,{gasToken:''}),null,2)],{type:'application/json'}),
+  $('#btn-backup').onclick=()=>dl(new Blob([JSON.stringify(DB,null,2)],{type:'application/json'}),
     `課堂儀表板備份_${todayStr()}.json`);
   $('#file-restore').onchange=e=>{
     const f=e.target.files[0]; if(!f) return;

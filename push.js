@@ -5,7 +5,7 @@
    ========================================================================== */
 import { GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { doc, collection, setDoc, updateDoc, deleteDoc,
+import { doc, collection, setDoc, updateDoc, deleteDoc, deleteField,
          getDocs, onSnapshot, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { auth, db, DOMAIN, TEA_KEY, teachers, isTeacher } from './mhh-fb.js';
@@ -79,6 +79,9 @@ function studentUrl(code){
   u.searchParams.set('r', String(code));
   return u.href;
 }
+/* 成績查詢頁：跟教室無關，一整個學期都是同一個網址，
+   所以不放教室代碼，貼一次到 Google Classroom 就好。 */
+function gradeUrl(){ return new URL('grades.html', baseUrl()).href; }
 function log(msg, bad){
   const el = $('#push-log'); if(!el) return;
   el.innerHTML = `<span style="color:${bad?'var(--danger)':'inherit'}">${esc(msg)}</span>`;
@@ -132,6 +135,7 @@ function refreshRoomBar(){
   $('#room-code').textContent = code.replace(/(\d{3})(\d{3})/, '$1 $2');
   $('#room-url').value = url;
   $('#room-class').textContent = `${c.name}　${(c.students||[]).length} 人`;
+  const gu = $('#grade-url'); if(gu) gu.value = gradeUrl();
   drawQR(url);
 }
 
@@ -176,6 +180,10 @@ if(baseBox){
   };
 }
 
+/* 還沒選班級也要看得到查詢頁網址 —— 它跟班級無關，
+   老師開學第一天就想貼到 Google Classroom。 */
+(function(){ const gu = $('#grade-url'); if(gu) gu.value = gradeUrl(); })();
+
 $('#btn-open-room')?.addEventListener('click', async () => {
   const c = activeClass();
   if(!c) return log('請先選擇班級。', true);
@@ -199,6 +207,14 @@ $('#btn-copy-url')?.addEventListener('click', async () => {
   try{ await navigator.clipboard.writeText($('#room-url').value);
        log('連結已複製，可以貼到 Google Classroom。'); }
   catch(e){ $('#room-url').select(); log('請按 Ctrl+C 複製。'); }
+});
+
+$('#btn-copy-grade-url')?.addEventListener('click', async () => {
+  const el = $('#grade-url'); if(!el) return;
+  if(!el.value) el.value = gradeUrl();
+  try{ await navigator.clipboard.writeText(el.value);
+       log('查詢頁連結已複製，可以貼到 Google Classroom。'); }
+  catch(e){ el.select(); log('請按 Ctrl+C 複製。'); }
 });
 
 /* ---------- 附圖：截圖貼上 / 拖放 / 選檔 ----------
@@ -572,6 +588,22 @@ function gradeStats(cls, records){
   return { nSess, byNo, byGroup };
 }
 
+
+/* ═══════════ 學生查詢頁（grades.html）用的成績副本 ═══════════
+   為什麼要再寫一份：rooms/{code}/grades 只有拿到「今天那間教室代碼」的人查得到。
+   學期中學生想回頭看自己的分數時，手邊不會有那張 QR。
+   所以同一份資料再寫進一個「跟教室無關」的地方：studentGrades/{email}。
+   一位學生一份文件、文件 id 就是她的信箱，規則只讓本人讀 ——
+   跟房間裡那份一樣安全，差別只在「不需要教室代碼」。
+
+   一位學生可能同時修不只一門課／跨學年度，所以文件裡是 records 這張表，
+   key 是「學年度__班級」，發布別班不會蓋掉這一班。 */
+const SG_COL = 'studentGrades';
+function sgKey(year, cls){
+  return (String(year || '') + '__' + String(cls || '')).replace(/[^0-9A-Za-z\u4e00-\u9fff]+/g, '_');
+}
+function sgId(email){ return String(email || '').trim().toLowerCase(); }
+
 function pubStateEl(){ return $('#pub-grade-state'); }
 
 $('#btn-pub-grade')?.addEventListener('click', async () => {
@@ -608,6 +640,8 @@ $('#btn-pub-grade')?.addEventListener('click', async () => {
   const gotSheet = Object.keys(extra).length;
 
   const ts = new Date().toISOString();
+  const YEAR = d.year || cls.year || '';
+  const SGKEY = sgKey(YEAR, cls.name);
   let sent = 0, noMail = [];
   await Promise.all(list.map(v => {
     const em = mail[String(v.no)];
@@ -617,7 +651,7 @@ $('#btn-pub-grade')?.addEventListener('click', async () => {
     const x = extra[String(v.no)] || null;
     const num = k => { const n = Number(x && x[k]); return Number.isFinite(n) ? n : 0; };
     const txt = k => String((x && x[k]) == null ? '' : x[k]).trim();
-    return setDoc(doc(db,'rooms',ROOM,'grades',String(v.no)), {
+    const payload = {
       no: v.no, name: v.name, email: em,
       className: cls.name, sessions: st.nSess, publishedAt: ts,
       /* 試算表是真相：拿得到就用試算表算的累積分數，拿不到才用本機的 */
@@ -634,7 +668,17 @@ $('#btn-pub-grade')?.addEventListener('click', async () => {
       work:   x ? { score: txt('作業分數'), comment: txt('作業評語') } : null,
       teacherNote: x ? txt('老師評語') : '',
       sheetAt: x ? String(x.updatedAt || '') : ''
-    });
+    };
+    /* 兩個地方各寫一份：教室裡那份（掃 QR 當堂看）、查詢頁那份（學期中回頭查）。
+       查詢頁那份用 merge，只動自己這一班的 key，別班的成績不會被蓋掉。 */
+    return Promise.all([
+      setDoc(doc(db,'rooms',ROOM,'grades',String(v.no)), payload),
+      setDoc(doc(db, SG_COL, sgId(em)), {
+        email: sgId(em), name: v.name || '',
+        updatedAt: ts,
+        records: { [SGKEY]: Object.assign({ year: String(YEAR || '') }, payload) }
+      }, { merge:true })
+    ]);
   }));
 
   const el = pubStateEl();
@@ -652,8 +696,20 @@ $('#btn-unpub-grade')?.addEventListener('click', async () => {
   if(!ROOM) return log('請先按「開啟教室」。', true);
   if(!confirm('收回已發布的成績？\n\n'
     + '學生手機上就查不到了。分數本身不會消失 —— 它在試算表裡。')) return;
+  const cls0 = activeClass();
+  const d0 = localDB();
+  const key0 = sgKey(d0.year || (cls0 && cls0.year) || '', cls0 ? cls0.name : '');
   const snap = await getDocs(collection(db,'rooms',ROOM,'grades'));
-  await Promise.all(snap.docs.map(x => deleteDoc(x.ref)));
+  /* 收回要兩邊一起收：教室裡那份刪掉，查詢頁那份只刪這一班的 key。
+     只收一邊，學生會在查詢頁看到老師以為已經收回的分數。 */
+  await Promise.all(snap.docs.map(x => {
+    const em = sgId((x.data() || {}).email);
+    const jobs = [ deleteDoc(x.ref) ];
+    if(em) jobs.push(
+      updateDoc(doc(db, SG_COL, em), { ['records.' + key0]: deleteField() }).catch(() => {})
+    );
+    return Promise.all(jobs);
+  }));
   const el = pubStateEl(); if(el) el.textContent = '已收回，學生目前查不到成績。';
   log('已收回發布的成績。');
 });

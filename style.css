@@ -1063,3 +1063,34 @@ body.tb-open{overflow:hidden}
 .tb-slot-r{font-size:12px;font-weight:800;color:var(--rc);white-space:nowrap}
 .tb-slot-n{font-size:13px;font-weight:700;overflow:hidden;
   text-overflow:ellipsis;white-space:nowrap}
+
+/* ══════════════════════════════════════════════════════════
+   上課模式：鎖定版面之後，座位表本身就是計分板（2026-09-03）
+   鎖定＝空位全部消失，畫面上每一格都是一個真人，
+   所以點下去只可能有一個意思：加分。
+   ══════════════════════════════════════════════════════════ */
+
+/* 可以點的暗示。不用 hover 當唯一線索 —— 教室是觸控電視，沒有 hover。 */
+.seat.scoring{cursor:pointer}
+.seat.scoring:hover .s-in{filter:brightness(1.06)}
+.seat.scoring:active .s-in{transform:scale(.97)}
+
+/* 這一堂發言過的人，整格描一圈綠邊，跟計分板那面同一個視覺語彙。 */
+.seat.scoring.spoke .s-in{box-shadow:0 0 0 3px var(--ok) inset}
+
+/* 累積分數。用等寬數字，分數跳動時整排不會左右晃。 */
+.seat .s-pts{font-variant-numeric:tabular-nums;font-size:1.15em;color:var(--txt)}
+
+/* 扣分鈕。放右下角，跟收空位的 ✕（正上方）分得開，
+   免得上課手忙腳亂時按錯 —— 那兩個動作的後果差很多。
+   常駐半透明而不是只在 hover 出現：觸控螢幕沒有 hover，
+   看不見的按鈕等於不存在。 */
+.seat-minus{position:absolute;right:5%;bottom:8%;
+  width:26px;height:26px;border-radius:50%;padding:0;z-index:4;
+  border:1px solid var(--line);background:var(--card);color:var(--txt2);
+  font-size:16px;line-height:1;cursor:pointer;opacity:.55;transition:.12s}
+/* 分數那一行：讓開扣分鈕，而且絕不換行 —— 座位格本來就窄，
+   一換行「分」會掉到第二行，整格高度被撐開，版面就歪了。 */
+.seat.scoring .s-no{padding-right:24px;white-space:nowrap;font-size:.92em}
+.seat:hover .seat-minus{opacity:1}
+.seat-minus:hover{background:var(--danger);border-color:var(--danger);color:#fff}

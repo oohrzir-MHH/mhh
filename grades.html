@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2b3a55">
+<title>查我的成績 ｜ MH⋯H</title>
+<style>
+:root{
+  --ink:#1a1d24; --ink-2:#5b6472; --line:#dfe3ea;
+  --bg:#f4f6f9; --card:#fff; --brand:#2b3a55; --brand-2:#3d5a80;
+  --ok:#2ea86a; --warn:#e8a13a; --bad:#e05260;
+  --r:14px; --shadow:0 2px 10px rgba(20,25,40,.07);
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root{ --ink:#eef1f6; --ink-2:#9aa4b4; --line:#333a48;
+         --bg:#161a22; --card:#1e242e; --brand:#8fb3e0; --brand-2:#6d9bd1; }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);
+  font:16px/1.7 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+.screen{display:none;min-height:100dvh;flex-direction:column}
+.screen.on{display:flex}
+.top{display:flex;align-items:center;gap:10px;padding:12px 16px;
+  background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.top .logo{font-weight:800;letter-spacing:.5px;color:var(--brand);white-space:nowrap}
+.top .who{margin-left:auto;font-size:.78rem;color:var(--ink-2);text-align:right;line-height:1.35}
+.body{flex:1;padding:20px 16px calc(24px + var(--safe-b));max-width:720px;margin:0 auto;width:100%}
+.mid{flex:1;display:flex;flex-direction:column;justify-content:center;
+  align-items:center;text-align:center;padding:28px 22px;gap:14px}
+h2{font-size:1.15rem;margin:0 0 4px}
+.sub{color:var(--ink-2);font-size:.9rem;margin:0}
+.btn{background:var(--brand);color:#fff;border-radius:12px;padding:13px 22px;
+  font-weight:700;box-shadow:var(--shadow)}
+.btn.ghost{background:transparent;color:var(--ink-2);box-shadow:none;
+  border:1px solid var(--line);padding:9px 16px;font-weight:600;font-size:.85rem}
+.err{display:none;white-space:pre-line;background:rgba(224,82,96,.12);
+  color:var(--bad);border-radius:10px;padding:10px 14px;font-size:.88rem;max-width:32rem}
+.gcard{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);
+  padding:16px 18px;margin-bottom:14px}
+.gcard h3{margin:0 0 10px;font-size:1rem;color:var(--brand)}
+.grow{display:flex;justify-content:space-between;align-items:baseline;
+  padding:7px 0;border-top:1px solid var(--line)}
+.grow:first-of-type{border-top:0}
+.grow b{font-size:1.15rem}
+.gnote{color:var(--ink-2);font-size:.82rem;margin:10px 0 0;white-space:pre-line}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.tab{border:1px solid var(--line);border-radius:999px;padding:7px 15px;
+  font-size:.85rem;font-weight:600;background:var(--card);color:var(--ink-2)}
+.tab.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.stamp{color:var(--ink-2);font-size:.75rem;margin:0 0 12px}
+</style>
+</head>
+<body>
+
+<!-- ① 登入 -->
+<section class="screen on" id="s-login">
+  <div class="top"><span class="logo">MH⋯H</span>
+    <span class="who">查我的成績</span></div>
+  <div class="mid">
+    <h2>查我的成績</h2>
+    <p class="sub">用<b>你上課掃 QR 時登入的那個 Google 帳號</b>登入，只看得到自己的分數。<br>
+      這一頁不需要教室代碼，學期中隨時都能來查。</p>
+    <button class="btn" id="btn-login">使用 Google 帳號登入</button>
+    <div class="err" id="login-err"></div>
+  </div>
+</section>
+
+<!-- ② 成績 -->
+<section class="screen" id="s-grade">
+  <div class="top"><span class="logo">MH⋯H</span>
+    <span class="who" id="who"></span></div>
+  <div class="body">
+    <h2 id="g-title">我的成績</h2>
+    <p class="stamp" id="g-stamp"></p>
+    <div class="tabs" id="g-tabs"></div>
+    <div id="g-box"></div>
+    <div class="err" id="g-err"></div>
+    <p style="text-align:center;margin-top:18px">
+      <button class="btn ghost" id="btn-reload">重新整理</button>
+      <button class="btn ghost" id="btn-logout">登出</button></p>
+  </div>
+</section>
+
+<script type="module">
+import { initializeApp }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getFirestore, doc, getDoc }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+const CFG = {
+  apiKey: "AIzaSyB21eHdFPd9W5o0Xa9EFvJEAk8Wsuzfzbw",
+  authDomain: "mhh-tngs.firebaseapp.com",
+  projectId: "mhh-tngs",
+  storageBucket: "mhh-tngs.firebasestorage.app",
+  messagingSenderId: "471690787859",
+  appId: "1:471690787859:web:37fa09bcd09a54032013e6"
+};
+const app = initializeApp(CFG);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+const $ = s => document.querySelector(s);
+const show = id => document.querySelectorAll('.screen')
+  .forEach(el => el.classList.toggle('on', el.id === id));
+const err = (sel, msg) => { const e = $(sel);
+  e.style.display = msg ? 'block' : 'none'; e.textContent = msg || ''; };
+const esc = x => String(x == null ? '' : x).replace(/[&<>]/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+let ME = null, RECORDS = {}, CUR = null;
+
+/* 登入。用 popup 不用 redirect —— redirect 在手機上常常回不來，
+   會變成「missing initial state」那個看不懂的錯誤。 */
+$('#btn-login').onclick = async () => {
+  err('#login-err','');
+  const p = new GoogleAuthProvider();
+  /* 2026-09-03：不再帶 hd。學生沒有統一的學校帳號，
+     hd 會讓 Google 在登入視窗就擋掉個人 Gmail。 */
+  p.setCustomParameters({ prompt: 'select_account' });
+  try{ await signInWithPopup(auth, p); }
+  catch(e){
+    const code = e.code || '';
+    if(/popup-blocked|popup-closed|cancelled-popup|web-storage-unsupported/.test(code)){
+      return err('#login-err','登入視窗被目前的瀏覽器攔下。\n\n請用右上角選單改成「在 Safari 開啟」或「在 Chrome 開啟」，再按一次登入。不要在 LINE 內建瀏覽器登入。');
+    }
+    if(/unauthorized-domain/.test(code)){
+      return err('#login-err','這個網站尚未加入 Firebase 授權網域。請把畫面拿給老師看。');
+    }
+    err('#login-err', `登入失敗\n${code || e.message}`);
+  }
+};
+
+$('#btn-logout').onclick = () => signOut(auth);
+$('#btn-reload').onclick = () => load();
+
+onAuthStateChanged(auth, async u => {
+  if(!u){ ME = null; show('s-login'); return; }
+  /* ★ 2026-09-03：拿掉「必須是學校帳號」的檢查。
+     真正決定看不看得到成績的是 studentGrades/{信箱} 這份文件存不存在 ——
+     老師是照座號綁定裡的信箱寫進去的，沒綁座號的人查不到任何東西。 */
+  ME = u;
+  $('#who').innerHTML = `${esc(u.displayName || '')}<br>${esc(u.email)}`;
+  show('s-grade');
+  load();
+});
+
+async function load(){
+  err('#g-err','');
+  $('#g-box').innerHTML = '<p class="sub">讀取中…</p>';
+  $('#g-tabs').innerHTML = ''; $('#g-stamp').textContent = '';
+  let snap;
+  try{
+    snap = await getDoc(doc(db, 'studentGrades', String(ME.email).trim().toLowerCase()));
+  }catch(e){
+    $('#g-box').innerHTML = '';
+    return err('#g-err', e.code === 'permission-denied'
+      ? '讀不到你的成績。\n請確認你登入的帳號，跟上課掃 QR 綁座號時用的是同一個。'
+      : ('讀取失敗：' + (e.code || e.message)));
+  }
+  /* 「老師還沒發布」和「系統壞了」是兩件事，要講清楚是哪一種，
+     不然學生會一直重整、然後來問老師。 */
+  if(!snap.exists() || !snap.data().records || !Object.keys(snap.data().records).length){
+    $('#g-box').innerHTML = '<div class="gcard"><h3>老師還沒有公布</h3>'
+      + '<p class="gnote">分數要老師按「發布」之後才查得到。\n'
+      + '如果你從來沒有掃過教室 QR 選座號，老師那邊也找不到你的帳號 —— 下一堂課記得先綁座號。</p></div>';
+    return;
+  }
+  RECORDS = snap.data().records;
+  const keys = Object.keys(RECORDS).sort().reverse();
+  CUR = keys.includes(CUR) ? CUR : keys[0];
+  $('#g-tabs').innerHTML = keys.length > 1
+    ? keys.map(k => `<button class="tab${k === CUR ? ' on' : ''}" data-k="${esc(k)}">${esc(label(k))}</button>`).join('')
+    : '';
+  $('#g-tabs').querySelectorAll('.tab').forEach(b =>
+    b.onclick = () => { CUR = b.dataset.k; render(); paintTabs(); });
+  render();
+}
+function paintTabs(){
+  $('#g-tabs').querySelectorAll('.tab')
+    .forEach(b => b.classList.toggle('on', b.dataset.k === CUR));
+}
+function label(k){
+  const g = RECORDS[k] || {};
+  return [g.year ? g.year + ' 學年度' : '', g.className || k].filter(Boolean).join('　');
+}
+
+function render(){
+  const g = RECORDS[CUR] || {};
+  const me = g.me || {}, gp = g.group || {};
+  const at = g.attend || null, wk = g.work || null;
+  $('#g-title').textContent = `${g.className || ''}　${g.no ?? ''} 號 ${g.name || ''}`;
+  $('#g-stamp').textContent = g.publishedAt
+    ? '老師發布時間：' + new Date(g.publishedAt).toLocaleString('zh-TW')
+    : '';
+  const t = (l, v, u) => `<div class="grow"><span>${l}</span><b>${esc(v)}${u || ''}</b></div>`;
+
+  /* 出缺席／作業分數／老師評語只有試算表裡才有。沒有就整塊不顯示，
+     不要顯示一排 0 ——「老師還沒登記」和「你是零分」不是同一件事。 */
+  const attendCard = at ? `<div class="gcard"><h3>出缺席</h3>
+      ${t('出席', at.present ?? 0, ' 堂')}
+      ${at.late ? t('遲到', at.late, ' 堂') : ''}
+      ${at.absent ? t('曠課', at.absent, ' 堂') : ''}
+      ${at.personal ? t('事假', at.personal, ' 堂') : ''}
+      ${at.sick ? t('病假', at.sick, ' 堂') : ''}
+      ${at.official ? t('公假', at.official, ' 堂') : ''}
+      ${at.left ? t('中途離開', at.left, ' 次') : ''}
+      ${at.unmarked ? t('還沒登記', at.unmarked, ' 堂') : ''}
+      <p class="gnote">登記有誤請直接跟老師說，這一頁只能看、不能改。</p></div>` : '';
+
+  const workCard = ((wk && (wk.score || wk.comment)) || g.teacherNote) ? `
+    <div class="gcard"><h3>作業與評語</h3>
+      ${wk && wk.score ? t('作業分數', wk.score, '') : ''}
+      ${wk && wk.comment ? `<p class="gnote"><b>作業評語</b><br>${esc(wk.comment)}</p>` : ''}
+      ${g.teacherNote ? `<p class="gnote"><b>老師的話</b><br>${esc(g.teacherNote)}</p>` : ''}
+    </div>` : '';
+
+  $('#g-box').innerHTML =
+    `<div class="gcard"><h3>我自己</h3>
+      ${t('累積總分', me.total ?? 0, ' 分')}
+      ${t('每堂平均', me.avg ?? 0, ' 分')}
+      ${t('發言次數', me.say ?? 0, ' 次')}
+      ${g.sessions ? t('全班上課堂數', g.sessions, ' 堂') : ''}
+    </div>
+    <div class="gcard"><h3>我這一組（第 ${esc(gp.table ?? '-')} 組）</h3>
+      ${t('全組總分', gp.total ?? 0, ' 分')}
+      ${t('每堂平均', gp.avg ?? 0, ' 分')}
+      ${gp.members ? t('組員人數', gp.members, ' 人') : ''}
+      <p class="gnote">看不到別人的分數，也沒有全班排名。組分是全組一起累積的。</p>
+    </div>
+    ${attendCard}${workCard}
+    ${g.sheetAt ? `<p class="stamp">試算表資料更新時間：${esc(g.sheetAt)}</p>` : ''}`;
+}
+</script>
+</body>
+</html>

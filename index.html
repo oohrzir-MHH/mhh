@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MH⋯H ｜ 課堂儀表板</title>
-<link rel="stylesheet" href="style.css?v=47">
+<link rel="stylesheet" href="style.css?v=2">
 <link rel="stylesheet" href="teacher-gate.css?v=1">
 </head>
 <body>
@@ -84,11 +84,12 @@
         轉的方向用右上角「輪動方向」切換 —— 下面圖例會用<b>具體例子</b>告訴你現在是哪一種。</p>
     </div>
     <div class="row-btns">
+      <label class="mini" id="lbl-groupcount" title="這個班要分幾組。人數不到滿編時，把組數調小，畫面上就不會留一排空桌子。">分幾組<input type="number" id="inp-groupcount" class="ctl" min="1" max="9" value="9"></label>
       <label class="mini">每組人數<input type="number" id="inp-groupsize" class="ctl" min="4" max="12" value="6"></label>
       <button class="btn" id="btn-autofill">⚡ 依座號自動排入</button>
       <button class="btn btn-primary" id="btn-export-png">🖼️ 下載座位表（橫向 A4 一頁）</button>
       <button class="btn" id="btn-export-xlsx">⬇️ 下載登記冊 Excel（正反兩頁）</button>
-      <button class="btn" id="btn-lockseat" title="排好之後鎖起來：空位整格消失，畫面與列印都乾淨">🔓 鎖定版面</button>
+      <button class="btn" id="btn-lockseat" title="排好之後鎖起來＝進入上課模式：空位整格消失，點姓名就是加分">🔓 鎖定版面（上課模式）</button>
       <button class="btn btn-ghost" id="btn-clearseat">🧹 清空座位</button>
       <button class="btn btn-ghost" id="btn-print">🖨️ 直接列印座位表</button>
       <button class="btn" id="btn-truesize" title="放大到 24pt（32px）實際大小，畫面可捲動">🔠 24pt 實際大小</button>
@@ -294,6 +295,13 @@
           <button class="btn btn-ghost btn-danger" id="btn-unpub-grade">🙈 收回（學生就查不到了）</button>
         </div>
         <p class="hint" id="pub-grade-state" style="margin-top:8px">尚未發布。</p>
+        <p class="hint" style="margin-top:12px">學生的<b>成績查詢頁</b>（不需要教室代碼，貼到 Google Classroom 一次就好）：</p>
+        <input type="text" id="grade-url" class="ctl mono" readonly>
+        <div class="row-btns" style="margin-top:8px">
+          <button class="btn" id="btn-copy-grade-url">📋 複製查詢頁連結</button>
+        </div>
+        <p class="hint" style="margin-top:6px">學生用<b>學校帳號</b>登入就看得到自己的分數。
+          沒綁過座號的學生查不到 —— 請她先掃過一次教室 QR 選座號。</p>
       </div>
 
     </div>
@@ -658,7 +666,7 @@
 <canvas id="fx-canvas"></canvas>
 <div class="toast-wrap" id="toast-wrap"></div>
 
-<script src="teacher-gate.js?v=2"></script>
+<script src="teacher-gate.js?v=5"></script>
 
 
 

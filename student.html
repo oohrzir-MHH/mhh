@@ -157,7 +157,7 @@ input[type=number]{font-size:1.9rem;font-weight:800;text-align:center;padding:16
     <h2 style="margin:0">Where Minds Bond</h2>
     <p class="sub" id="login-room">—</p>
     <button class="btn pri big" id="btn-login" style="max-width:330px;margin-top:12px">
-      使用學校帳號登入</button>
+      使用 Google 帳號登入</button>
     <div id="room-entry" style="display:none;width:min(330px,100%);margin-top:8px">
       <p class="note">QR 無法使用時，可直接輸入老師畫面上的六位教室代碼：</p>
       <input type="text" id="inp-room" inputmode="numeric" maxlength="6"
@@ -165,7 +165,8 @@ input[type=number]{font-size:1.9rem;font-weight:800;text-align:center;padding:16
       <button class="btn big" id="btn-room-enter" style="margin-top:8px">進入教室</button>
     </div>
     <p class="note" style="max-width:330px">
-      請用 <b>@tngs.tn.edu.tw</b> 的學校帳號。<br>
+      學校帳號或<b>你自己的 Gmail</b> 都可以登入。<br>
+      登入之後要<b>選一次你的座號</b>，老師才知道你是誰、分數才算得到你身上。<br>
       <b>只有第一次要登入</b>，之後這台裝置會直接進入。<br>
       若目前是在 LINE、相機掃碼器或其他 App 內開啟，請先選「在 Safari／Chrome 開啟」。</p>
     <div class="err" id="login-err" style="display:none"></div>
@@ -177,10 +178,20 @@ input[type=number]{font-size:1.9rem;font-weight:800;text-align:center;padding:16
   <div class="top"><span class="logo">MH⋯H</span>
     <span class="who" id="seat-who"></span></div>
   <div class="body">
-    <h2>點一下你的座號</h2>
-    <p class="sub">選錯了跟老師說，老師可以幫你解除。</p>
-    <div class="seatgrid" id="seatgrid"></div>
+    <h2>輸入你的座號</h2>
+    <p class="sub">打完座號會顯示你的名字，確認是你本人再送出。<br>綁錯了跟老師說，老師可以幫你解除。</p>
+    <div style="width:min(330px,100%);margin:0 auto">
+      <input type="text" id="inp-seatno" inputmode="numeric" maxlength="3"
+        autocomplete="off" placeholder="例如：21" aria-label="你的座號"
+        style="font-size:26px;text-align:center;letter-spacing:2px">
+      <div id="seat-preview" style="display:none;margin-top:12px"></div>
+      <button class="btn big" id="btn-seat-confirm" style="margin-top:10px;display:none">確認，這是我</button>
+    </div>
     <div class="err" id="seat-err" style="display:none"></div>
+    <details style="margin-top:18px">
+      <summary class="sub" style="cursor:pointer">看不到自己的座號？點這裡列出全班</summary>
+      <div class="seatgrid" id="seatgrid" style="margin-top:10px"></div>
+    </details>
   </div>
 </div>
 
@@ -192,6 +203,7 @@ input[type=number]{font-size:1.9rem;font-weight:800;text-align:center;padding:16
     <h2 style="margin:0">已就緒</h2>
     <p class="sub">老師推送題目後<br>這頁會自動出現，不用重整。</p>
     <button class="btn" id="btn-mygrade" style="margin-top:10px">📊 我的分數</button>
+    <div class="err" id="wait-err" style="display:none;margin-top:12px"></div>
   </div>
 </div>
 
@@ -203,6 +215,9 @@ input[type=number]{font-size:1.9rem;font-weight:800;text-align:center;padding:16
     <p class="sub" id="grade-sub">讀取中…</p>
     <div id="grade-box"></div>
     <div class="err" id="grade-err" style="display:none"></div>
+    <p class="sub" style="margin-top:16px">下課以後想再看一次？把
+      <a id="grade-page-link" href="grades.html">成績查詢頁</a>
+      加到書籤 —— 那一頁不用教室代碼，用學校帳號登入就查得到。</p>
   </div>
   <div class="foot">
     <button class="btn" id="btn-grade-refresh">重新整理</button>
@@ -285,7 +300,6 @@ const CFG = {
   messagingSenderId: "471690787859",
   appId: "1:471690787859:web:37fa09bcd09a54032013e6"
 };
-const DOMAIN = 'tngs.tn.edu.tw';
 
 const app = initializeApp(CFG);
 const auth = getAuth(app);
@@ -293,6 +307,11 @@ const db   = getFirestore(app);
 
 /* ═══════════ 小工具 ═══════════ */
 const $ = s => document.querySelector(s);
+/* 名單是老師推上來的，理論上乾淨，但它經過 Firestore 才到這裡 ——
+   任何要塞進 innerHTML 的字串一律先轉義，不要相信「理論上」。 */
+const esc = t => String(t==null?'':t)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const show = id => document.querySelectorAll('.screen')
   .forEach(el => el.classList.toggle('on', el.id === id));
 const err = (sel, msg) => { const e = $(sel);
@@ -324,12 +343,11 @@ if(!ROOM){
   $('#login-room').textContent = `教室代碼　${ROOM}`;
   onAuthStateChanged(auth, async u => {
     if(!u){ show('s-login'); return; }
-    if(!(u.email || '').endsWith('@' + DOMAIN)){
-      await signOut(auth);
-      show('s-login');
-      err('#login-err', `你登入的是 ${u.email}\n這不是學校帳號。\n請改用 @${DOMAIN} 的帳號再登入一次。`);
-      return;
-    }
+    /* ★ 2026-09-03：拿掉「必須是 @tngs.tn.edu.tw」的限制。
+       學生沒有統一的 TNGS 帳號，這道檢查會讓所有人登入後被踢回登入頁 ——
+       畫面看起來就是「掃完 QR 登入完就停住了」。
+       改成：任何 Google 帳號都能登入，真正決定你看不看得到東西的是
+       「有沒有綁座號」（見 firestore.rules 的 isMember）。 */
     ME = u;
     const who = `${u.displayName || ''}<br>${u.email}`;
     ['#seat-who','#wait-who','#ans-who','#done-who']
@@ -353,7 +371,9 @@ $('#inp-room').addEventListener('keydown', e => { if(e.key === 'Enter') enterByC
 $('#btn-login').onclick = async () => {
   err('#login-err', '');
   const p = new GoogleAuthProvider();
-  p.setCustomParameters({ hd: DOMAIN, prompt: 'select_account' });
+  /* 不再帶 hd —— hd 會叫 Google 只接受某個網域的帳號，
+     學生用個人 Gmail 時會直接被 Google 擋在登入視窗裡。 */
+  p.setCustomParameters({ prompt: 'select_account' });
   try { await signInWithPopup(auth, p); }
   catch(e){
     const code = e.code || '';
@@ -390,8 +410,21 @@ async function enterRoom(){
     if(s && s.exists() && s.data().email === ME.email){ MYSEAT = cached; }
   }
 
-  if(MYSEAT) listenQuestion();
-  else       await renderSeats();
+  if(MYSEAT){
+    /* 這台裝置上次就綁好了，不會再走一次 claim()，
+       但 members 那一份可能還沒有（舊版綁的，或上次寫到一半斷線）。
+       補寫一次，否則規則會擋掉題目，學生又會停在等待畫面。 */
+    await ensureMember(MYSEAT).catch(()=>{});
+    listenQuestion();
+  }
+  else await renderSeats();
+}
+
+/* 登記「我綁過座號了」。規則靠這一份判斷能不能讀題目與成績。 */
+function ensureMember(no){
+  return setDoc(doc(db,'rooms',ROOM,'members',ME.uid), {
+    email: ME.email, no: Number(no), joinedAt: serverTimestamp()
+  });
 }
 
 /* ═══════════ 選座號 ═══════════ */
@@ -404,6 +437,57 @@ async function renderSeats(){
     return;
   }
   const taken = {};
+
+  /* ---- 打座號 → 帶出姓名 → 確認（2026-09-03）----
+     為什麼要多一個確認步驟：綁定是一次性的，綁下去這個 Google 帳號
+     就是這位學生查成績的憑證。直接點格子太容易手滑點到隔壁號碼，
+     而且學生看不到「我正在用哪一個帳號綁」——
+     很多人手機上同時登著私人和班級的 Gmail。
+     所以確認畫面一定要同時顯示：座號、姓名、以及**現在登入的信箱**。 */
+  const input   = $('#inp-seatno');
+  const preview = $('#seat-preview');
+  const okBtn   = $('#btn-seat-confirm');
+  let pending = null;
+
+  function review(){
+    err('#seat-err','');
+    const raw = String(input.value || '').replace(/\D/g,'');
+    input.value = raw;
+    if(!raw){ pending=null; preview.style.display='none'; okBtn.style.display='none'; return; }
+    const st = roster.find(x => String(x.no) === String(Number(raw)));
+    if(!st){
+      pending=null; preview.style.display='none'; okBtn.style.display='none';
+      return err('#seat-err', `這個班沒有 ${raw} 號。請再確認一次你的座號。`);
+    }
+    const t = taken[String(st.no)];
+    if(t && t.email !== ME.email){
+      pending=null; preview.style.display='none'; okBtn.style.display='none';
+      return err('#seat-err',
+        `${st.no} 號已經被 ${t.displayName || '其他人'} 綁走了。\n`+
+        '如果那是你的座號，請舉手跟老師說，老師可以解除。');
+    }
+    pending = st;
+    preview.style.display='';
+    preview.innerHTML =
+      `<div style="padding:14px;border-radius:12px;border:1px solid currentColor">`+
+      `<div style="font-size:30px;font-weight:800">${esc(st.no)} 號　${esc(st.name || '')}</div>`+
+      `<div class="sub" style="margin-top:8px">確認之後，<b>以後就用這個帳號查成績</b>：<br>`+
+      `<b>${esc(ME.email)}</b></div>`+
+      (t ? '<div class="sub" style="margin-top:6px">（這個座號本來就是你綁的，可以重新確認。）</div>' : '')+
+      `</div>`;
+    okBtn.style.display='';
+  }
+
+  input.oninput = review;
+  input.addEventListener('keydown', e => { if(e.key === 'Enter' && pending) okBtn.click(); });
+  okBtn.onclick = () => {
+    if(!pending) return;
+    if(!confirm(`確定綁定 ${pending.no} 號 ${pending.name || ''}？\n\n`+
+                `帳號：${ME.email}\n\n`+
+                '綁定後這個座號的成績就掛在這個帳號上。\n綁錯了要請老師解除。')) return;
+    claim(String(pending.no), pending.name, taken[String(pending.no)]);
+  };
+
   onSnapshot(collection(db,'rooms',ROOM,'seats'), snap => {
     snap.forEach(d => taken[d.id] = d.data());
     grid.innerHTML = '';
@@ -414,10 +498,12 @@ async function renderSeats(){
       const b = document.createElement('button');
       b.className = 'seat' + (t && !mine ? ' taken' : '') + (mine ? ' me' : '');
       b.innerHTML = `<b>${no}</b><small>${st.name || ''}</small>`;
-      b.onclick = () => claim(no, st.name, t);
+      /* 清單是備援：點了不直接綁，一律回到上面的確認流程。 */
+      b.onclick = () => { input.value = no; review(); input.scrollIntoView({block:'center'}); };
       grid.appendChild(b);
     });
-  });
+    if(pending) review();          // 別人剛綁走時，確認畫面要即時失效
+  }, e => err('#seat-err', `座號清單讀取失敗\n${e.code || e.message}`));
 }
 
 async function claim(no, name, taken){
@@ -431,6 +517,12 @@ async function claim(no, name, taken){
       no: Number(no), name: name || '', email: ME.email,
       displayName: ME.displayName || '', deviceId: DEV, claimedAt: serverTimestamp()
     });
+    /* ★ 2026-09-03：同時登記成員。
+       安全規則沒辦法「查詢」哪一個座號是我的（規則裡不能下 query），
+       只能用 get() 讀一份固定路徑的文件。所以綁座號時多寫一份
+       rooms/{code}/members/{我的 uid}，規則就能一行判斷「這個人綁過座號」。
+       沒有這一份，任何登入的人都讀得到題目與成績。 */
+    await ensureMember(no);
     MYSEAT = String(no);
     localStorage.setItem('mhh_seat_' + ROOM, MYSEAT);
     listenQuestion();
@@ -440,6 +532,13 @@ async function claim(no, name, taken){
 }
 
 /* ═══════════ 監聽題目 ═══════════ */
+/* onSnapshot 的第二個參數是錯誤 callback。沒有它的話，
+   權限被拒（permission-denied）不會有任何畫面反應 ——
+   學生看到的就是「停在等待畫面不動」，這正是這一輪要修的症狀之一。 */
+function snapErr(where){
+  return e => err('#wait-err', `${where}讀取失敗\n${e.code || e.message}\n\n`+
+    '如果寫的是 permission-denied，請跟老師說「Firestore 規則要重新發布」。');
+}
 function listenQuestion(){
   show('s-wait');
   onSnapshot(doc(db,'rooms',ROOM), snap => {
@@ -450,7 +549,7 @@ function listenQuestion(){
     if(CURQ && CURQ.qid === q.qid) return;      // 同一題，不重畫
     CURQ = q; SENTQ = null;
     renderQuestion(q);
-  });
+  }, snapErr('教室'));
 }
 
 const KIND = { text:'文字作答', number:'數字作答', draw:'畫圖作答', choice:'選擇題' };
