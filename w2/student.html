@@ -1,97 +1,1108 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">
+<!doctype html>
+<html lang="zh-Hant"><head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>反泡泡 W2 小組學習單</title>
+<title>幾個才夠？幾回才夠？</title>
+<!-- v13 2026-09-10：目標句、σ 推導過程、共用軸/各自放大切換、形狀題重排、學習單流水編號 -->
+<!-- v12 2026-09-09：加 n=30 看鐘形、形狀先於數字、SE 四格(±1/±2)、重疊圖轉 90 度、不宣稱 95% -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
 <style>
-@page{size:A4;margin:12mm 10mm}
+:root{
+  --ground:#F6F7F5;--panel:#FFFFFF;--ink:#1A1E1C;--ink-2:#4A534E;--ink-3:#7C857F;
+  --line:#DDE2DD;--line-2:#EDF0EC;--accent:#2E6B5E;--accent-soft:#DCE8E4;
+  --truth:#BE5F26;--mine:#C0392B;--dim:#C4CBC6;--alt:#4A6FA5;--alt-soft:#DCE4F0;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#121614;--panel:#1A201D;--ink:#EDF1EE;--ink-2:#AFB9B4;--ink-3:#7C8781;
+  --line:#2C3531;--line-2:#222925;--accent:#6BC0AA;--accent-soft:#22322D;
+  --truth:#E08B4E;--mine:#F0705E;--dim:#39423E;--alt:#8FB0DE;--alt-soft:#232C39;
+}}
+:root[data-theme="dark"]{
+  --ground:#121614;--panel:#1A201D;--ink:#EDF1EE;--ink-2:#AFB9B4;--ink-3:#7C8781;
+  --line:#2C3531;--line-2:#222925;--accent:#6BC0AA;--accent-soft:#22322D;
+  --truth:#E08B4E;--mine:#F0705E;--dim:#39423E;--alt:#8FB0DE;--alt-soft:#232C39;
+}
 *{box-sizing:border-box}
-body{font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
-  color:#111;background:#fff;font-size:12px;line-height:1.75;margin:0;padding:14px}
-.sheet{max-width:800px;margin:0 auto}
-h1{font-size:19px;margin:0 0 2px;font-weight:800}
-.meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;border-bottom:2px solid #111;
-  padding-bottom:7px;margin-bottom:10px}
-.meta span{white-space:nowrap}
-.u{display:inline-block;border-bottom:1px solid #111;min-width:70px}
-.lead{font-size:11.5px;color:#444;margin:0 0 10px;border-left:3px solid #111;padding-left:9px}
-.q{border:1px solid #bbb;border-radius:6px;padding:9px 11px;margin-bottom:9px;break-inside:avoid}
-.qh{font-weight:800;font-size:13px;margin:0 0 5px;display:flex;gap:7px;align-items:baseline}
-.qh .n{background:#111;color:#fff;border-radius:4px;padding:1px 7px;font-size:12px}
-.qh .src{margin-left:auto;font-size:10.5px;font-weight:400;color:#777}
-.q p{margin:0 0 5px}
-.b{display:inline-block;border-bottom:1px solid #333;min-width:96px;height:1.15em;vertical-align:-2px;margin:0 2px}
-.b.s{min-width:52px}.b.l{min-width:190px}.b.xl{min-width:100%;display:block;margin-top:3px}
-.calc{font-family:"Courier New",monospace;font-size:11.5px;line-height:2.1}
-.note{font-size:10.5px;color:#666;margin-top:4px}
-.ans{margin-top:7px;background:#EAF2EF;border:1px solid #2E6B5E;border-radius:5px;
-  padding:7px 9px;font-size:11.5px;line-height:1.8;color:#12332C}
-.ans b{color:#12332C}
-.ans .al{font-weight:800;font-size:10px;letter-spacing:.08em;color:#2E6B5E;display:block;margin-bottom:2px}
-.tn{margin-top:5px;padding-top:4px;border-top:1px dashed #2E6B5E;color:#3C4E49;font-size:11px}
-.banner{background:#BE5F26;color:#fff;padding:8px 11px;border-radius:6px;font-size:12px;
-  font-weight:700;margin-bottom:10px}
-.sec{font-size:12px;font-weight:800;margin:14px 0 6px;padding:3px 9px;background:#111;color:#fff;
-  border-radius:4px;display:inline-block}
-@media print{body{padding:0}.q{border-color:#999}}
+body{background:var(--ground);color:var(--ink);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  line-height:1.7;-webkit-text-size-adjust:100%}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 56px;display:flex;flex-direction:column;gap:14px}
+header{display:flex;flex-direction:column;gap:5px}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{font-family:"Noto Serif TC",serif;font-weight:700;font-size:27px;line-height:1.3;margin:0;text-wrap:balance}
+.sub{color:var(--ink-2);font-size:14px;margin:0}
+h2{font-family:"Noto Serif TC",serif;font-size:20px;margin:24px 0 0;font-weight:700}
+h2 .num{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--accent);margin-right:8px}
 
-.rec{width:100%;border-collapse:collapse;margin-top:6px;font-size:11.5px}
-.rec th,.rec td{border:1px solid #666;padding:6px 8px;height:26px;text-align:left}
-.rec th{background:#111;color:#fff;font-weight:700}
-</style></head><body><div class="sheet">
-<h1>反泡泡 W2 小組學習單：幾個才夠？幾回才夠？</h1>
-<div class="meta"><span>班級 <span class="u"></span></span><span>組別 <span class="u"></span></span><span>組員 <span class="u" style="min-width:210px"></span></span><span>日期 <span class="u"></span></span></div>
-<p class="lead">配合互動網頁使用。網頁上每個橘框標了題號，做到那裡就翻到這一頁的同一題。<b>先操作、先觀察，再寫。</b>寫不出來再按網頁上的「查看提示」。</p>
-<div class="sec">第一部分　骰子模擬：n 與回數</div>
-<div class="q"><p class="qh"><span class="n">①</span>形狀：五張圖長得一樣嗎？<span class="src">01–02 區 · 按「各自放大」</span></p><p>1. 五張圖形下的<b>總點數</b>一樣嗎？<span class="b s"></span></p>
-<p>2. 從 n＝1 看到 n＝30，中間越來越 <span class="b s"></span>，兩邊越來越 <span class="b s"></span>。</p>
-<p>3. 這個形狀有沒有對稱？<span class="b s"></span>　最高的地方落在橫軸哪個數字？<span class="b s"></span></p>
-<p>4. n＝1 那張畫的是<b>原始數據本身</b>。它是鐘形嗎？<span class="b s"></span></p>
-<p>5. 原始數據不是鐘形，平均起來卻是。所以：不管原始數據長什麼形狀，只要 <span class="b"></span>，畫出來就會 <span class="b l"></span>。</p>
-<p>6. 這件事對你的實驗有什麼用？<span class="b xl"></span></p>
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tab{font-family:"IBM Plex Mono",monospace;font-size:14px;font-weight:600;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink-2);
+  border-radius:8px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.3}
+.tab .st{font-size:10px;font-weight:400;color:var(--ink-3);font-family:"Noto Sans TC",sans-serif}
+.tab[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.console{display:grid;grid-template-columns:1fr;gap:12px;background:var(--panel);
+  border:1px solid var(--accent);border-radius:12px;padding:12px}
+@media (min-width:600px){ .console{grid-template-columns:1.35fr 1fr} }
+.cL{min-width:0}
+.cR{display:flex;flex-direction:column;gap:9px;justify-content:flex-start}
+.ph{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:0 2px 3px}
+.pn{font-family:"IBM Plex Mono",monospace;font-size:14px;font-weight:600}
+.pc{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+svg{display:block;width:100%;height:auto}
+.stats{display:flex;gap:14px;padding:4px 2px 0;font-family:"IBM Plex Mono",monospace;
+  font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--ink-3);flex-wrap:wrap}
+.stats b{font-weight:600;font-size:13.5px}
+.sev b{color:var(--accent)}
+
+.tray{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;min-height:52px;align-items:center}
+.die{width:46px;height:46px;border-radius:9px;background:var(--accent);position:relative;
+  box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.die.empty{background:var(--panel);border:1px dashed var(--line);box-shadow:none}
+.die i{position:absolute;width:8px;height:8px;border-radius:50%;background:#FFF}
+.die.rolling{animation:shake .16s linear infinite}
+@keyframes shake{0%{transform:rotate(-7deg) translateY(0)}50%{transform:rotate(7deg) translateY(-3px)}100%{transform:rotate(-7deg)}}
+@media (prefers-reduced-motion:reduce){.die.rolling{animation:none}}
+.mean{text-align:center;font-family:"IBM Plex Mono",monospace;font-size:15px;font-weight:600;
+  color:var(--accent);background:var(--accent-soft);border-radius:8px;padding:7px 10px}
+.mean small{display:block;font-size:10.5px;color:var(--ink-3);font-weight:400;font-family:"Noto Sans TC",sans-serif}
+
+button{font-family:inherit;font-size:15px;font-weight:500;cursor:pointer;border-radius:8px;
+  padding:11px 14px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+button:hover:not(:disabled){border-color:var(--accent)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button:disabled{opacity:.4;cursor:default}
+.primary{background:var(--accent);color:var(--ground);border-color:var(--accent);font-weight:700;font-size:16px}
+.danger{font-size:12.5px;padding:8px 10px;color:var(--ink-3)}
+.danger.armed{border-color:var(--mine);color:var(--mine);font-weight:700}
+.row{display:flex;gap:7px}
+.row button{flex:1}
+.hint{font-size:12.5px;color:var(--ink-3);margin:0;padding:0 2px}
+
+.grid4{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+
+.grid4{grid-template-columns:repeat(2,1fr)}
+@media (min-width:760px){ .grid4{grid-template-columns:repeat(5,1fr)} }
+.mini{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 8px 5px}
+.mini .mh{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;
+  font-size:11.5px;color:var(--ink-3);padding-bottom:2px}
+.mini .mh b{color:var(--ink)}
+.mini .ms{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);
+  display:flex;justify-content:space-between;padding-top:3px}
+.mini .ms .se{color:var(--accent);font-weight:600}
+
+.defs{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:600px){ .defs{grid-template-columns:1fr 1fr} }
+.def{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+.def h3{margin:0 0 2px;font-family:"Noto Serif TC",serif;font-size:17px;color:var(--ink)}
+.def .en{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);letter-spacing:.06em}
+.def dl{margin:0;font-size:13.5px;line-height:1.7}
+.def dt{color:var(--ink-3);font-size:11.5px;margin-top:7px}
+.def dd{margin:0;color:var(--ink-2)}
+.def dd b{color:var(--ink)}
+
+.mine{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;
+  display:flex;flex-direction:column;gap:10px}
+.mine p{margin:0;font-size:14px;color:var(--ink-2)}
+.mrow{display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap}
+.mbox{display:flex;flex-direction:column}
+.mbox .k{font-size:11px;color:var(--ink-3)}
+.mbox .v{font-family:"IBM Plex Mono",monospace;font-size:23px;font-weight:600;font-variant-numeric:tabular-nums}
+.mbox.err .v{color:var(--mine)}
+.mbox .n{font-size:11px;color:var(--ink-3)}
+
+.note{border-left:2px solid var(--accent);padding:2px 0 2px 12px;font-size:13.5px;color:var(--ink-2);margin:0}
+.note b{color:var(--ink);font-weight:700}
+.q{background:var(--accent-soft);border-radius:10px;padding:14px;font-size:14.5px;color:var(--ink)}
+.q b{font-family:"Noto Serif TC",serif;font-size:16px;display:block;margin-bottom:4px}
+.pnl{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 11px 7px}
+.toggle{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.toggle button{border:none;border-radius:0;padding:7px 13px;font-size:13px;font-weight:600;background:var(--panel);color:var(--ink-3)}
+.toggle button[aria-pressed="true"]{background:var(--accent);color:var(--ground)}
+.simnote{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--truth);font-weight:600;padding:0 2px 3px;margin:0}
+.rules{margin:6px 0 0;padding-left:18px;font-size:13.5px;color:var(--ink-2);line-height:1.75}
+.rules b{color:var(--ink)}
+.sheet{background:var(--accent-soft);border-radius:10px;padding:13px 15px;font-size:14px;color:var(--ink)}
+.sheet b{font-family:"Noto Serif TC",serif;display:block;margin-bottom:5px;font-size:15px}
+.story{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+.story .t{font-family:"Noto Serif TC",serif;font-size:15px;color:var(--ink);font-weight:700;margin:0 0 6px}
+.story p{margin:0 0 8px;font-size:13.5px;color:var(--ink-2);line-height:1.75}
+.story p:last-child{margin:0}
+.story code{font-family:"IBM Plex Mono",monospace;font-size:12.5px;background:var(--accent-soft);
+  color:var(--accent);padding:1px 5px;border-radius:4px}
+footer{font-size:12px;color:var(--ink-3);text-align:center;padding-top:8px}
+@media (prefers-reduced-motion:no-preference){.pop{animation:pop .18s ease-out}}
+@keyframes pop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+
+.katex{font-size:1.02em}
+.fxbox{background:var(--accent-soft);border-radius:7px;padding:10px 11px;margin:9px 0;text-align:center;color:var(--accent);overflow-x:auto}
+.ask{background:var(--panel);border:1px solid var(--truth);border-radius:10px;padding:13px 14px;margin-top:8px}
+.ask .qt{font-family:"Noto Serif TC",serif;font-weight:700;font-size:15px;color:var(--ink);margin:0 0 5px}
+.ask p{margin:0 0 6px;font-size:13.5px;color:var(--ink-2);line-height:1.75}
+.ask .blank{display:inline-block;min-width:104px;border-bottom:1.5px dashed var(--truth);
+  height:1.25em;vertical-align:-2px;margin:0 3px}
+.rv{font-size:12.5px;padding:6px 11px;border-color:var(--truth);color:var(--truth);background:transparent;font-weight:600}
+.rvb{margin-top:8px;border-left:2px solid var(--truth);padding:2px 0 2px 11px;font-size:13px;color:var(--ink-2);line-height:1.75}
+.rvb b{color:var(--ink)}
+.tosheet{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--truth);font-weight:600;margin:0 0 6px}
+table.dt{border-collapse:collapse;width:100%;font-size:12.5px;margin-top:6px}
+table.dt th,table.dt td{border:1px solid var(--line);padding:5px 7px;text-align:center;
+  font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+table.dt th{background:var(--accent-soft);color:var(--accent);font-weight:600;font-size:11.5px;
+  font-family:"Noto Sans TC",sans-serif}
+table.dt td.lb{font-family:"Noto Sans TC",sans-serif;text-align:left;color:var(--ink-2)}
+table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-weight:600;
+  font-family:"IBM Plex Mono",monospace}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.terms{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.terms th,.terms td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+.terms th{background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600;white-space:nowrap}
+.terms code{font-family:"IBM Plex Mono",monospace;font-size:11.5px;background:var(--line-2);
+  color:var(--ink);padding:1px 4px;border-radius:4px;word-break:break-all}
+.stat3{display:grid;grid-template-columns:1fr;gap:5px;padding:6px 2px 0}
+.s3{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+  font-size:11.5px;color:var(--ink-3);border-bottom:1px dotted var(--line);padding-bottom:3px}
+.s3 .k{font-family:"Noto Sans TC",sans-serif}
+.s3 .k em{font-style:normal;font-family:"IBM Plex Mono",monospace;color:var(--ink-2);font-weight:600}
+.s3 b{font-family:"IBM Plex Mono",monospace;font-size:14px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.s3.a b{color:var(--accent)}
+.s3.t b{color:var(--truth)}
+.pair{display:grid;grid-template-columns:1fr;gap:8px}
+@media (min-width:560px){ .pair{grid-template-columns:1fr 1fr} }
+.pair .pnl{margin:0}
+.tag{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;
+  padding:2px 7px;border-radius:5px;background:var(--accent-soft);color:var(--accent)}
+.tag.s{background:var(--alt-soft);color:var(--alt)}
+.quad{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.quad th,.quad td{border:1px solid var(--line);padding:9px 10px;vertical-align:top;text-align:left}
+.quad th{background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600}
+.quad td b{color:var(--ink)}
+.quad .kw{font-family:"IBM Plex Mono",monospace;color:var(--truth);font-weight:700}
+</style>
+</head><body>
+<div class="wrap">
+<header>
+  <span class="eyebrow">反泡泡 W2 · 重複幾回才夠</span>
+  <h1>幾個才夠？幾回才夠？</h1>
+  <p class="sub"><b style="color:var(--ink)">本頁要解決兩個問題：</b>① 一回實驗取幾個數據點求平均（n ＝ ？）才夠；② 這樣的一回，我要做幾回。<br>
+  操作方式：按一次 ＝ <b>做一回</b>——擲 n 個骰子、取平均，圖上就多出<b>一個點</b>。畫面固定模擬 200 回，讓你看見那些平均彼此散在哪。</p>
+</header>
+
+<div class="story">
+  <p class="t">先講清楚：一個數字、一回、200 回</p>
+  <div class="scroll"><table class="terms">
+    <tr><th style="width:22%">說法</th><th>骰子這邊</th><th>你的實驗那邊</th></tr>
+    <tr><td><b>一個原始數字</b></td><td>擲出 1 個骰子的點數</td><td>一筆測量值。<br>例：數 10 試算出 1 個成功率；或量到 1 個存活時間（秒）</td></tr>
+    <tr><td><b>一回</b><br><span style="font-size:11.5px;color:var(--ink-3)">＝圖上一個點</span></td><td>n 個骰子的<b>平均</b>（n＝1／2／3／5／30）</td><td>n 個原始數字的<b>平均</b>（n 是你自己決定的）</td></tr>
+    <tr><td><b>做幾回</b></td><td>畫面固定模擬 200 回，看這些點散在哪</td><td><span style="color:var(--truth)">做完下面的操作，你要能回答：<b>我這樣取 n 個原始數字，一共要做幾回？</b></span></td></tr>
+  </table></div>
+  <p style="margin-top:8px">全篇只用這三個說法，不再多加量詞。<b style="color:var(--ink)">進到 SE 公式裡的那個 n，是「一回裡有幾個原始數字」</b>——骰子是幾個骰子，你的實驗是幾個測量值。</p>
+  <p style="color:var(--truth)">以下我們透過擲 n 個骰子來操作、模擬數據；你必須在過程中弄清楚：<b>你自己的實驗要決定的，是一回取幾個測量值。</b></p>
+  <p>你<b style="color:var(--ink)">如果</b>只做 1 回，就永遠只看得到圖上的一個點。骰子模擬 200 回，是替你把那些你走不到的可能性畫出來。</p>
+  <p style="color:var(--truth)"><b>一個關鍵差別：</b>骰子點數的<b>理論平均值（真值）＝ 3.5</b>，這是算得出來的；而你在反泡泡實驗裡想量的那個真值，<b>根本不存在一個算得出來的數字</b>——沒有人知道「20 °C 的真正成功率」到底是多少。骰子有答案可以對，你的實驗沒有。這就是我們拿骰子來模擬的原因。</p>
 </div>
-<div class="q"><p class="qh"><span class="n">②</span>寬窄：什麼變了，什麼沒變？<span class="src">02 區 · 按「共用同一條軸」</span></p><p>1. 從 n＝1 到 n＝30，五張圖的 σ <span class="b"></span>，五張圖的寬窄 <span class="b"></span>。</p>
-<p>2. 為什麼 σ 會是這樣？<span class="b xl"></span></p>
-<p>3. 圖上那條橘線是 <span class="b"></span>；圖越窄，代表你算出來的平均離它 <span class="b s"></span>。</p>
-<p>4. 造成寬窄改變的是 <span class="b s"></span>。理由：<span class="b xl"></span></p>
+
+<div class="story">
+  <p class="t">先設定情境：為什麼骰子可以拿來「模擬」實驗？</p>
+  <p>把「擲 n 個骰子求平均值」想成「做 n 個測量求平均值」。你想量的<b style="color:var(--ink)">理論平均真值是 3.5</b>，但<b style="color:var(--ink)">並不是每一回都會剛好給你 3.5</b>。</p>
+  <p><b style="color:var(--ink)">為什麼會這樣？</b>因為你控制不了的東西太多：手離桌面多高、出手的角度、桌面平不平、骰子轉了幾圈才停。這些你既沒量、也沒辦法固定，它們合起來讓每一次的結果跳來跳去。<b style="color:var(--ink)">這種「控制不了、也預測不了、每次都不一樣」的跳動，就叫隨機。</b></p>
+  <p>你的實驗完全一樣：滴管捏的力道、離水面的高度、水溫飄了 0.3 度、碼錶按下去慢了半秒——<b style="color:var(--ink)">你沒有辦法讓兩次操作一模一樣</b>，所以量到的數字每次都不同。</p>
+  <p style="color:var(--truth)"><b>骰子跟你的實驗差在哪？</b>骰子的所有可能結果只有六個，你數得完；你的實驗有無限多種可能，你數不完。所以下面那個 <b>σ（sigma，母體標準差，population standard deviation）——描述整個母體本身有多散的量</b>，骰子算得出來，你算不出來。</p>
 </div>
-<div class="q"><p class="qh"><span class="n">③</span>兩個問題，答案不一樣<span class="src">03 區</span></p><p>1. 我的器材與操作<b>做一次測量</b>會晃多少，會不會因為我一回取 n 個數值來平均而改變？<br><span class="b s"></span>，因為 <span class="b xl"></span></p>
-<p>2. 我<b>報出來的那個平均</b>會晃多少，會不會因為我一回取 n 個數值來平均而改變？<br><span class="b s"></span>，因為 <span class="b xl"></span></p>
+
+<div class="story">
+  <p class="t">σ ＝ 1.71 是怎麼來的？</p>
+  <p>一顆公正骰子的六個面是 1、2、3、4、5、6，<b style="color:var(--ink)">全部都在這裡了，一個不漏</b>——這叫<b style="color:var(--ink)">母體</b>（population）。母體的平均 μ ＝ (1+2+…+6)÷6 ＝ <b style="color:var(--ink)">3.5</b>，這就是<b style="color:var(--ink)">真值</b>。</p>
+  <div class="fxbox">\[\;\sigma=\sqrt{\dfrac{\sum_{i=1}^{6}(x_i-3.5)^2}{6}}\;\]</div>
+  <p style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:1.9;color:var(--ink-2)">
+  分子 ＝ (1−3.5)² ＋ (2−3.5)² ＋ (3−3.5)² ＋ (4−3.5)² ＋ (5−3.5)² ＋ (6−3.5)²<br>
+  　　 ＝ (−2.5)² ＋ (−1.5)² ＋ (−0.5)² ＋ (0.5)² ＋ (1.5)² ＋ (2.5)²<br>
+  　　 ＝ 6.25 ＋ 2.25 ＋ 0.25 ＋ 0.25 ＋ 2.25 ＋ 6.25 ＝ <b style="color:var(--ink)">17.5</b><br>
+  σ ＝ √(17.5 ÷ 6) ＝ √2.9167 ＝ <b style="color:var(--ink)">1.708</b></p>
+  <p>σ（<b style="color:var(--ink)">sigma，母體標準差</b>）量的是「六個面離 3.5 平均差多遠」，也就是<b style="color:var(--ink)">這個骰子本身跳得多厲害</b>。<span style="color:var(--truth)"><b>那麼：它會不會因為你一回多擲幾個、或多做幾回而改變？</b>——先不要猜，等一下操作完再回答。</span></p>
+  <p style="color:var(--truth)">你的實驗沒有這個東西。因為你不可能把所有可能的測量值都做出來，所以真值 μ 與 σ 對你來說<b>存在，但你永遠拿不到</b>。你只能用手上那 n 個數字去<b>估計</b>它，估出來的那個叫 <b>s</b>（樣本標準差）。<b style="color:var(--ink)">σ 是「已知」，s 是「估出來的」——這是它們唯一的差別。</b></p>
 </div>
-<div class="q"><p class="qh"><span class="n">④</span>SE 變小的速度，用算的<span class="src">03 區 · 要按計算機</span></p><p class="calc">
-① n：1 → 2　SE 剩 √(1÷2) ＝ √0.5 ＝ <span class="b s"></span>　→ 縮了 1 − √0.5 ＝ <span class="b s"></span> ＝ <span class="b s"></span> %<br>
-② n：2 → 3　SE 剩 √(2÷3) ＝ <span class="b s"></span>　→ 縮了 <span class="b s"></span> ＝ <span class="b s"></span> %<br>
-③ n：3 → 5　SE 剩 √(3÷5) ＝ <span class="b s"></span>　→ 縮了 <span class="b s"></span> ＝ <span class="b s"></span> %<br>
-④ n：5 → 30　SE 剩 √(5÷30) ＝ <span class="b s"></span>　→ 縮了 <span class="b s"></span> ＝ <span class="b s"></span> %</p>
-<p>5. 哪幾次你覺得值得做？為什麼？<span class="b xl"></span></p>
-<p>6. 如果你是組長，你會把 n 設在 <span class="b s"></span>。理由：<span class="b xl"></span></p>
-<p class="note">代價提示：5 個條件 × n × 10 試。n＝3 是 150 次，n＝5 是 250 次。一堂課 50 分鐘。</p>
+
+<h2><span class="num">01</span>一回取 n 個骰子求平均，重複 200 回</h2>
+<p class="hint" style="margin-bottom:2px">選一個 n（＝一回裡有幾個骰子），按「做 1 回」＝擲 n 個骰子、算出它們的平均、在圖上點一個點。重複到 200 回。</p>
+<div class="tabs" id="tabs"></div>
+
+<div class="console">
+  <div class="cL">
+    <div class="ph"><span class="pn" id="bigName">n = 5</span><span class="pc"><span id="done">0</span> / 200 回</span></div>
+    <svg id="big" viewBox="0 0 360 226" role="img" aria-label="每一回平均值的分布"></svg>
+    <div class="stat3">
+      <div class="s3 t"><span class="k"><em>&#963;</em> 母體標準差（實測）<span style="color:var(--ink-3)">：把 200 回擲出的骰子全部倒在一起量 → 骰子本身有多隨機</span></span><b id="sdv">—</b></div>
+      <div class="s3 a"><span class="k"><em>SE</em> 標準誤（<b style="color:var(--ink)">實際數出來的</b>）<span style="color:var(--ink-3)">：這 200 個平均點彼此散多開</span></span><b id="sev">—</b></div>
+      <div class="s3 t"><span class="k"><em>SE</em> 標準誤（<b style="color:var(--ink)">公式算出來的</b>）＝ &#963; ÷ √n<span style="color:var(--ink-3)">：拿已知的 &#963;＝1.71 去算</span></span><b id="tse">0.76</b></div>
+    </div>
+  </div>
+  <div class="cR">
+    <div class="tray" id="tray"></div>
+    <div class="mean" id="mean">平均 —<small>這一回 n 個骰子的平均</small></div>
+    <button id="roll" class="primary">做 1 回</button>
+    <div class="row"><button id="fast" hidden>＋5 回</button><button id="fill" hidden>一鍵補到 200</button></div>
+    <div class="row"><button id="reset" class="danger">清空這個 n 重做</button></div>
+    <p class="hint" id="hint">前 10 回一回一回按，感覺一下每回都不一樣。</p>
+  </div>
 </div>
-<div class="q"><p class="qh"><span class="n">⑤</span>從 200 回按到 20000 回<span class="src">05 區 · 左右對照</span></p><p>1. 形狀：<span class="b l"></span>　最左與最右兩端：<span class="b l"></span></p>
-<p>2. SE 有沒有跟著變小？<span class="b s"></span>，因為 <span class="b xl"></span></p>
+
+<h2><span class="num">02</span>不同 n 擺在一起比</h2>
+<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+  <span style="font-size:13px;color:var(--ink-2)">橫軸畫法：</span>
+  <span class="toggle"><button id="axShare" aria-pressed="true">共用同一條軸</button><button id="axZoom" aria-pressed="false">各自放大</button></span>
+  <span id="axnote" style="font-size:12px;color:var(--ink-3)"></span>
 </div>
-<div class="q"><p class="qh"><span class="n">⑥</span>那另外 19800 回是什麼？<span class="src">05 區</span></p><p>1. 右邊那張圖畫了 20000 回，但你的實驗只做 <span class="b s"></span> 回。</p>
-<p>2. 那另外 19800 回，對你的實驗來說代表 <span class="b xl"></span></p>
+<div class="grid4" id="grid"></div>
+<p class="hint">五格共用同一條橫軸（每一回的平均點數 1–6）與同一條<b style="color:var(--ink)">真值線 3.5</b>；縱軸都是<b style="color:var(--ink)">出現回數</b>。n 是「一回裡有幾個骰子」，不是做了幾回。</p>
+
+<div class="ask">
+  <p class="tosheet">寫進學習單 ①（先看形狀，再看數字）</p>
+  <p class="qt">先只看形狀：五張圖長得一樣嗎？</p>
+  <p>把五張圖的 n 都補到 200 回。<b style="color:var(--truth)">按上面的「各自放大」再看形狀。</b>先<b style="color:var(--ink)">不要看任何數字</b>，只看輪廓。</p>
+  <p>① 五張圖形下的<b>總點數</b>一樣嗎？<span class="blank" style="min-width:90px"></span></p>
+  <p>② 從 n＝1 一路看到 n＝30，形狀是怎麼變的？中間越來越 <span class="blank" style="min-width:90px"></span>，兩邊越來越 <span class="blank" style="min-width:90px"></span>。</p>
+  <p>③ 這個形狀有沒有對稱？<span class="blank" style="min-width:70px"></span>　最高的地方大約落在橫軸的哪個數字上？<span class="blank" style="min-width:90px"></span></p>
+  <p>④ n＝1 那張畫的是<b>原始數據本身</b>（一回只擲 1 個骰子，沒有平均可言）。它是鐘形嗎？<span class="blank" style="min-width:70px"></span></p>
+  <p>⑤ 原始數據不是鐘形，平均起來卻變成鐘形。<b style="color:var(--ink)">所以這件事告訴你：</b>不管原始數據長什麼形狀，只要 <span class="blank" style="min-width:120px"></span>，畫出來就會 <span class="blank" style="min-width:150px"></span>。</p>
+  <p style="color:var(--truth)">⑥ 這件事對你的實驗有什麼用？<span class="blank" style="min-width:230px"></span></p>
+  <button class="rv">查看提示（想不出來再按）</button>
+  <div class="rvb" hidden>骰子本身六個面出現的機會是<b>一樣的</b>——所以 n＝1 那張是<b>平的</b>，六根差不多高，一點也不像鐘形。<br>但把好幾個平均起來以後，形狀就變了：往中間集中、兩邊變薄、左右對稱。<br><b>注意：關鍵不是「骰子很隨機」</b>——n＝1 也一樣隨機，卻是平的。關鍵是「取了平均」這個動作本身。</div>
 </div>
-<div class="sec">最後：把它變成我們組的決定</div>
-<div class="q">
-<p class="qh"><span class="n">決定</span>我們這一組的實驗設計</p>
-<p>1. 我們的<b>測量值</b>是什麼（一個原始數字怎麼來）？<span class="b xl"></span></p>
-<p>2. 如果要數成功率，<b>成功</b>怎麼定義？（做幾次／怎麼算／到什麼程度算成功）<span class="b xl"></span></p>
-<p>3. 我們<b>一回取 n ＝ <span class="b s"></span> 個</b>原始數字。理由（不准寫「因為要三次」）：<span class="b xl"></span></p>
-<p>4. 我們一共要做 <span class="b s"></span> 回。</p>
-<p>5. 下週 pilot 只跑最極端的兩個條件：<span class="b s"></span> 與 <span class="b s"></span>；其餘要固定的條件是 <span class="b l"></span>。</p>
-<p class="note">畫哪一種圖、誤差線怎麼畫、重疊要查什麼關鍵字——等你有自己的數據那一週再處理。</p>
+
+<div class="ask">
+  <p class="tosheet">寫進學習單 ②</p>
+  <p class="qt">看完形狀，再看寬窄</p>
+  <p>從 n=1 到 n=30，五張圖的 <b>σ</b> <span class="blank"></span>，五張圖的<b>寬窄</b> <span class="blank"></span>。</p>
+  <p>為什麼 σ 會是這樣？<span class="blank" style="min-width:240px"></span></p>
+  <p>圖上那條橘線是 <span class="blank" style="min-width:110px"></span>；圖越窄，代表你算出來的平均<b>離它</b> <span class="blank" style="min-width:110px"></span>。</p>
+  <p>造成寬窄改變的是 <span class="blank"></span>。理由：<span class="blank" style="min-width:220px"></span></p>
+  <button class="rv">查看提示（想不出來再按）</button>
+  <div class="rvb" hidden>兩件事分開看：<b>骰子本身</b>有沒有因為你一回多拿幾個而變得比較不隨機？<b>圖上那些平均點</b>有沒有因為每個點是更多骰子平均出來的而擠得比較近？<br>再看那條橘線：它是<b>真值 3.5</b>，是「答案」。圖越窄＝你隨便抽一回，抽到的平均越靠近答案。<br><br><b>加大 n 的代價，算給你看：</b>反泡泡示範題有 5 個溫度，一個原始數字要試 10 次。<br>n＝3 → 5×3×10 ＝ <b>150 次</b>；n＝5 → 5×5×10 ＝ <b>250 次</b>。<br>一次操作抓 30 秒，就是 <b>75 分鐘</b> 對 <b>125 分鐘</b>。你們一堂課 50 分鐘。<br>把這個代價跟上面 SE 縮小的幅度擺在一起——<b>但先不要下結論，要同時看完學習單 ④「SE 變小的速度」才能決定 n。</b></div>
 </div>
-<div class="sec">下週要帶回來：pilot 記錄表</div>
-<div class="q">
-<p class="qh"><span class="n">記錄</span>一個條件要填滿幾列？就是你上面寫的 n</p>
-<table class="rec"><tr><th>條件</th><th>這是第幾個成功率</th><th>10 試中成功幾次</th><th>成功率</th></tr>
-<tr><td></td><td>第 1 個</td><td></td><td>　　　　%</td></tr>
-<tr><td></td><td>第 2 個</td><td></td><td>　　　　%</td></tr>
-<tr><td></td><td>第 3 個</td><td></td><td>　　　　%</td></tr>
-<tr><td></td><td>第 1 個</td><td></td><td>　　　　%</td></tr>
-<tr><td></td><td>第 2 個</td><td></td><td>　　　　%</td></tr>
-<tr><td></td><td>第 3 個</td><td></td><td>　　　　%</td></tr>
-</table>
-<p class="note">填不滿，下週沒有東西可以算，也沒有東西可以被別組反駁。</p>
+
+<h2><span class="num">03</span>回到反泡泡：三個符號，各管一件事</h2>
+<div class="scroll"><table class="terms">
+  <tr><th style="width:12%">符號</th><th style="width:26%">中文全名</th><th>它在講誰</th><th style="width:22%">你算得出來嗎</th></tr>
+  <tr><td><b>σ</b><br><span style="font-size:11px;color:var(--ink-3)">sigma</span></td><td><b>母體標準差</b><br><span style="font-size:11.5px;color:var(--ink-3)">population SD</span></td><td>整個母體本身有多散</td><td style="color:var(--truth)"><b>不行。</b>骰子才有（＝1.71）</td></tr>
+  <tr><td><b>s</b></td><td><b>樣本標準差</b><br><span style="font-size:11.5px;color:var(--ink-3)">sample SD</span></td><td>你手上那 n 個原始數字彼此散多開（用來估 σ）</td><td>可以</td></tr>
+  <tr><td><b>SE</b></td><td><b>標準誤</b><br><span style="font-size:11.5px;color:var(--ink-3)">standard error</span></td><td>你算出來的那個<b>平均</b>有多不穩</td><td>可以（＝ s ÷ √n）</td></tr>
+</table></div>
+
+<div class="defs">
+  <div class="def">
+    <h3>s ｜樣本標準差</h3><span class="en">s · sample standard deviation</span>
+    <div class="fxbox">\[\;s=\sqrt{\dfrac{\displaystyle\sum_{i=1}^{n}(x_i-\bar{x})^2}{n-1}}\;\]</div>
+    <dl>
+      <dt>圖上是什麼</dt><dd>一回實驗畫出圖上<b>一個點</b>，這個點是那 n 個數字的<b>平均</b>；而這 n 個數字<b>彼此散多開</b>，就是 s。<br><span style="font-size:12.5px;color:var(--ink-3)">注意：s 描述的是那 n 個原始數字，不是圖上那些點。n＝1 時算不出 s（分母 n−1＝0）——一個數字沒有「彼此差多少」可言。</span></dd>
+      <dt>實驗上是什麼</dt><dd>我的<b>器材與操作做一次測量會晃多少</b>（滴管拿得穩不穩、水溫飄不飄）</dd>
+      <dt>會不會隨 n 變</dt><dd><span class="blank"></span>　<span style="font-size:12px;color:var(--ink-3)">↓ 見下方題目</span></dd>
+    </dl>
+  </div>
+  <div class="def">
+    <h3>SE ｜標準誤</h3><span class="en">SE · standard error</span>
+    <div class="fxbox">\[\;SE=\dfrac{s}{\sqrt{n}}\;\]</div>
+    <dl>
+      <dt>圖上是什麼</dt><dd>這些<b>平均點彼此散多開</b></dd>
+      <dt>實驗上是什麼</dt><dd>我這一回用 n 個數字算出的平均，<b>跟我下一回會算出的平均，彼此差多少</b>。<br><span style="font-size:12.5px;color:var(--ink-3)">SE 告訴你的是：如果重做一回，那個平均大概會落在多寬的範圍裡。</span></dd>
+      <dt>會不會隨 n 變</dt><dd><span class="blank"></span>　<span style="font-size:12px;color:var(--ink-3)">↓ 見下方題目</span></dd>
+    </dl>
+  </div>
 </div>
-</div></body></html>
+
+<div class="ask">
+  <p class="tosheet">寫進學習單 ③</p>
+  <p class="qt">兩個問題，答案不一樣——分開回答</p>
+  <p><b style="color:var(--ink)">問題一：</b>我的器材與操作<b>做一次測量</b>會晃多少（滴管拿得穩不穩、水溫飄不飄），<b>會不會因為我一回取 n 個數值來平均（n 是我自己決定的）而改變？</b><br><span class="blank"></span>，因為 <span class="blank" style="min-width:220px"></span>。</p>
+  <p><b style="color:var(--ink)">問題二：</b>那我<b>報出來的那個平均</b>會晃多少，<b>會不會因為我一回取 n 個數值來平均而改變？</b><br><span class="blank"></span>，因為 <span class="blank" style="min-width:220px"></span>。</p>
+  <p style="color:var(--truth)">先去 01 區把四個分頁都按幾下，看最上面那個 <b>σ 實測</b>——它有沒有隨 n 改變？（s 是拿手上的數字去估 σ；σ 不變，s 估出來的也就在同一個數字附近晃。）</p>
+  <button class="rv">查看提示（想不出來再按）</button>
+  <div class="rvb" hidden>試想：一回多量幾個，<b>會不會讓你的滴管變準？</b><br>骰子那邊也一樣：一回抓 5 個骰子，會讓每一個骰子變得比較不隨機嗎？<br>那圖上那些<b>平均點</b>呢——它們有沒有擠得比較近？</div>
+</div>
+
+<div class="ask">
+  <p class="tosheet">寫進學習單 ④</p>
+  <p class="qt">SE 變小的速度，用算的</p>
+  <p>SE ＝ σ ÷ √n，所以 n 從 a 變到 b，SE 剩下原本的 <b>√(a÷b)</b> 倍。算算看：</p>
+  <p style="font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:2">
+  ① n：1 → 2　<span style="font-family:'Noto Sans TC',sans-serif;font-size:12px;color:var(--ink-3)">一回從 1 個骰子變 2 個</span><br>
+  　SE 剩 √(1÷2) ＝ √0.5 ＝ <span class="blank" style="min-width:70px"></span>　→ 縮了 1 − √0.5 ＝ <span class="blank" style="min-width:80px"></span> ＝ <span class="blank" style="min-width:60px"></span> %<br>
+  ② n：2 → 3　<span style="font-family:'Noto Sans TC',sans-serif;font-size:12px;color:var(--ink-3)">一回從 2 個變 3 個</span><br>
+  　SE 剩 √(2÷3) ＝ <span class="blank" style="min-width:70px"></span>　→ 縮了 <span class="blank" style="min-width:110px"></span> ＝ <span class="blank" style="min-width:60px"></span> %<br>
+  ③ n：3 → 5　<span style="font-family:'Noto Sans TC',sans-serif;font-size:12px;color:var(--ink-3)">一回從 3 個變 5 個</span><br>
+  　SE 剩 √(3÷5) ＝ <span class="blank" style="min-width:70px"></span>　→ 縮了 <span class="blank" style="min-width:110px"></span> ＝ <span class="blank" style="min-width:60px"></span> %<br>
+  ④ n：5 → 30　<span style="font-family:'Noto Sans TC',sans-serif;font-size:12px;color:var(--ink-3)">一回從 5 個變 30 個（＝畫面上最後一個分頁）</span><br>
+  　SE 剩 √(5÷30) ＝ <span class="blank" style="min-width:70px"></span>　→ 縮了 <span class="blank" style="min-width:110px"></span> ＝ <span class="blank" style="min-width:60px"></span> %</p>
+  <p style="color:var(--truth)">要按計算機。四個算完再往下答。</p>
+  <p>①②③④ 每一次都多加了骰子，<b style="color:var(--ink)">哪幾次你覺得值得做？為什麼？</b><span class="blank" style="min-width:230px"></span></p>
+  <p>如果你是這組的組長，你會把 n 設在哪裡？<span class="blank" style="min-width:60px"></span>　理由：<span class="blank" style="min-width:200px"></span></p>
+  <p>（算完回去對照 01 區五個分頁的「SE 公式」數字，看對不對得起來。）</p>
+  <button class="rv">查看提示（想不出來再按）</button>
+  <div class="rvb" hidden>示範第一個：√(1÷2) ＝ √0.5，所以 SE 剩下原本的 √0.5 倍，縮掉的比例就是 1 − √0.5。<b>按計算機把它變成小數，再乘 100 變成 %。</b><br>剩下三個自己算。算完把四個「縮掉的 %」跟「多加了幾個骰子」並排寫下來，值不值得就看得出來了。<br>④ 特別注意：從 5 加到 30 是多做了 <b>5 倍</b>的工，縮掉的比例有沒有多 5 倍？</div>
+</div>
+
+<h2><span class="num">04</span>抽出我的那一回</h2>
+<div class="mine">
+  <p>你把 n 個數字平均起來，完成一回，這就叫<b style="color:var(--ink)">抽樣一回</b>。螢幕上這 200 個點，<b style="color:var(--ink)">假如你重新實驗一回，你在實驗裡只會拿到其中一個點</b>。</p>
+  <p style="color:var(--truth);font-size:13px">按下按鈕，抽出我的那一回。</p>
+  <button id="pick">按這裡：抽出我的那一回</button>
+  <div class="mrow" id="mrow" hidden>
+    <div class="mbox"><span class="k">我算出的平均</span><span class="v" id="mv">—</span><span class="n">我會拿它去寫結論</span></div>
+    <div class="mbox err"><span class="k">離真值的誤差</span><span class="v" id="me">—</span><span class="n">真實實驗中不可得</span></div>
+  </div>
+  <p style="font-size:13px">在你真正的實驗裡，右邊那一欄永遠是空的——因為沒有人知道真值。<b style="color:var(--ink)">SE 是你唯一算得出來、對這個看不見的誤差的估計。</b></p>
+</div>
+<h2><span class="num">05</span>那，多做幾回呢？</h2>
+<div class="q"><b>把 200 回做成 20000 回，SE 會變小嗎？</b>先答，再按。</div>
+<p class="hint" style="margin-top:6px">注意：這一區是<b style="color:var(--ink)">另一次獨立的模擬</b>（固定 n＝5），跟上面 01 區你自己按出來的那批資料無關，不會互相影響。</p>
+<div class="pair" style="margin-top:8px">
+  <div class="pnl">
+    <div class="ph"><span class="pn">200 回</span><span class="pc">固定不動，當基準</span></div>
+    <svg id="res0" viewBox="0 0 360 176"></svg>
+    <div class="stats">
+      <span class="sev"><span>SE 實測</span> <b id="bse0">—</b></span>
+      <span><span>最左～最右</span> <b id="brg0">—</b></span>
+    </div>
+  </div>
+  <div class="pnl">
+    <div class="ph"><span class="pn"><span id="bc">200</span> 回</span><span class="pc">按下面的鈕會加上去</span></div>
+    <svg id="res" viewBox="0 0 360 176"></svg>
+    <div class="stats">
+      <span class="sev"><span>SE 實測</span> <b id="bse">—</b></span>
+      <span><span>最左～最右</span> <b id="brg">—</b></span>
+    </div>
+  </div>
+</div>
+<p class="hint" style="margin-top:4px">兩張圖的縱軸都是<b style="color:var(--ink)">佔比 %</b>（不是次數），所以回數不同也能直接疊著比。</p>
+<div class="row" style="margin-top:8px"><button id="more" class="primary">＋2000 回</button><button id="bres">重設回 200 回</button></div>
+
+<div class="ask">
+  <p class="tosheet">寫進學習單 ⑤</p>
+  <p class="qt">從 200 回按到 20000 回，你看到什麼變了、什麼沒變？</p>
+  <p>形狀：<span class="blank" style="min-width:150px"></span>　最左與最右兩端：<span class="blank" style="min-width:150px"></span></p>
+  <p>SE 有沒有跟著變小？<span class="blank"></span>，因為 <span class="blank" style="min-width:220px"></span>。</p>
+  <button class="rv">查看提示（想不出來再按）</button>
+  <div class="rvb" hidden>盯著兩個地方看：<b>左右兩端的最大最小值有沒有動？</b>中間高高低低的鋸齒有沒有變平順？<br>再問自己：多做幾回，是「換了一個新的分布」，還是「把同一個分布看得更清楚」？</div>
+</div>
+
+<div class="ask">
+  <p class="tosheet">寫進學習單 ⑥</p>
+  <p class="qt">那另外那 19800 回是什麼？</p>
+  <p>右邊那張圖現在畫了 20000 回，但你的實驗只做 <span class="blank" style="min-width:50px"></span> 回。</p>
+  <p>用你自己的話寫：螢幕上那另外 19800 回，對你的實驗來說代表 <span class="blank" style="min-width:250px"></span>。</p>
+</div>
+
+<h2><span class="num">06</span>那堆點，怎麼變成一根誤差線</h2>
+<div class="story">
+  <p class="t">同一件事，轉 90 度看</p>
+  <p>左邊是你熟悉的樣子：200 個平均點<b style="color:var(--ink)">橫著</b>散開。右邊把同一批點<b style="color:var(--ink)">立起來</b>，再把「中間 ±1 SE 的範圍」畫成一根線——<b style="color:var(--ink)">那根線就是誤差線。</b></p>
+</div>
+<div class="pnl" style="margin-top:8px">
+  <p class="simnote">獨立模擬 · n＝5 · 200 回</p>
+  <svg id="bridge" viewBox="0 0 360 210"></svg>
+  <p class="hint" style="margin-top:4px">右邊那根紅線就是<b style="color:var(--ink)">誤差線（error bar）</b>——你在論文、科展海報、Excel 圖表上看到的那根。線的兩端各代表什麼、線有多長，下面的題目要你自己讀出來。</p>
+</div>
+<div class="ask">
+  <p class="tosheet">寫進學習單 ⑦</p>
+  <p class="qt">誤差線在講什麼？</p>
+  <p>誤差線的中心是 <span class="blank" style="min-width:130px"></span>，長度是 <span class="blank" style="min-width:130px"></span>。</p>
+  <p>在真實實驗裡，右邊那堆點你看不到。你的實驗會做 <span class="blank" style="min-width:60px"></span> 回，所以圖上會有 <span class="blank" style="min-width:60px"></span> 個點——但你還是畫得出這根線，因為 <span class="blank" style="min-width:200px"></span>。</p>
+  <button class="rv">查看提示（想不出來再按）</button>
+  <div class="rvb" hidden>你手上有那 n 個原始數字，所以你算得出 s，也就算得出 SE ＝ s ÷ √n。<br>換句話說：<b>你不需要真的重做 200 回，就能估出「如果重做，會跑多遠」。</b>這就是 SE 的價值。</div>
+</div>
+
+<h2><span class="num">07</span>回到反泡泡</h2>
+
+<div class="story">
+  <p class="t">示範題目 A：連續變因（不是任何一組的題目）</p>
+  <p class="simnote">模擬數據 · 不是實驗結果</p>
+  <p><b style="color:var(--ink)">題目：</b>在同一支滴管、同一落下高度、同一濃度下，探討<b style="color:var(--ink)">液溫（5／10／20／30／50 °C）</b>對<b style="color:var(--ink)">成功率</b>的影響。</p>
+  <p><b style="color:var(--ink)">先定義成功：</b>反泡泡落入水面後<b style="color:var(--ink)">沉入水中並維持 5 秒以上</b>，算 1 次成功。<span style="color:var(--truth)">沒有這個定義，成功率就不是一個數字。</span></p>
+  <p><b style="color:var(--ink)">怎麼得到一個原始數字：</b>每個溫度試 <code>10 試</code>，數出成功幾次 → 成功率 ＝ 成功次數 ÷ 10。這樣得到 <b>1 個原始數字</b>。<br>同一個溫度重複 <code>3 個 10 試</code>，得到 <b>3 個成功率</b>，取平均 ＝ 這一回，圖上一個點。<b style="color:var(--ink)">所以 n ＝ 3。</b></p>
+  <p style="color:var(--truth)">注意：10 試一數，成功率只可能是 0%、10%、20%…100%。下面的原始數據就長這樣。</p>
+</div>
+
+<div class="pnl" style="margin-top:10px">
+  <p class="simnote">原始模擬數據 · 欄列標號同 Excel</p>
+  <div class="scroll" id="rawCont"></div>
+  <p class="hint" style="margin-top:4px">下面公式裡的 <code style="font-family:'IBM Plex Mono',monospace">B2:D2</code>，指的就是這張表第 <b style="color:var(--ink)">2</b> 列、<b style="color:var(--ink)">B 到 D</b> 三欄那三個數字。</p>
+</div>
+
+<div class="story" style="margin-top:10px">
+  <p class="t">兩個統計量，用上面那張表算給你看</p>
+  <div class="scroll"><table class="terms">
+    <tr><th style="width:12%"></th><th style="width:20%">中文</th><th>數學式</th><th style="width:26%">Excel</th><th style="width:24%">白話</th></tr>
+    <tr><td><b>s</b></td><td>樣本標準差</td><td>\(s=\sqrt{\dfrac{\sum (x_i-\bar{x})^2}{n-1}}\)</td><td><code>=STDEV.S(B2:D2)</code></td><td>這 3 個成功率<b>彼此</b>差多少<br><span style="font-size:12px;color:var(--ink-3)">＝我做一次測量會晃多少</span></td></tr>
+    <tr><td><b>SE</b></td><td>標準誤</td><td>\(SE=\dfrac{s}{\sqrt{n}}\)</td><td><code>=STDEV.S(B2:D2)/SQRT(3)</code><br><span style="font-size:11.5px;color:var(--ink-3)">Excel 沒有 SE 的內建函數</span></td><td>如果我重做一回，算出的平均<b>離現在這個平均</b>會跑多遠<br><span style="font-size:12px;color:var(--ink-3)">＝<b style="color:var(--ink)">決定</b>誤差線的長度</span></td></tr>
+    <tr><td><b>σ</b></td><td>母體標準差</td><td>\(\sigma=\sqrt{\dfrac{\sum (x_i-\mu)^2}{N}}\)</td><td><code>=STDEV.P(...)</code></td><td><b style="color:var(--truth)">你的實驗算不出來。</b>骰子才有（σ＝1.71，所以 SE 公式值 ＝ 1.71÷√n）</td></tr>
+  </table></div>
+  <p style="margin-top:8px;font-size:13px;color:var(--ink-2)">上表最右邊兩欄的 s 與 SE，就是這樣算出來的。<b style="color:var(--ink)">n＝3，所以 SE ＝ s ÷ √3 ≈ s ÷ 1.732。</b></p>
+</div>
+
+<div class="ask">
+  <p class="tosheet">寫進學習單 ⑧</p>
+  <p class="qt">誤差線要畫 ±s 還是 ±SE？</p>
+  <p>一個溫度下我測 n＝3 個數據（y₁、y₂、y₃），取平均得到這個溫度的 <b>ȳ</b>。</p>
+  <p>我要比的是<b style="color:var(--ink)">不同溫度之間的 ȳ 有沒有差</b>——也就是在比<b>平均值</b>。</p>
+  <p>所以誤差線畫 <span class="blank"></span>，因為 <span class="blank" style="min-width:220px"></span>。</p>
+  <button class="rv">查看提示（想不出來再按）</button>
+  <div class="rvb" hidden>回去看 03 區：<b>s</b> 講的是「我做一次測量會晃多少」，<b>SE</b> 講的是「我報出來的那個平均，重做一回會跑多遠」。<br>你在圖上比的是誰？是原始數據，還是平均？</div>
+</div>
+
+<p class="note" style="margin-top:12px">下面同一份數據畫四次。<b>左右</b>比的是 ±SE 對 ±s，<b>上下</b>比的是 ×1 對 ×2。四張圖的數據完全一樣，只有誤差線的畫法不同。</p>
+<div class="pair" style="margin-top:8px">
+  <div class="pnl">
+    <div class="ph"><span class="pn"><span class="tag">± 1 SE</span></span><span class="pc">＝ ±s÷√3</span></div>
+    <svg id="contSE" viewBox="0 0 360 190"></svg>
+  </div>
+  <div class="pnl">
+    <div class="ph"><span class="pn"><span class="tag s">± 1 s</span></span><span class="pc">同一份數據</span></div>
+    <svg id="contSD" viewBox="0 0 360 190"></svg>
+  </div>
+  <div class="pnl">
+    <div class="ph"><span class="pn"><span class="tag">± 2 SE</span></span><span class="pc">長度是上面那張的 2 倍</span></div>
+    <svg id="contSE2" viewBox="0 0 360 190"></svg>
+  </div>
+  <div class="pnl">
+    <div class="ph"><span class="pn"><span class="tag s">± 2 s</span></span><span class="pc">長度是上面那張的 2 倍</span></div>
+    <svg id="contSD2" viewBox="0 0 360 190"></svg>
+  </div>
+</div>
+<ul class="rules">
+  <li>x 軸按<b>真實數值</b>間距——把 5／10／20／30／50 畫成等間隔五格，趨勢會被扭曲</li>
+  <li>可以連線，但連線只是幫眼睛看，中間那些溫度你沒測過</li>
+</ul>
+
+<div class="ask">
+  <p class="tosheet">寫進學習單 ⑨</p>
+  <p class="qt">四張圖比完，回答三題</p>
+  <p>① ±s 明顯比 ±SE 長。<b style="color:var(--ink)">長比較保守，是不是就比較好？</b><span class="blank"></span>，因為 ±s 描述的是 <span class="blank" style="min-width:180px"></span>，不是 <span class="blank" style="min-width:150px"></span>。</p>
+  <p>② 把 ±1SE 換成 ±2SE 之後，<b style="color:var(--ink)">數據有變嗎？</b><span class="blank"></span>。那為什麼看起來差這麼多？<span class="blank" style="min-width:200px"></span></p>
+  <p>③ 所以，別人看到你的圖，<b style="color:var(--ink)">要先知道什麼才看得懂？</b>圖說裡一定要寫出 <span class="blank" style="min-width:120px"></span> 和 <span class="blank" style="min-width:120px"></span>。</p>
+  <button class="rv">查看提示（想不出來再按）</button>
+  <div class="rvb" hidden>③ 想像你只看到一張圖、沒有圖說：你能分辨那根線是 ±1SE 還是 ±2s 嗎？分辨不出來，就等於什麼都沒講。<br>查一下科展的評審意見或期刊圖說，你會發現：<b>三種畫法都被接受，但沒寫清楚畫的是哪一種、n 是多少，就會被扣分。</b></div>
+</div>
+
+<div class="ask">
+  <p class="tosheet">延伸（不考，寫關鍵字就好）</p>
+  <p class="qt">「±2SE 大概涵蓋 95%」——這句話我們現在能用嗎？</p>
+  <p>你可能在別的地方看過：資料若呈鐘形分布，±1 個標準差大約涵蓋 <span class="blank" style="min-width:60px"></span>%、±2 個大約涵蓋 <span class="blank" style="min-width:60px"></span>%。</p>
+  <p style="color:var(--truth)"><b>但是</b>那組數字成立有兩個前提：形狀要夠接近鐘形，而且那個「標準差」要是<b>已知的 σ</b>。我們手上只有 3 個數字、用的是<b>估出來的 s</b>——這時候 ±2SE 涵蓋的其實<b>不到 95%</b>。</p>
+  <p>要修正這件事，統計上用的是另一個分布（提示：跟自由度 n−1 有關）。關鍵字：<span class="blank" style="min-width:130px"></span></p>
+  <p><b style="color:var(--ink)">所以這堂課的結論是：</b>誤差線只拿來做「兩組有沒有明顯分開」的<b>眼睛判斷</b>，<b style="color:var(--ink)">不要在圖說裡宣稱它是 95% 信賴區間</b>——除非你查清楚該用哪個係數。</p>
+  <button class="rv">查看提示（想不出來再按）</button>
+  <div class="rvb" hidden>68 / 95。<br>要查的關鍵字是 <b>t 分布</b>（Student's t-distribution）。n＝3 時，自由度是 2，那個係數不是 2，是 4.30——差很多，所以我們不寫。</div>
+</div>
+
+<div class="story" style="margin-top:14px">
+  <p class="t">示範題目 B：類別變因（換一種測量值）</p>
+  <p class="simnote">模擬數據 · 不是實驗結果</p>
+  <p><b style="color:var(--ink)">題目：</b>在同樣的滴管、高度、濃度、溫度下，探討<b style="color:var(--ink)">水的種類（去離子水／自來水／礦泉水）</b>對<b style="color:var(--ink)">反泡泡存活時間（秒）</b>的影響。</p>
+  <p><b style="color:var(--ink)">怎麼得到一個原始數字：</b>放一顆反泡泡，用碼錶量到它破掉為止 → <b>1 個存活時間</b>，這就是 1 個原始數字。<b style="color:var(--ink)">不用數 10 試</b>——這裡的測量值本身就是連續的數字。</p>
+  <p>同一種水量 <b>3 顆</b>，得到 3 個存活時間，取平均 ＝ 這一回。<b style="color:var(--ink)">所以 n ＝ 3。</b></p>
+  <p style="color:var(--truth)">比較一下 A 題與 B 題：一個要先定義「成功」再數次數，一個直接量到一個數字。<b>但兩題的 n 都是「一回裡有幾個原始數字」，都是 3。</b></p>
+</div>
+
+<div class="pnl" style="margin-top:8px">
+  <p class="simnote">原始模擬數據 · 欄列標號同 Excel</p>
+  <div class="scroll" id="rawCat"></div>
+</div>
+
+<div class="pair" style="margin-top:8px">
+  <div class="pnl">
+    <div class="ph"><span class="pn"><span class="tag">± 1 SE</span></span><span class="pc">＝ ±s÷√3</span></div>
+    <svg id="catSE" viewBox="0 0 360 190"></svg>
+  </div>
+  <div class="pnl">
+    <div class="ph"><span class="pn"><span class="tag s">± 1 s</span></span><span class="pc">同一份數據</span></div>
+    <svg id="catSD" viewBox="0 0 360 190"></svg>
+  </div>
+  <div class="pnl">
+    <div class="ph"><span class="pn"><span class="tag">± 2 SE</span></span><span class="pc">長度 ×2</span></div>
+    <svg id="catSE2" viewBox="0 0 360 190"></svg>
+  </div>
+  <div class="pnl">
+    <div class="ph"><span class="pn"><span class="tag s">± 2 s</span></span><span class="pc">長度 ×2</span></div>
+    <svg id="catSD2" viewBox="0 0 360 190"></svg>
+  </div>
+</div>
+<ul class="rules">
+  <li>誤差線畫在長條頂端</li>
+  <li><b>不可以連線</b>——「自來水和礦泉水之間」不存在任何東西</li>
+  <li>x 軸順序沒有意義，可以按平均值排</li>
+</ul>
+
+<div class="ask">
+  <p class="tosheet">寫進學習單 ⑩</p>
+  <p class="qt">看上面<b>左上那張（±1SE）</b>，哪兩種水可以說「有差」？</p>
+  <p>誤差線沒有重疊的是 <span class="blank" style="min-width:170px"></span>，所以可以說 <span class="blank"></span>。</p>
+  <p>換成看 <b>±2SE</b> 那張，同樣這兩種水還分得開嗎？<span class="blank"></span>。<b style="color:var(--ink)">那到底該用哪一張下結論？</b><span class="blank" style="min-width:200px"></span></p>
+  <p>礦泉水跟另外兩種都重疊，所以只能說 <span class="blank" style="min-width:120px"></span>。它的誤差線特別長，代表 <span class="blank" style="min-width:190px"></span>。</p>
+  <button class="rv">查看提示（想不出來再按）</button>
+  <div class="rvb" hidden>先只用眼睛：把三根誤差線的上下端投影到縱軸上，哪兩根完全沒有交集？<br>誤差線特別長 → 回去看原始數據表，那一列的三個數字長什麼樣？</div>
+</div>
+
+<h2><span class="num">08</span>重疊了，然後呢？</h2>
+<div class="story">
+  <p class="t">「有差」長什麼樣、「看不出來」長什麼樣</p>
+  <p>下面四張是兩群數據疊在一起的樣子。<b style="color:var(--ink)">左右各兩張，一次只變一件事。</b></p>
+</div>
+<div class="pnl" style="margin-top:8px">
+  <svg id="ovl" viewBox="0 0 360 310"></svg>
+</div>
+<div class="pnl" style="margin-top:8px">
+  <p class="simnote">同樣四組，轉 90 度畫成誤差線</p>
+  <svg id="ovlR" viewBox="0 0 360 320"></svg>
+  <p class="hint" style="margin-top:4px">上面那四張鐘形圖，就是下面這四組誤差線的「側面」。<b style="color:var(--ink)">鐘形越胖 → 誤差線越長。</b></p>
+</div>
+<div class="ask">
+  <p class="tosheet">寫進學習單 ⑪</p>
+  <p class="qt">哪一組的平均值比較可能有顯著差異？</p>
+  <p>上排兩張：平均差一樣，但散布不同 → 我選 <span class="blank" style="min-width:70px"></span>，因為 <span class="blank" style="min-width:200px"></span>。</p>
+  <p>下排兩張：散布一樣，但平均差不同 → 我選 <span class="blank" style="min-width:70px"></span>，因為 <span class="blank" style="min-width:200px"></span>。</p>
+  <p>對照上下兩張圖：鐘形的<b>最高點</b>對到誤差線的 <span class="blank" style="min-width:110px"></span>；鐘形的<b>胖瘦</b>對到誤差線的 <span class="blank" style="min-width:110px"></span>。</p>
+  <p>所以「兩組差不差得出來」，要同時看 <span class="blank" style="min-width:110px"></span> 和 <span class="blank" style="min-width:110px"></span> 兩件事。</p>
+</div>
+
+<p class="note" style="margin-top:12px">誤差線明顯不重疊 → 可以說「有差」。重疊很多 → 只能說「看不出來」。<b>重疊不代表一定沒差，只代表你這份資料講不出來。</b>那要怎麼辦？——把判斷交給計算，這叫<b>推論統計</b>。</p>
+
+<div class="story" style="margin-top:10px">
+  <p class="t">重疊的時候，用哪一種？</p>
+  <p>先問自己一句：<b style="color:var(--ink)">我要比的那個東西，是平均值，還是個數？</b></p>
+  <div class="scroll"><table class="quad">
+    <tr><th style="width:22%"></th><th>Y 是<b>連續數值</b><br><span style="font-weight:400">可以算平均（存活時間、溫度、濃度）</span></th><th>Y 是<b>類別</b><br><span style="font-weight:400">只能數個數（成功／失敗、有／無）</span></th></tr>
+    <tr><th>X 是<b>類別</b><br><span style="font-weight:400">水的種類、有無添加</span></th>
+      <td>兩組 → <span class="kw">t 檢定</span><br>三組以上 → <span class="kw">ANOVA</span><br><span style="font-size:12px;color:var(--ink-3)">用途：比不同組別的平均值</span></td>
+      <td><span class="kw">卡方檢定</span><br><span style="font-size:12px;color:var(--ink-3)">用途：比不同組別的次數分布</span></td></tr>
+    <tr><th>X 是<b>連續數值</b><br><span style="font-weight:400">溫度、時間、濃度</span></th>
+      <td><span class="kw">迴歸分析</span><br><span style="font-size:12px;color:var(--ink-3)">用途：看 X 變動時 Y 跟著怎麼變</span></td>
+      <td style="color:var(--ink-3)">（高一先不碰）</td></tr>
+  </table></div>
+  <p style="margin-top:8px;color:var(--truth)"><b>這堂課不教怎麼算。</b>你只要能判斷「我這份資料該去查哪個關鍵字」就夠了——把那個詞抄進學習單，回家自己查得動。</p>
+</div>
+
+<div class="ask">
+  <p class="tosheet">寫進學習單 ⑫</p>
+  <p class="qt">用上面兩個示範題各判斷一次</p>
+  <p><b style="color:var(--ink)">A 題</b>（液溫 5/10/20/30/50 °C vs 成功率）：X 是 <span class="blank" style="min-width:80px"></span>、Y 是 <span class="blank" style="min-width:80px"></span> → 關鍵字 <span class="blank" style="min-width:110px"></span>。</p>
+  <p><b style="color:var(--ink)">B 題</b>（三種水 vs 存活時間）：X 是 <span class="blank" style="min-width:80px"></span>、Y 是 <span class="blank" style="min-width:80px"></span> → 關鍵字 <span class="blank" style="min-width:110px"></span>。</p>
+  <p><b style="color:var(--ink)">我自己這一組的題目：</b>X 是 <span class="blank" style="min-width:80px"></span>、Y 是 <span class="blank" style="min-width:80px"></span> → 關鍵字 <span class="blank" style="min-width:110px"></span>。</p>
+</div>
+
+<div class="sheet" style="margin-top:12px"><b>寫進小組學習單 ③ ④</b>
+③ σ／s／SE 三個各是什麼、n 從 1 變到 5 哪一個變窄了（附計算）、做更多回 SE 會不會變小——都要寫理由。<br>
+④ 成功怎麼定義（或測量值是什麼）、一個原始數字怎麼來、一回幾個原始數字（不准寫「因為要三次」）、誤差線畫哪一個、要畫哪一種圖、<b>如果誤差線重疊要用哪一種推論統計（寫關鍵字）</b>。</div>
+
+<footer>骰子母體：平均 μ＝3.5、母體標準差 σ＝1.708｜SE 公式值 ＝ σ ÷ √n<br>v14 · 2026-09-10</footer>
+</div>
+<script>
+(function(){
+var NS="http://www.w3.org/2000/svg";
+var POP=1.7078, MAX=200, MANUAL=10, STEP5_UNTIL=100;
+var LIST=[1,2,3,5,30];
+var P={}, cur=5, picked=null, rolling=false, ZOOM=false;
+LIST.forEach(function(n){P[n]={means:[],raw:[],last:null};});
+
+function el(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);return e;}
+function txt(s,x,y,t,o){var a={x:x,y:y,fill:(o&&o.fill)||"var(--ink-3)","font-size":(o&&o.size)||"10",
+  "font-family":(o&&o.mono)?"IBM Plex Mono, monospace":"Noto Sans TC, sans-serif"};
+  if(o&&o.anchor)a["text-anchor"]=o.anchor; if(o&&o.weight)a["font-weight"]=o.weight;
+  if(o&&o.rotate)a.transform="rotate("+o.rotate+" "+x+" "+y+")";
+  var e=el("text",a); e.textContent=t; s.appendChild(e); return e;}
+function sum(a){return a.reduce(function(p,c){return p+c;},0);}
+function mean(a){return sum(a)/a.length;}
+function sd(a){ if(!a||a.length<2)return null; var m=mean(a);
+  return Math.sqrt(a.reduce(function(p,c){return p+(c-m)*(c-m);},0)/(a.length-1)); }
+
+/* ---------- 骰子 ---------- */
+var PIPS={1:[[50,50]],2:[[28,28],[72,72]],3:[[28,28],[50,50],[72,72]],
+  4:[[28,28],[72,28],[28,72],[72,72]],5:[[28,28],[72,28],[50,50],[28,72],[72,72]],
+  6:[[28,25],[72,25],[28,50],[72,50],[28,75],[72,75]]};
+function faceHTML(v){
+  return PIPS[v].map(function(p){
+    return '<i style="left:'+(p[0]-9)+'%;top:'+(p[1]-9)+'%"></i>';
+  }).join("");
+}
+function drawTray(vals, isRolling){
+  var tray=document.getElementById("tray"); tray.innerHTML="";
+  for(var i=0;i<cur;i++){
+    var d=document.createElement("span");
+    if(vals){ d.className="die"+(isRolling?" rolling":""); d.innerHTML=faceHTML(vals[i]); }
+    else { d.className="die empty"; }
+    tray.appendChild(d);
+  }
+}
+function setMean(v){
+  document.getElementById("mean").innerHTML = v===null
+    ? '平均 —<small>這一回 '+cur+' 個骰子的平均</small>'
+    : '平均 '+v.toFixed(2)+'<small>這一回 '+cur+' 個骰子的平均</small>';
+}
+
+/* ---------- 主圖 ---------- */
+var L=44,R=350,BASE=170,TOPY=24;
+function X(v){return L+(v-1)/5*(R-L);}
+function axis(s, base, showLab){
+  s.appendChild(el("line",{x1:L,y1:base,x2:R,y2:base,stroke:"var(--line)","stroke-width":1}));
+  for(var t=1;t<=6;t++){
+    s.appendChild(el("line",{x1:X(t),y1:base,x2:X(t),y2:base+5,stroke:"var(--line)","stroke-width":1}));
+    if(showLab) txt(s,X(t),base+18,t,{anchor:"middle",size:"11.5",mono:1});
+  }
+}
+function truth(s, base, top, label){
+  s.appendChild(el("line",{x1:X(3.5),y1:top,x2:X(3.5),y2:base,stroke:"var(--truth)","stroke-width":1.5}));
+  if(label) txt(s,X(3.5)+5,top+9,"真值 3.5",{fill:"var(--truth)",size:"11",weight:"600"});
+}
+function BIN(m){return Math.round(m*10);}
+function drawBig(){
+  var s=document.getElementById("big"), p=P[cur];
+  while(s.firstChild)s.removeChild(s.firstChild);
+  axis(s,BASE,true); truth(s,BASE,TOPY-10,true);
+  s.appendChild(el("line",{x1:L,y1:TOPY-10,x2:L,y2:BASE,stroke:"var(--line)","stroke-width":1}));
+  txt(s,(L+R)/2,BASE+36,"橫軸：每一回（"+cur+" 個骰子）的平均點數",{anchor:"middle",size:"11"});
+  txt(s,14,(BASE+TOPY)/2,"縱軸：出現回數",{anchor:"middle",size:"10.5",rotate:-90});
+  if(!p.means.length){ txt(s,(L+R)/2,(BASE+TOPY)/2,"按右邊「做 1 回」開始",{anchor:"middle",size:"11"}); return; }
+
+  var count={}, kk, maxStack=0;
+  p.means.forEach(function(m){kk=BIN(m);count[kk]=(count[kk]||0)+1;
+    if(count[kk]>maxStack)maxStack=count[kk];});
+  var room=BASE-TOPY-4;
+  var STEPY=Math.min(6.6, maxStack>1?room/(maxStack-1):room);
+  var RAD=Math.max(1.15, Math.min(3.4, STEPY*0.52));
+
+  var stack={};
+  p.means.forEach(function(m,i){
+    var k=BIN(m);
+    stack[k]=(stack[k]||0)+1;
+    var isPick=(picked!==null&&i===picked), dim=(picked!==null&&!isPick);
+    var c=el("circle",{cx:X(k/10).toFixed(2),cy:(BASE-4-(stack[k]-1)*STEPY).toFixed(2),
+      r:isPick?Math.max(RAD+1.4,4.2):RAD, fill:isPick?"var(--mine)":(dim?"var(--dim)":"var(--accent)"),
+      "fill-opacity":isPick?"1":(dim?"0.9":"0.85")});
+    if(i===p.means.length-1&&picked===null&&p.means.length<=40)c.setAttribute("class","pop");
+    s.appendChild(c);
+  });
+}
+function drawMini(n){
+  var s=document.getElementById("sv"+n), p=P[n];
+  while(s.firstChild)s.removeChild(s.firstChild);
+  var B=84, T=14, ML=30, MR=352;
+  var lo=1, hi=6, binw=0.1;
+  if(ZOOM && p.means.length>1){
+    var mn=Math.min.apply(null,p.means), mx0=Math.max.apply(null,p.means);
+    var pad=Math.max(0.05,(mx0-mn)*0.12);
+    lo=mn-pad; hi=mx0+pad;
+    binw=Math.max(0.01,(hi-lo)/26);
+  }
+  var xs=function(v){return ML+(v-lo)/(hi-lo)*(MR-ML);};
+  s.appendChild(el("line",{x1:ML,y1:B,x2:MR,y2:B,stroke:"var(--line)","stroke-width":1}));
+  s.appendChild(el("line",{x1:ML,y1:T,x2:ML,y2:B,stroke:"var(--line)","stroke-width":1}));
+  var ticks = ZOOM ? [lo+(hi-lo)*0.08, 3.5, hi-(hi-lo)*0.08] : [1,2,3,4,5,6];
+  ticks.forEach(function(t,i){
+    if(t<lo||t>hi)return;
+    s.appendChild(el("line",{x1:xs(t),y1:B,x2:xs(t),y2:B+4,stroke:"var(--line)","stroke-width":1}));
+    if(ZOOM || t%2===1) txt(s,xs(t),B+16,ZOOM?t.toFixed(1):t,{anchor:"middle",size:"10",mono:1});
+  });
+  if(3.5>=lo&&3.5<=hi)
+    s.appendChild(el("line",{x1:xs(3.5),y1:T,x2:xs(3.5),y2:B,stroke:"var(--truth)","stroke-width":1.4}));
+  txt(s,(ML+MR)/2,B+31,"一回的平均點數",{anchor:"middle",size:"10.5"});
+  txt(s,12,(B+T)/2,"出現回數",{anchor:"middle",size:"10",rotate:-90});
+  if(!p.means.length){ txt(s,(ML+MR)/2,(B+T)/2,"尚未做",{anchor:"middle",size:"10"}); return; }
+  var bins={},k,maxc=0;
+  p.means.forEach(function(m){k=Math.round(m/binw);bins[k]=(bins[k]||0)+1;maxc=Math.max(maxc,bins[k]);});
+  var w=Math.max(1.5,(MR-ML)*binw/(hi-lo)*0.86);
+  for(k in bins){
+    var h2=bins[k]/maxc*(B-T);
+    s.appendChild(el("rect",{x:(xs(k*binw)-w/2).toFixed(2),y:(B-h2).toFixed(2),
+      width:w.toFixed(2),height:h2.toFixed(2),fill:"var(--accent)","fill-opacity":n===cur?"0.85":"0.5",rx:1}));
+  }
+}
+function stats(){
+  LIST.forEach(function(n){
+    var p=P[n], a=sd(p.raw), b=sd(p.means);
+    document.getElementById("ts"+n).textContent=p.means.length+" 回";
+    document.getElementById("mse"+n).textContent=b===null?"—":b.toFixed(2);
+    document.getElementById("msd"+n).textContent=a===null?"—":a.toFixed(2);
+    document.getElementById("tab"+n).setAttribute("aria-selected",n===cur?"true":"false");
+    drawMini(n);
+  });
+  var p=P[cur], a=sd(p.raw), b=sd(p.means);
+  document.getElementById("done").textContent=p.means.length;
+  document.getElementById("sdv").textContent=a===null?"—":a.toFixed(2);
+  document.getElementById("sev").textContent=b===null?"—":b.toFixed(2);
+  document.getElementById("tse").textContent=(POP/Math.sqrt(cur)).toFixed(2);
+  document.getElementById("bigName").textContent="n = "+cur;
+}
+var armed=false, armTimer=null;
+function disarm(){ armed=false; var r=document.getElementById("reset");
+  r.classList.remove("armed"); r.textContent="清空這個 n 重做"; if(armTimer){clearTimeout(armTimer);armTimer=null;} }
+function ui(){
+  var p=P[cur], d=p.means.length, full=d>=MAX;
+  document.getElementById("roll").disabled=full||rolling;
+  document.getElementById("roll").textContent="做 1 回（擲 "+cur+" 個）";
+  var f=document.getElementById("fast");
+  f.hidden = d<MANUAL || full;
+  f.disabled = full||rolling;
+  f.textContent = d<STEP5_UNTIL ? "＋5 回" : "＋10 回";
+  var fl=document.getElementById("fill");
+  fl.hidden = d<MANUAL || full;
+  fl.disabled = full||rolling;
+  fl.textContent = "一鍵補到 "+MAX+" 回";
+  document.getElementById("pick").disabled = d<MANUAL;
+  document.getElementById("hint").textContent = full ? "200 回滿了。畫面留著不會清掉——這些點散開的範圍，就是 SE。"
+    : d<MANUAL ? "前 10 回一回一回按，感覺一下每回都不一樣。"
+    : d<STEP5_UNTIL ? "感覺到了就用「＋5 回」，或直接「一鍵補到 200」——後面的按鈕只是勞動，不用手動按完。" : "可以「一鍵補到 200」，把時間留給看圖跟寫學習單。";
+}
+function render(){ drawBig(); stats(); ui(); }
+
+function doRoll(k, animate){
+  var p=P[cur];
+  function once(){
+    if(p.means.length>=MAX)return null;
+    var v=[];for(var i=0;i<cur;i++){var r=1+Math.floor(Math.random()*6);v.push(r);p.raw.push(r);}
+    p.last=v;p.means.push(mean(v));return v;
+  }
+  disarm();
+  picked=null; document.getElementById("mrow").hidden=true;
+  if(animate){
+    rolling=true; ui();
+    var spins=0, iv=setInterval(function(){
+      var fake=[];for(var i=0;i<cur;i++)fake.push(1+Math.floor(Math.random()*6));
+      drawTray(fake,true); spins++;
+      if(spins>=6){
+        clearInterval(iv);
+        var v=once(); rolling=false;
+        if(v){drawTray(v,false); setMean(mean(v));}
+        render();
+      }
+    },70);
+  } else {
+    var last=null;
+    for(var j=0;j<k;j++){ var v=once(); if(v)last=v; }
+    if(last){ drawTray(last,false); setMean(mean(last)); }
+    render();
+  }
+}
+
+/* ---------- tabs / mini ---------- */
+var tabs=document.getElementById("tabs"), grid=document.getElementById("grid");
+LIST.forEach(function(n){
+  var t=document.createElement("button");
+  t.className="tab"; t.id="tab"+n; t.setAttribute("role","tab");
+  t.innerHTML='<span>n = '+n+'</span><span class="st" id="ts'+n+'">0 回</span>';
+  t.onclick=function(){ if(rolling)return; cur=n; picked=null; disarm();
+    document.getElementById("mrow").hidden=true;
+    drawTray(P[n].last,false); setMean(P[n].last?mean(P[n].last):null); render(); };
+  tabs.appendChild(t);
+
+  var m=document.createElement("div");
+  m.className="mini";
+  m.innerHTML='<div class="mh"><b>n = '+n+'</b><span title="母體標準差">\u03c3 <span id="msd'+n+'">—</span></span></div>'
+    +'<svg id="sv'+n+'" viewBox="0 0 360 120"></svg>'
+    +'<div class="ms"><span>SE 實測 <span class="se" id="mse'+n+'">—</span></span>'
+    +'<span>SE 公式 '+(POP/Math.sqrt(n)).toFixed(2)+'</span></div>';
+  grid.appendChild(m);
+});
+
+function setAx(z){
+  ZOOM=z;
+  document.getElementById("axShare").setAttribute("aria-pressed",z?"false":"true");
+  document.getElementById("axZoom").setAttribute("aria-pressed",z?"true":"false");
+  document.getElementById("axnote").textContent = z
+    ? "每張圖各自縮放到自己的範圍 → 看得出形狀，但不能比寬窄。"
+    : "五張共用 1–6 → 可以比寬窄，但 n 大時形狀被壓扁。";
+  LIST.forEach(drawMini);
+}
+document.getElementById("axShare").onclick=function(){setAx(false);};
+document.getElementById("axZoom").onclick=function(){setAx(true);};
+
+document.getElementById("roll").onclick=function(){ doRoll(1,true); };
+document.getElementById("fast").onclick=function(){
+  doRoll(P[cur].means.length<STEP5_UNTIL?5:10,false); };
+document.getElementById("fill").onclick=function(){
+  doRoll(MAX-P[cur].means.length,false); };
+document.getElementById("reset").onclick=function(){
+  var r=document.getElementById("reset");
+  if(!armed){ armed=true; r.classList.add("armed");
+    r.textContent="⚠ 再按一次才會清空（圖會不見）";
+    armTimer=setTimeout(disarm,4000); return; }
+  disarm();
+  P[cur]={means:[],raw:[],last:null}; picked=null;
+  document.getElementById("mrow").hidden=true;
+  drawTray(null,false); setMean(null); render(); };
+document.getElementById("pick").onclick=function(){
+  var p=P[cur]; if(p.means.length<MANUAL)return;
+  picked=Math.floor(Math.random()*p.means.length);
+  var v=p.means[picked];
+  document.getElementById("mv").textContent=v.toFixed(2);
+  document.getElementById("me").textContent=(v-3.5>=0?"+":"")+(v-3.5).toFixed(2);
+  document.getElementById("mrow").hidden=false; drawBig(); };
+
+/* ---------- 05 解析度 ---------- */
+var big=[], base200=[], BIGMAX=20000;
+function bigRoll(k){for(var i=0;i<k;i++){var s=0;for(var j=0;j<5;j++)s+=1+Math.floor(Math.random()*6);big.push(s/5);}}
+function drawResInto(sid,arr,seid,rgid){
+  var s=document.getElementById(sid);
+  while(s.firstChild)s.removeChild(s.firstChild);
+  var B=126,T=16,YM=0.26;
+  axis(s,B,true); truth(s,B,T-6,false);
+  s.appendChild(el("line",{x1:L,y1:T-6,x2:L,y2:B,stroke:"var(--line)","stroke-width":1}));
+  [0.1,0.2].forEach(function(g){
+    var y=B-g/YM*(B-T);
+    s.appendChild(el("line",{x1:L,y1:y,x2:R,y2:y,stroke:"var(--line-2)","stroke-width":1}));
+    txt(s,L-5,y+3.5,(g*100)+"%",{anchor:"end",size:"9.5",mono:1});
+  });
+  var bins={},k;arr.forEach(function(m){k=Math.round(m*5);bins[k]=(bins[k]||0)+1;});
+  var w=(R-L)/25*0.86;
+  for(k in bins){
+    var pct=bins[k]/arr.length, h=Math.min(pct/YM,1)*(B-T);
+    s.appendChild(el("rect",{x:(X(k/5)-w/2).toFixed(2),y:(B-h).toFixed(2),width:w.toFixed(2),
+      height:h.toFixed(2),fill:"var(--accent)","fill-opacity":"0.8",rx:1}));
+  }
+  txt(s,(L+R)/2,B+36,"橫軸：每一回（5 個骰子）的平均點數",{anchor:"middle",size:"11"});
+  txt(s,14,(B+T)/2,"縱軸：佔全部的 %",{anchor:"middle",size:"10.5",rotate:-90});
+  var b=sd(arr);document.getElementById(seid).textContent=b?b.toFixed(2):"—";
+  document.getElementById(rgid).textContent=Math.min.apply(null,arr).toFixed(1)+" ～ "+Math.max.apply(null,arr).toFixed(1);
+}
+function drawRes(){
+  drawResInto("res",big,"bse","brg");
+  document.getElementById("bc").textContent=big.length;
+  var mb=document.getElementById("more");
+  mb.disabled=big.length>=BIGMAX;
+  mb.textContent=big.length>=BIGMAX?("已達 "+BIGMAX+" 回"):"＋2000 回";
+}
+document.getElementById("more").onclick=function(){bigRoll(Math.min(2000,BIGMAX-big.length));drawRes();};
+document.getElementById("bres").onclick=function(){big=base200.slice(0);drawRes();};
+
+/* ---------- 06 橋接：一堆點 → 一根誤差線 ---------- */
+function drawBridge(){
+  var s=document.getElementById("bridge");
+  while(s.firstChild)s.removeChild(s.firstChild);
+  var pts=[]; for(var i=0;i<200;i++){var t=0;for(var j=0;j<5;j++)t+=1+Math.floor(Math.random()*6);pts.push(t/5);}
+  var m=mean(pts), e=sd(pts);
+  var lo=2.0, hi=5.0;
+  /* 左：橫著散開 */
+  var AL=34,AR=210,B=150,T=30;
+  var xL=function(v){return AL+(v-lo)/(hi-lo)*(AR-AL);};
+  s.appendChild(el("line",{x1:AL,y1:B,x2:AR,y2:B,stroke:"var(--line)","stroke-width":1}));
+  [2,3,4,5].forEach(function(t){ s.appendChild(el("line",{x1:xL(t),y1:B,x2:xL(t),y2:B+4,stroke:"var(--line)","stroke-width":1}));
+    txt(s,xL(t),B+15,t,{anchor:"middle",size:"9.5",mono:1}); });
+  var bins={},k,maxc=0;
+  pts.forEach(function(v){k=Math.round(v*10);bins[k]=(bins[k]||0)+1;maxc=Math.max(maxc,bins[k]);});
+  var w=(AR-AL)/((hi-lo)*10)*0.85;
+  for(k in bins){ var h=bins[k]/maxc*(B-T);
+    s.appendChild(el("rect",{x:(xL(k/10)-w/2).toFixed(2),y:(B-h).toFixed(2),width:w.toFixed(2),
+      height:h.toFixed(2),fill:"var(--accent)","fill-opacity":"0.75",rx:1})); }
+  txt(s,(AL+AR)/2,18,"200 個平均點，橫著看",{anchor:"middle",size:"11",fill:"var(--ink-2)",weight:"600"});
+  txt(s,(AL+AR)/2,B+30,"每一回的平均點數",{anchor:"middle",size:"10"});
+  /* 中間箭頭 */
+  s.appendChild(el("path",{d:"M218 92 L246 92",stroke:"var(--truth)","stroke-width":1.4}));
+  s.appendChild(el("path",{d:"M246 92 l-6 -3.5 l0 7 z",fill:"var(--truth)"}));
+  txt(s,232,84,"轉 90°",{anchor:"middle",size:"10",fill:"var(--truth)",weight:"600"});
+  /* 右：立起來 + 誤差線 */
+  var RL=262,RR=350;
+  var yR=function(v){return B-(v-lo)/(hi-lo)*(B-T);};
+  s.appendChild(el("line",{x1:RL,y1:T,x2:RL,y2:B,stroke:"var(--line)","stroke-width":1}));
+  [2,3,4,5].forEach(function(t){ s.appendChild(el("line",{x1:RL-4,y1:yR(t),x2:RL,y2:yR(t),stroke:"var(--line)","stroke-width":1}));
+    txt(s,RL-7,yR(t)+3.5,t,{anchor:"end",size:"9.5",mono:1}); });
+  var jx=RL+22;
+  pts.forEach(function(v,i){
+    s.appendChild(el("circle",{cx:(jx+((i*37)%40)-20).toFixed(1),cy:yR(v).toFixed(1),r:1.3,
+      fill:"var(--dim)","fill-opacity":"0.9"}));
+  });
+  var ex=RR-24, y1=yR(m+e), y2=yR(m-e);
+  s.appendChild(el("line",{x1:ex,y1:y1,x2:ex,y2:y2,stroke:"var(--mine)","stroke-width":2}));
+  s.appendChild(el("line",{x1:ex-7,y1:y1,x2:ex+7,y2:y1,stroke:"var(--mine)","stroke-width":2}));
+  s.appendChild(el("line",{x1:ex-7,y1:y2,x2:ex+7,y2:y2,stroke:"var(--mine)","stroke-width":2}));
+  s.appendChild(el("circle",{cx:ex,cy:yR(m),r:3.6,fill:"var(--mine)"}));
+  txt(s,(RL+RR)/2,18,"立起來＝誤差線 error bar",{anchor:"middle",size:"10.5",fill:"var(--ink-2)",weight:"600"});
+  txt(s,ex,y1-6,"+1 SE",{anchor:"middle",size:"9",fill:"var(--mine)",mono:1,weight:"600"});
+  txt(s,ex,y2+12,"−1 SE",{anchor:"middle",size:"9",fill:"var(--mine)",mono:1,weight:"600"});
+  txt(s,RL+20,B+15,"200 個點",{anchor:"middle",size:"9"});
+  txt(s,ex,B+15,"你的平均",{anchor:"middle",size:"9",fill:"var(--mine)"});
+  txt(s,180,188,"SE ＝ "+e.toFixed(2)+"　平均 ＝ "+m.toFixed(2)+"　（本次模擬）",
+    {anchor:"middle",size:"10.5",mono:1,fill:"var(--ink-2)"});
+  txt(s,180,203,"左邊那堆點的寬度，就是右邊那根線的長度——同一件事，兩種畫法。",
+    {anchor:"middle",size:"10"});
+}
+
+/* ---------- 07 反泡泡 ---------- */
+var NR=3;
+var CONT={xs:[5,10,20,30,50], unit:"%", ymax:100,
+  raw:[[20,30,50],[40,40,60],[50,60,70],[60,70,70],[20,40,60]]};
+var CAT={c:["去離子水","自來水","礦泉水"], unit:" 秒", ymax:16,
+  raw:[[9.2,8.4,8.8],[4.6,3.9,5.3],[7.4,5.1,8.6]]};
+function derive(o){ o.m=o.raw.map(mean); o.s=o.raw.map(sd); o.se=o.s.map(function(v){return v/Math.sqrt(NR);}); }
+derive(CONT); derive(CAT);
+
+function rawTable(host, firstHead, labels, o, dec, colHead){
+  var h='<table class="dt"><tr><th class="xl"></th><th class="xl">A</th><th class="xl">B</th><th class="xl">C</th>'
+   +'<th class="xl">D</th><th class="xl">E</th><th class="xl">F</th><th class="xl">G</th></tr>';
+  h+='<tr><td class="xl">1</td><th>'+firstHead+'</th><th>'+colHead+'<br>①</th><th>'+colHead+'<br>②</th><th>'+colHead+'<br>③</th>'
+   +'<th>平均 ȳ<br><span style="font-weight:400">圖上的點</span></th><th>s</th><th>SE<br><span style="font-weight:400">＝s÷√3</span></th></tr>';
+  labels.forEach(function(lb,i){
+    h+='<tr><td class="xl">'+(i+2)+'</td><td class="lb">'+lb+'</td>'
+      +o.raw[i].map(function(v){return '<td>'+v.toFixed(dec)+o.unit+'</td>';}).join("")
+      +'<td style="color:var(--accent);font-weight:600">'+o.m[i].toFixed(1)+o.unit+'</td>'
+      +'<td>'+o.s[i].toFixed(1)+'</td><td style="color:var(--truth);font-weight:600">'+o.se[i].toFixed(1)+'</td></tr>';
+  });
+  document.getElementById(host).innerHTML=h+'</table>';
+}
+rawTable("rawCont","液溫 °C",CONT.xs.map(function(v){return v+" °C";}),CONT,0,"成功率<br><span style=\"font-weight:400\">10 試</span>");
+rawTable("rawCat","水的種類",CAT.c,CAT,1,"存活時間");
+
+function frame(s,AL,AR,B,T,ymax,ticks,ylab,xlab){
+  s.appendChild(el("line",{x1:AL,y1:B,x2:AR,y2:B,stroke:"var(--line)","stroke-width":1}));
+  s.appendChild(el("line",{x1:AL,y1:T,x2:AL,y2:B,stroke:"var(--line)","stroke-width":1}));
+  ticks.forEach(function(g){
+    var y=B-g/ymax*(B-T);
+    s.appendChild(el("line",{x1:AL,y1:y,x2:AR,y2:y,stroke:"var(--line-2)","stroke-width":1}));
+    txt(s,AL-5,y+3.5,g,{anchor:"end",size:"9.5",mono:1});
+  });
+  txt(s,13,(B+T)/2,ylab,{anchor:"middle",size:"10",rotate:-90});
+  txt(s,(AL+AR)/2,B+31,xlab,{anchor:"middle",size:"10.5"});
+}
+function errbar(s,px,yc,y1,y2,cap,col){
+  s.appendChild(el("line",{x1:px,y1:y1,x2:px,y2:y2,stroke:col,"stroke-width":1.6}));
+  s.appendChild(el("line",{x1:px-cap,y1:y1,x2:px+cap,y2:y1,stroke:col,"stroke-width":1.6}));
+  s.appendChild(el("line",{x1:px-cap,y1:y2,x2:px+cap,y2:y2,stroke:col,"stroke-width":1.6}));
+}
+function drawCont(id,useSE,K){
+  K=K||1;
+  var s=document.getElementById(id);
+  while(s.firstChild)s.removeChild(s.firstChild);
+  var AL=40,AR=348,B=150,T=18,YM=100;
+  var xx=function(v){return AL+v/50*(AR-AL);}, yy=function(v){return B-v/YM*(B-T);};
+  frame(s,AL,AR,B,T,YM,[0,50,100],"成功率（%）","液溫（°C）");
+  var d="";
+  CONT.xs.forEach(function(v,i){ d+=(i?" L":"M")+xx(v).toFixed(1)+" "+yy(CONT.m[i]).toFixed(1); });
+  s.appendChild(el("path",{d:d,fill:"none",stroke:"var(--accent)","stroke-width":1.2,"stroke-opacity":"0.45"}));
+  CONT.xs.forEach(function(v,i){
+    var px=xx(v), e=(useSE?CONT.se[i]:CONT.s[i])*K;
+    errbar(s,px,yy(CONT.m[i]),yy(CONT.m[i]+e),yy(CONT.m[i]-e),4,useSE?"var(--ink)":"var(--alt)");
+    s.appendChild(el("circle",{cx:px,cy:yy(CONT.m[i]),r:3.4,fill:"var(--accent)"}));
+    txt(s,px,B+14,v,{anchor:"middle",size:"10",mono:1});
+  });
+}
+function drawCat(id,useSE,K){
+  K=K||1;
+  var s=document.getElementById(id);
+  while(s.firstChild)s.removeChild(s.firstChild);
+  var AL=40,AR=348,B=150,T=18,YM=CAT.ymax;
+  var yy=function(v){return B-v/YM*(B-T);};
+  frame(s,AL,AR,B,T,YM,[0,4,8,12,16],"存活時間（秒）","水的種類");
+  var step=(AR-AL)/3;
+  CAT.c.forEach(function(c,i){
+    var px=AL+step*i+step/2, w=step*0.46, e=(useSE?CAT.se[i]:CAT.s[i])*K;
+    s.appendChild(el("rect",{x:px-w/2,y:yy(CAT.m[i]),width:w,height:(B-yy(CAT.m[i])).toFixed(1),
+      fill:"var(--accent)","fill-opacity":i===0?"0.85":"0.42",rx:2}));
+    errbar(s,px,yy(CAT.m[i]),yy(CAT.m[i]+e),yy(CAT.m[i]-e),5,useSE?"var(--ink)":"var(--alt)");
+    txt(s,px,B+15,c,{anchor:"middle",size:"10.5",fill:"var(--ink-2)"});
+  });
+}
+
+/* ---------- 08 重疊圖 ---------- */
+function bell(s,x0,x1,ybase,h,c,sig,col,lab){
+  var d="",N=48;
+  for(var i=0;i<=N;i++){
+    var t=i/N, x=x0+t*(x1-x0);
+    var u=(x-c)/sig, y=ybase-h*Math.exp(-0.5*u*u);
+    d+=(i?" L":"M")+x.toFixed(1)+" "+y.toFixed(1);
+  }
+  d+=" L"+x1.toFixed(1)+" "+ybase+" L"+x0.toFixed(1)+" "+ybase+" Z";
+  s.appendChild(el("path",{d:d,fill:col,"fill-opacity":"0.42",stroke:col,"stroke-width":1.2}));
+  if(lab) txt(s,c,ybase-h-4,lab,{anchor:"middle",size:"9.5",fill:col,weight:"600"});
+}
+function drawOvl(){
+  var s=document.getElementById("ovl");
+  while(s.firstChild)s.removeChild(s.firstChild);
+  var panels=[
+    {x:10, y:100, t:"圖 1", sub:"散布小", c1:-26,c2:26,sig:16},
+    {x:190,y:100, t:"圖 2", sub:"散布大", c1:-26,c2:26,sig:32},
+    {x:10, y:262, t:"圖 3", sub:"平均差小", c1:-16,c2:16,sig:22},
+    {x:190,y:262, t:"圖 4", sub:"平均差大", c1:-40,c2:40,sig:22}
+  ];
+  txt(s,180,16,"上排：平均差一樣，散布不同",{anchor:"middle",size:"11.5",fill:"var(--ink-2)",weight:"600"});
+  txt(s,180,178,"下排：散布一樣，平均差不同",{anchor:"middle",size:"11.5",fill:"var(--ink-2)",weight:"600"});
+  panels.forEach(function(p){
+    var w=160, mid=p.x+w/2, yb=p.y;
+    s.appendChild(el("line",{x1:p.x+6,y1:yb,x2:p.x+w-6,y2:yb,stroke:"var(--line)","stroke-width":1}));
+    bell(s,p.x+6,p.x+w-6,yb,54,mid+p.c1,p.sig,"var(--accent)","對照組");
+    bell(s,p.x+6,p.x+w-6,yb,54,mid+p.c2,p.sig,"var(--truth)","實驗組");
+    txt(s,mid,yb+15,p.t+"　"+p.sub,{anchor:"middle",size:"10.5",fill:"var(--ink-2)",weight:"600"});
+    txt(s,mid,yb+28,"橫軸＝測量值　縱軸＝出現次數",{anchor:"middle",size:"9"});
+  });
+}
+
+function drawOvlRot(){
+  var s=document.getElementById("ovlR");
+  while(s.firstChild)s.removeChild(s.firstChild);
+  var panels=[
+    {x:10, y:120, t:"圖 1", sub:"散布小 → 誤差線短", c1:-26,c2:26,sig:16},
+    {x:190,y:120, t:"圖 2", sub:"散布大 → 誤差線長", c1:-26,c2:26,sig:32},
+    {x:10, y:282, t:"圖 3", sub:"平均差小", c1:-16,c2:16,sig:22},
+    {x:190,y:282, t:"圖 4", sub:"平均差大", c1:-40,c2:40,sig:22}
+  ];
+  txt(s,180,16,"上排：誤差線長度不同",{anchor:"middle",size:"11.5",fill:"var(--ink-2)",weight:"600"});
+  txt(s,180,178,"下排：兩點的距離不同",{anchor:"middle",size:"11.5",fill:"var(--ink-2)",weight:"600"});
+  panels.forEach(function(p){
+    var w=160, B=p.y, T=p.y-88, mid=(T+B)/2;
+    s.appendChild(el("line",{x1:p.x+16,y1:T,x2:p.x+16,y2:B,stroke:"var(--line)","stroke-width":1}));
+    s.appendChild(el("line",{x1:p.x+16,y1:B,x2:p.x+w-6,y2:B,stroke:"var(--line)","stroke-width":1}));
+    txt(s,p.x+9,mid,"測量值",{anchor:"middle",size:"9",rotate:-90});
+    [[p.x+58,p.c1,"var(--accent)","對照組"],[p.x+116,p.c2,"var(--truth)","實驗組"]].forEach(function(g){
+      var yc=mid-g[1]*0.62, e=p.sig*0.62;
+      errbar(s,g[0],yc,yc-e,yc+e,6,g[2]);
+      s.appendChild(el("circle",{cx:g[0],cy:yc,r:3.4,fill:g[2]}));
+      txt(s,g[0],B+13,g[3],{anchor:"middle",size:"9",fill:g[2]});
+    });
+    txt(s,p.x+w/2,B+27,p.t+"　"+p.sub,{anchor:"middle",size:"10",fill:"var(--ink-2)",weight:"600"});
+  });
+}
+
+/* ---------- 提示 ---------- */
+Array.prototype.forEach.call(document.querySelectorAll(".rv"),function(b){
+  b.onclick=function(){
+    var box=b.nextElementSibling;
+    box.hidden=!box.hidden;
+    b.textContent=box.hidden?"查看提示（想不出來再按）":"收起提示";
+  };
+});
+
+drawTray(null,false); setMean(null); setAx(false); render();
+bigRoll(200); base200=big.slice(0); drawResInto("res0",base200,"bse0","brg0"); drawRes(); drawBridge();
+drawCont("contSE",true,1); drawCont("contSD",false,1);
+drawCont("contSE2",true,2); drawCont("contSD2",false,2);
+drawCat("catSE",true,1); drawCat("catSD",false,1);
+drawCat("catSE2",true,2); drawCat("catSD2",false,2);
+drawOvl(); drawOvlRot();
+
+/* ---------- KaTeX ---------- */
+function mathFallback(){
+  var R=[[/s=\\sqrt/,"s = √[ Σ(xᵢ − x̄)² ÷ (n − 1) ]"],
+         [/SE=\\dfrac\{s\}/,"SE = s ÷ √n"],
+         [/\\sigma=\\sqrt\{\\dfrac\{\\sum_/,"σ = √( 17.5 ÷ 6 ) = 1.708"],
+         [/\\sigma=/,"σ = √[ Σ(xᵢ − μ)² ÷ N ]"]];
+  Array.prototype.forEach.call(document.querySelectorAll(".fxbox, .terms td"),function(e){
+    var t=e.textContent;
+    if(t.indexOf("\\")<0)return;
+    for(var i=0;i<R.length;i++) if(R[i][0].test(t)){ e.textContent=R[i][1]; return; }
+  });
+}
+window.addEventListener("load",function(){
+  var ok=false;
+  if(window.renderMathInElement){
+    try{ renderMathInElement(document.body,{delimiters:[
+      {left:"\\[",right:"\\]",display:true},{left:"\\(",right:"\\)",display:false}],
+      throwOnError:false}); ok=document.querySelectorAll(".katex").length>0; }catch(e){}
+  }
+  if(!ok) mathFallback();
+});
+})();
+</script>
+</body></html>
