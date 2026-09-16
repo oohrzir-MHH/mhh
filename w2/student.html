@@ -185,9 +185,21 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
 .quad th{background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600}
 .quad td b{color:var(--ink)}
 .quad .kw{font-family:"IBM Plex Mono",monospace;color:var(--truth);font-weight:700}
+
+.ans{margin-top:10px;border:1px solid var(--accent);background:var(--accent-soft);
+  border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.85;color:var(--ink)}
+.ans .al{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:10.5px;
+  letter-spacing:.08em;font-weight:700;color:var(--accent);margin-bottom:4px}
+.ans .al::after{content:"";display:block}
+.ans .tn{margin-top:7px;padding-top:6px;border-top:1px dashed var(--accent);
+  font-size:12.5px;color:var(--ink-2)}
+.tbanner{background:var(--truth);color:#fff;border-radius:10px;padding:11px 14px;
+  font-size:13.5px;line-height:1.75;font-weight:500}
+.tbanner b{color:#fff}
 </style>
 </head><body>
 <div class="wrap">
+
 <header>
   <span class="eyebrow">反泡泡 W2 · 重複幾回才夠</span>
   <h1>幾個才夠？幾回才夠？</h1>
@@ -199,8 +211,8 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
   <p class="t">先講清楚：一個數字、一回、200 回</p>
   <div class="scroll"><table class="terms">
     <tr><th style="width:22%">說法</th><th>骰子這邊</th><th>你的實驗那邊</th></tr>
-    <tr><td><b>一個原始數字</b></td><td>擲出 1 個骰子的點數</td><td>一筆測量值。<br>例：數 10 試算出 1 個成功率；或量到 1 個存活時間（秒）</td></tr>
-    <tr><td><b>一回</b><br><span style="font-size:11.5px;color:var(--ink-3)">＝圖上一個點</span></td><td>n 個骰子的<b>平均</b>（n＝1／2／3／5／30）</td><td>n 個原始數字的<b>平均</b>（n 是你自己決定的）</td></tr>
+    <tr><td><b>一個原始數字</b></td><td>擲出 1 個骰子的點數</td><td><b>一筆測量值</b>——實驗做一次、直接得到的那個數字。<br>A 題（成功率）：滴<b>一顆</b>反泡泡，成功記 <b>1</b>、失敗記 <b>0</b> → 這個 0 或 1 就是一筆原始數字。<br>B 題（存活時間）：量<b>一顆</b>反泡泡活幾秒 → 那個秒數就是一筆原始數字。<br><span style="color:var(--truth)">成功率<b>不是</b>原始數字——它已經是 10 筆 0／1 的平均，屬於下一列。</span></td></tr>
+    <tr><td><b>一回</b><br><span style="font-size:11.5px;color:var(--ink-3)">＝圖上一個點</span></td><td>n 個骰子的<b>平均</b>（n＝1／2／3／5／30）</td><td>n 個原始數字的<b>平均</b>（n 是你自己決定的）<br><span style="color:var(--truth)">A 題：成功率 ＝ 成功個數 ÷ n，n＝10 顆泡泡。<b>成功率本身就是一回的平均值</b>，不必再平均一次。</span></td></tr>
     <tr><td><b>做幾回</b></td><td>畫面固定模擬 200 回，看這些點散在哪</td><td><span style="color:var(--truth)">做完下面的操作，你要能回答：<b>我這樣取 n 個原始數字，一共要做幾回？</b></span></td></tr>
   </table></div>
   <p style="margin-top:8px">全篇只用這三個說法，不再多加量詞。<b style="color:var(--ink)">進到 SE 公式裡的那個 n，是「一回裡有幾個原始數字」</b>——骰子是幾個骰子，你的實驗是幾個測量值。</p>
@@ -275,6 +287,8 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
   <p style="color:var(--truth)">⑥ 這件事對你的實驗有什麼用？<span class="blank" style="min-width:230px"></span></p>
   <button class="rv">查看提示（想不出來再按）</button>
   <div class="rvb" hidden>骰子本身六個面出現的機會是<b>一樣的</b>——所以 n＝1 那張是<b>平的</b>，六根差不多高，一點也不像鐘形。<br>但把好幾個平均起來以後，形狀就變了：往中間集中、兩邊變薄、左右對稱。<br><b>注意：關鍵不是「骰子很隨機」</b>——n＝1 也一樣隨機，卻是平的。關鍵是「取了平均」這個動作本身。</div>
+
+  
 </div>
 
 <div class="ask">
@@ -285,7 +299,9 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
   <p>圖上那條橘線是 <span class="blank" style="min-width:110px"></span>；圖越窄，代表你算出來的平均<b>離它</b> <span class="blank" style="min-width:110px"></span>。</p>
   <p>造成寬窄改變的是 <span class="blank"></span>。理由：<span class="blank" style="min-width:220px"></span></p>
   <button class="rv">查看提示（想不出來再按）</button>
-  <div class="rvb" hidden>兩件事分開看：<b>骰子本身</b>有沒有因為你一回多拿幾個而變得比較不隨機？<b>圖上那些平均點</b>有沒有因為每個點是更多骰子平均出來的而擠得比較近？<br>再看那條橘線：它是<b>真值 3.5</b>，是「答案」。圖越窄＝你隨便抽一回，抽到的平均越靠近答案。<br><br><b>加大 n 的代價，算給你看：</b>反泡泡示範題有 5 個溫度，一個原始數字要試 10 次。<br>n＝3 → 5×3×10 ＝ <b>150 次</b>；n＝5 → 5×5×10 ＝ <b>250 次</b>。<br>一次操作抓 30 秒，就是 <b>75 分鐘</b> 對 <b>125 分鐘</b>。你們一堂課 50 分鐘。<br>把這個代價跟上面 SE 縮小的幅度擺在一起——<b>但先不要下結論，要同時看完學習單 ④「SE 變小的速度」才能決定 n。</b></div>
+  <div class="rvb" hidden>兩件事分開看：<b>骰子本身</b>有沒有因為你一回多拿幾個而變得比較不隨機？<b>圖上那些平均點</b>有沒有因為每個點是更多骰子平均出來的而擠得比較近？<br>再看那條橘線：它是<b>真值 3.5</b>，是「答案」。圖越窄＝你隨便抽一回，抽到的平均越靠近答案。<br><br><b>加大 n 的代價，算給你看：</b>反泡泡示範題有 5 個溫度，一回滴 n 顆泡泡。<br>n＝10 → 5×10 ＝ <b>50 顆</b>；n＝20 → 5×20 ＝ <b>100 顆</b>；n＝30 → 5×30 ＝ <b>150 顆</b>。<br>一顆抓 30 秒，就是 <b>25 分鐘</b>／<b>50 分鐘</b>／<b>75 分鐘</b>。你們一堂課 50 分鐘。<br>把這個代價跟上面 SE 縮小的幅度擺在一起——<b>但先不要下結論，要同時看完學習單 ④「SE 變小的速度」才能決定 n。</b></div>
+
+  
 </div>
 
 <h2><span class="num">03</span>回到反泡泡：三個符號，各管一件事</h2>
@@ -325,6 +341,8 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
   <p style="color:var(--truth)">先去 01 區把四個分頁都按幾下，看最上面那個 <b>σ 實測</b>——它有沒有隨 n 改變？（s 是拿手上的數字去估 σ；σ 不變，s 估出來的也就在同一個數字附近晃。）</p>
   <button class="rv">查看提示（想不出來再按）</button>
   <div class="rvb" hidden>試想：一回多量幾個，<b>會不會讓你的滴管變準？</b><br>骰子那邊也一樣：一回抓 5 個骰子，會讓每一個骰子變得比較不隨機嗎？<br>那圖上那些<b>平均點</b>呢——它們有沒有擠得比較近？</div>
+
+  
 </div>
 
 <div class="ask">
@@ -345,7 +363,9 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
   <p>如果你是這組的組長，你會把 n 設在哪裡？<span class="blank" style="min-width:60px"></span>　理由：<span class="blank" style="min-width:200px"></span></p>
   <p>（算完回去對照 01 區五個分頁的「SE 公式」數字，看對不對得起來。）</p>
   <button class="rv">查看提示（想不出來再按）</button>
-  <div class="rvb" hidden>示範第一個：√(1÷2) ＝ √0.5，所以 SE 剩下原本的 √0.5 倍，縮掉的比例就是 1 − √0.5。<b>按計算機把它變成小數，再乘 100 變成 %。</b><br>剩下三個自己算。算完把四個「縮掉的 %」跟「多加了幾個骰子」並排寫下來，值不值得就看得出來了。<br>④ 特別注意：從 5 加到 30 是多做了 <b>5 倍</b>的工，縮掉的比例有沒有多 5 倍？</div>
+  <div class="rvb" hidden>示範第一個：√(1÷2) ＝ √0.5，所以 SE 剩下原本的 √0.5 倍，縮掉的比例就是 1 − √0.5。<b>按計算機把它變成小數，再乘 100 變成 %。</b><br>剩下三個自己算。算完把四個「縮掉的 %」跟「多加了幾個骰子」並排寫下來，值不值得就看得出來了。<br>④ 特別注意：從 5 加到 30，工作量變成原本的 <b>30 ÷ 5 ＝ 6 倍</b>。縮掉的比例有沒有也變 6 倍？<br>還有一件事要想：①②③④ 每一次<b>多加的骰子數不一樣</b>（1、1、2、25 個）。要比划不划算，不能直接比「縮掉幾 %」，要比「<b>每多一個骰子</b>換到幾 %」。</div>
+
+  
 </div>
 
 <h2><span class="num">04</span>抽出我的那一回</h2>
@@ -359,6 +379,22 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
   </div>
   <p style="font-size:13px">在你真正的實驗裡，右邊那一欄永遠是空的——因為沒有人知道真值。<b style="color:var(--ink)">SE 是你唯一算得出來、對這個看不見的誤差的估計。</b></p>
 </div>
+<div class="story" style="margin-top:12px">
+  <p class="t">兩個詞不要混：誤差（error）與不確定度（uncertainty）</p>
+  <div class="scroll"><table class="terms">
+    <tr><th style="width:20%">詞</th><th style="width:30%">定義</th><th>你算不算得出來</th></tr>
+    <tr><td><b>誤差</b><br><span style="font-size:11px;color:var(--ink-3)">error</span></td>
+        <td>我量到的值 <b>減</b> 真值</td>
+        <td><b style="color:var(--truth)">算不出來。</b>要知道真值才算得出來，而真值沒有人知道——就是上面那一欄「真實實驗中不可得」。</td></tr>
+    <tr><td><b>不確定度</b><br><span style="font-size:11px;color:var(--ink-3)">uncertainty</span></td>
+        <td>我報出來的這個數字，<b>可能落在多寬的範圍</b></td>
+        <td><b style="color:var(--accent)">算得出來。</b>SE 就是它的一種估計。這是你唯一能誠實寫進報告的東西。</td></tr>
+  </table></div>
+  <p style="margin-top:8px">所以正確的說法是：<b style="color:var(--ink)">加大 n，縮小的是「不確定度」，不是「誤差」。</b>誤差是一個你永遠看不到的定值；你只是把「可能範圍」收窄，讓自己猜得比較準而已。</p>
+  <p style="color:var(--truth)"><b>唯一的例外：「誤差線」（error bar）這個名字不要改。</b>它是全世界通用的圖表元件名稱，期刊、科展都這樣寫。名字叫誤差線，畫的內容卻是不確定度——這是歷史遺留，記住就好，但在<b>文字敘述</b>裡要講不確定度。</p>
+  
+</div>
+
 <h2><span class="num">05</span>那，多做幾回呢？</h2>
 <div class="q"><b>把 200 回做成 20000 回，SE 會變小嗎？</b>先答，再按。</div>
 <p class="hint" style="margin-top:6px">注意：這一區是<b style="color:var(--ink)">另一次獨立的模擬</b>（固定 n＝5），跟上面 01 區你自己按出來的那批資料無關，不會互相影響。</p>
@@ -390,6 +426,8 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
   <p>SE 有沒有跟著變小？<span class="blank"></span>，因為 <span class="blank" style="min-width:220px"></span>。</p>
   <button class="rv">查看提示（想不出來再按）</button>
   <div class="rvb" hidden>盯著兩個地方看：<b>左右兩端的最大最小值有沒有動？</b>中間高高低低的鋸齒有沒有變平順？<br>再問自己：多做幾回，是「換了一個新的分布」，還是「把同一個分布看得更清楚」？</div>
+
+  
 </div>
 
 <div class="ask">
@@ -397,6 +435,8 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
   <p class="qt">那另外那 19800 回是什麼？</p>
   <p>右邊那張圖現在畫了 20000 回，但你的實驗只做 <span class="blank" style="min-width:50px"></span> 回。</p>
   <p>用你自己的話寫：螢幕上那另外 19800 回，對你的實驗來說代表 <span class="blank" style="min-width:250px"></span>。</p>
+
+  
 </div>
 
 <h2><span class="num">06</span>那堆點，怎麼變成一根誤差線</h2>
@@ -416,6 +456,8 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
   <p>在真實實驗裡，右邊那堆點你看不到。你的實驗會做 <span class="blank" style="min-width:60px"></span> 回，所以圖上會有 <span class="blank" style="min-width:60px"></span> 個點——但你還是畫得出這根線，因為 <span class="blank" style="min-width:200px"></span>。</p>
   <button class="rv">查看提示（想不出來再按）</button>
   <div class="rvb" hidden>你手上有那 n 個原始數字，所以你算得出 s，也就算得出 SE ＝ s ÷ √n。<br>換句話說：<b>你不需要真的重做 200 回，就能估出「如果重做，會跑多遠」。</b>這就是 SE 的價值。</div>
+
+  
 </div>
 
 <h2><span class="num">07</span>回到反泡泡</h2>
@@ -425,41 +467,69 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
   <p class="simnote">模擬數據 · 不是實驗結果</p>
   <p><b style="color:var(--ink)">題目：</b>在同一支滴管、同一落下高度、同一濃度下，探討<b style="color:var(--ink)">液溫（5／10／20／30／50 °C）</b>對<b style="color:var(--ink)">成功率</b>的影響。</p>
   <p><b style="color:var(--ink)">先定義成功：</b>反泡泡落入水面後<b style="color:var(--ink)">沉入水中並維持 5 秒以上</b>，算 1 次成功。<span style="color:var(--truth)">沒有這個定義，成功率就不是一個數字。</span></p>
-  <p><b style="color:var(--ink)">怎麼得到一個原始數字：</b>每個溫度試 <code>10 試</code>，數出成功幾次 → 成功率 ＝ 成功次數 ÷ 10。這樣得到 <b>1 個原始數字</b>。<br>同一個溫度重複 <code>3 個 10 試</code>，得到 <b>3 個成功率</b>，取平均 ＝ 這一回，圖上一個點。<b style="color:var(--ink)">所以 n ＝ 3。</b></p>
-  <p style="color:var(--truth)">注意：10 試一數，成功率只可能是 0%、10%、20%…100%。下面的原始數據就長這樣。</p>
+  <p><b style="color:var(--ink)">怎麼得到一筆原始數字：</b>滴 <b>1 顆</b>反泡泡，成功記 <code>1</code>、失敗記 <code>0</code>。<b>這個 0 或 1 就是一筆原始數字</b>。</p>
+  <p><b style="color:var(--ink)">怎麼得到一回：</b>同一個溫度滴 <code>10 顆</code>，把這 10 筆 0／1 取平均 → 例如 6 個 1、4 個 0，平均 ＝ 0.6 ＝ <b>60 %</b>。<b style="color:var(--ink)">這個平均值我們就叫它「成功率」。所以 n ＝ 10，一個溫度只要做一回。</b></p>
+  <p style="color:var(--truth)"><b>這裡最容易搞混：</b>成功率 ＝ 成功個數 ÷ 10，這條式子<b>本身就是在取平均</b>（10 個 0／1 的平均）。所以成功率是「一回」，不是「一筆原始數字」。<b>不要再把 3 個成功率平均一次</b>——那叫做 3 回（圖上會有 3 個點），這一題不需要。</p>
+  
+  <p style="color:var(--truth)">注意：10 顆一回，成功率只可能是 0%、10%、20%…100%。下面的原始數據就長這樣。</p>
+</div>
+
+<div class="story" style="margin-top:10px">
+  <p class="t">0／1 資料的特權：σ ＝ √(p(1−p))，不用做就算得出來</p>
+  <p>骰子那邊 σ＝1.71 是把六個面全部列出來算的。0／1 資料更省事——<b style="color:var(--ink)">連列都不用列，σ 被成功率 p 本身鎖死了。</b>推導只有四行：</p>
+  <p style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:2;color:var(--ink-2)">
+  <b style="color:var(--ink)">設定</b>　一顆泡泡的結果 X：成功時 X＝1、失敗時 X＝0，成功機率為 p。<br>
+  <b style="color:var(--ink)">① 平均</b>　μ ＝ E[X] ＝ 1×p ＋ 0×(1−p) ＝ <b style="color:var(--ink)">p</b><br>
+  <span style="color:var(--ink-3)">　（所以「成功率」估的就是這個 p，這是它能當平均值用的理由。）</span><br>
+  <b style="color:var(--ink)">② 一個小把戲</b>　X 只有 0 和 1 兩個值，而 0²＝0、1²＝1，所以 <b style="color:var(--ink)">X² ＝ X</b>，因此 E[X²] ＝ E[X] ＝ p<br>
+  <b style="color:var(--ink)">③ 變異數</b>　σ² ＝ E[X²] − (E[X])² ＝ p − p² ＝ <b style="color:var(--ink)">p(1−p)</b><br>
+  <b style="color:var(--ink)">④ 開根號</b>　σ ＝ <b style="color:var(--truth)">√(p(1−p))</b></p>
+  <div class="fxbox">\[\;\sigma=\sqrt{p(1-p)}\qquad SE=\dfrac{\sigma}{\sqrt{n}}=\sqrt{\dfrac{p(1-p)}{n}}\;\]</div>
+  <p><b style="color:var(--ink)">注意右邊那條不是新公式。</b>它就是本頁一直在用的 SE ＝ σ ÷ √n，只是把 σ ＝ √(p(1−p)) 代進去而已。</p>
+  <p><b style="color:var(--ink)">σ 隨 p 怎麼變（直覺檢查）：</b></p>
+  <div class="scroll"><table class="dt">
+    <tr><th>p</th><th>0</th><th>0.1</th><th>0.3</th><th>0.5</th><th>0.7</th><th>0.9</th><th>1</th></tr>
+    <tr><td class="lb">σ ＝ √(p(1−p))</td><td>0</td><td>0.30</td><td>0.46</td><td style="color:var(--truth);font-weight:600">0.50</td><td>0.46</td><td>0.30</td><td>0</td></tr>
+  </table></div>
+  <p style="margin-top:6px">p＝0 或 1 時 σ＝0——<b>每次結果都一樣，根本不會晃</b>。p＝0.5 時 σ 最大——<b>最難猜、最難測準</b>。這就是下面「最壞情況取 p＝0.5」的理由。</p>
+  <p style="color:var(--truth)"><b>這個特權有代價，也有邊界：</b>只有 0／1 資料才這樣。B 題的存活秒數是連續量，σ 是一個<b>獨立的未知數</b>，沒有公式可以套，只能從你實際量到的那幾個秒數算 s 去估它。<b>這是 A 題與 B 題真正的差別</b>，不是「一個要定義成功、一個不用」。</p>
+  
 </div>
 
 <div class="pnl" style="margin-top:10px">
-  <p class="simnote">原始模擬數據 · 欄列標號同 Excel</p>
+  <p class="simnote">原始模擬數據 · 欄列標號同 Excel · 每格＝一顆泡泡（1＝成功、0＝失敗）</p>
   <div class="scroll" id="rawCont"></div>
-  <p class="hint" style="margin-top:4px">下面公式裡的 <code style="font-family:'IBM Plex Mono',monospace">B2:D2</code>，指的就是這張表第 <b style="color:var(--ink)">2</b> 列、<b style="color:var(--ink)">B 到 D</b> 三欄那三個數字。</p>
+  <p class="hint" style="margin-top:4px">下面公式裡的 <code style="font-family:'IBM Plex Mono',monospace">B2:K2</code>，指的就是這張表第 <b style="color:var(--ink)">2</b> 列、<b style="color:var(--ink)">B 到 K</b> 十欄那十筆 0／1。</p>
 </div>
 
 <div class="story" style="margin-top:10px">
   <p class="t">兩個統計量，用上面那張表算給你看</p>
   <div class="scroll"><table class="terms">
     <tr><th style="width:12%"></th><th style="width:20%">中文</th><th>數學式</th><th style="width:26%">Excel</th><th style="width:24%">白話</th></tr>
-    <tr><td><b>s</b></td><td>樣本標準差</td><td>\(s=\sqrt{\dfrac{\sum (x_i-\bar{x})^2}{n-1}}\)</td><td><code>=STDEV.S(B2:D2)</code></td><td>這 3 個成功率<b>彼此</b>差多少<br><span style="font-size:12px;color:var(--ink-3)">＝我做一次測量會晃多少</span></td></tr>
-    <tr><td><b>SE</b></td><td>標準誤</td><td>\(SE=\dfrac{s}{\sqrt{n}}\)</td><td><code>=STDEV.S(B2:D2)/SQRT(3)</code><br><span style="font-size:11.5px;color:var(--ink-3)">Excel 沒有 SE 的內建函數</span></td><td>如果我重做一回，算出的平均<b>離現在這個平均</b>會跑多遠<br><span style="font-size:12px;color:var(--ink-3)">＝<b style="color:var(--ink)">決定</b>誤差線的長度</span></td></tr>
+    <tr><td><b>s</b></td><td>樣本標準差</td><td>\(s=\sqrt{\dfrac{\sum (x_i-\bar{x})^2}{n-1}}\)</td><td><code>=STDEV.S(B2:K2)</code><br><span style="font-size:11.5px;color:var(--ink-3)">B～K ＝ 那 10 顆的 0／1</span></td><td>這 10 筆 0／1 <b>彼此</b>差多少<br><span style="font-size:12px;color:var(--ink-3)">＝我做一次測量會晃多少</span></td></tr>
+    <tr><td><b>SE</b></td><td>標準誤</td><td>\(SE=\dfrac{s}{\sqrt{n}}\)</td><td><code>=STDEV.S(B2:K2)/SQRT(10)</code><br><span style="font-size:11.5px;color:var(--ink-3)">Excel 沒有 SE 的內建函數</span></td><td>如果我重做一回，算出的平均<b>離現在這個平均</b>會跑多遠<br><span style="font-size:12px;color:var(--ink-3)">＝<b style="color:var(--ink)">決定</b>誤差線的長度</span></td></tr>
     <tr><td><b>σ</b></td><td>母體標準差</td><td>\(\sigma=\sqrt{\dfrac{\sum (x_i-\mu)^2}{N}}\)</td><td><code>=STDEV.P(...)</code></td><td><b style="color:var(--truth)">你的實驗算不出來。</b>骰子才有（σ＝1.71，所以 SE 公式值 ＝ 1.71÷√n）</td></tr>
   </table></div>
-  <p style="margin-top:8px;font-size:13px;color:var(--ink-2)">上表最右邊兩欄的 s 與 SE，就是這樣算出來的。<b style="color:var(--ink)">n＝3，所以 SE ＝ s ÷ √3 ≈ s ÷ 1.732。</b></p>
+  <p style="margin-top:8px;font-size:13px;color:var(--ink-2)">上表最右邊兩欄的 s 與 SE，就是這樣算出來的。<b style="color:var(--ink)">n＝10，所以 SE ＝ s ÷ √10 ≈ s ÷ 3.162。</b></p>
+  <p style="margin-top:8px;font-size:13px;color:var(--ink-2)"><b style="color:var(--truth)">0／1 資料有第二條路：</b>直接用 SE ＝ √(p(1−p)÷n)，連 s 都不用算。以 20 °C 的 p̂＝0.6 為例：√(0.6×0.4÷10) ＝ √0.024 ＝ 0.155 ＝ <b>15.5 %</b>，與左邊 STDEV.S 那條路算出來的 15.5 % 幾乎一樣（差別只在 Excel 的樣本標準差除的是 n−1，公式除的是 n，n＝10 時差不到 5 %）。<b>兩條路是同一件事</b>，不是兩套理論。</p>
 </div>
 
 <div class="ask">
   <p class="tosheet">寫進學習單 ⑧</p>
   <p class="qt">誤差線要畫 ±s 還是 ±SE？</p>
-  <p>一個溫度下我測 n＝3 個數據（y₁、y₂、y₃），取平均得到這個溫度的 <b>ȳ</b>。</p>
-  <p>我要比的是<b style="color:var(--ink)">不同溫度之間的 ȳ 有沒有差</b>——也就是在比<b>平均值</b>。</p>
+  <p>一個溫度下我滴 n＝10 顆泡泡，得到 10 筆 0／1，取平均得到這個溫度的成功率 <b>p̂</b>。</p>
+  <p>我要比的是<b style="color:var(--ink)">不同溫度之間的 p̂ 有沒有差</b>——而 p̂ 就是那 10 筆 0／1 的<b>平均值</b>。</p>
   <p>所以誤差線畫 <span class="blank"></span>，因為 <span class="blank" style="min-width:220px"></span>。</p>
   <button class="rv">查看提示（想不出來再按）</button>
   <div class="rvb" hidden>回去看 03 區：<b>s</b> 講的是「我做一次測量會晃多少」，<b>SE</b> 講的是「我報出來的那個平均，重做一回會跑多遠」。<br>你在圖上比的是誰？是原始數據，還是平均？</div>
+
+  
 </div>
 
 <p class="note" style="margin-top:12px">下面同一份數據畫四次。<b>左右</b>比的是 ±SE 對 ±s，<b>上下</b>比的是 ×1 對 ×2。四張圖的數據完全一樣，只有誤差線的畫法不同。</p>
 <div class="pair" style="margin-top:8px">
   <div class="pnl">
-    <div class="ph"><span class="pn"><span class="tag">± 1 SE</span></span><span class="pc">＝ ±s÷√3</span></div>
+    <div class="ph"><span class="pn"><span class="tag">± 1 SE</span></span><span class="pc">＝ ±s÷√10</span></div>
     <svg id="contSE" viewBox="0 0 360 190"></svg>
   </div>
   <div class="pnl">
@@ -488,26 +558,80 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
   <p>③ 所以，別人看到你的圖，<b style="color:var(--ink)">要先知道什麼才看得懂？</b>圖說裡一定要寫出 <span class="blank" style="min-width:120px"></span> 和 <span class="blank" style="min-width:120px"></span>。</p>
   <button class="rv">查看提示（想不出來再按）</button>
   <div class="rvb" hidden>③ 想像你只看到一張圖、沒有圖說：你能分辨那根線是 ±1SE 還是 ±2s 嗎？分辨不出來，就等於什麼都沒講。<br>查一下科展的評審意見或期刊圖說，你會發現：<b>三種畫法都被接受，但沒寫清楚畫的是哪一種、n 是多少，就會被扣分。</b></div>
+
+  
 </div>
 
 <div class="ask">
   <p class="tosheet">延伸（不考，寫關鍵字就好）</p>
   <p class="qt">「±2SE 大概涵蓋 95%」——這句話我們現在能用嗎？</p>
   <p>你可能在別的地方看過：資料若呈鐘形分布，±1 個標準差大約涵蓋 <span class="blank" style="min-width:60px"></span>%、±2 個大約涵蓋 <span class="blank" style="min-width:60px"></span>%。</p>
-  <p style="color:var(--truth)"><b>但是</b>那組數字成立有兩個前提：形狀要夠接近鐘形，而且那個「標準差」要是<b>已知的 σ</b>。我們手上只有 3 個數字、用的是<b>估出來的 s</b>——這時候 ±2SE 涵蓋的其實<b>不到 95%</b>。</p>
+  <p style="color:var(--truth)"><b>但是</b>那組數字成立有兩個前提：形狀要夠接近鐘形，而且那個「標準差」要是<b>已知的 σ</b>。我們手上只有 10 個數字、用的是<b>估出來的 s</b>——這時候 ±2SE 涵蓋的其實<b>不到 95%</b>。</p>
   <p>要修正這件事，統計上用的是另一個分布（提示：跟自由度 n−1 有關）。關鍵字：<span class="blank" style="min-width:130px"></span></p>
   <p><b style="color:var(--ink)">所以這堂課的結論是：</b>誤差線只拿來做「兩組有沒有明顯分開」的<b>眼睛判斷</b>，<b style="color:var(--ink)">不要在圖說裡宣稱它是 95% 信賴區間</b>——除非你查清楚該用哪個係數。</p>
   <button class="rv">查看提示（想不出來再按）</button>
-  <div class="rvb" hidden>68 / 95。<br>要查的關鍵字是 <b>t 分布</b>（Student's t-distribution）。n＝3 時，自由度是 2，那個係數不是 2，是 4.30——差很多，所以我們不寫。</div>
+  <div class="rvb" hidden>68 / 95。<br>要查的關鍵字是 <b>t 分布</b>（Student's t-distribution）。n＝10 時自由度是 9，要涵蓋 95% 的係數不是 2，是 <b>2.26</b>。</div>
+
+  
+</div>
+
+<div class="story" style="margin-top:14px">
+  <p class="t">那，兩組要差多少才敢說「有差」？——算給你看</p>
+  <p>誤差線只能用眼睛看重不重疊，很不精準。0／1 資料可以直接把門檻算出來。三步：</p>
+
+  <p style="font-family:'Noto Serif TC',serif;font-weight:700;margin:12px 0 4px">第 1 步　一組的不確定度（最壞情況）</p>
+  <p>實驗做完之前不知道 p 是多少，所以取<b style="color:var(--ink)">最難測的 p＝0.5</b>（上面那張表：σ 在 p＝0.5 時最大）。</p>
+  <p style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:2;color:var(--ink-2)">
+  SE ＝ √( p(1−p) ÷ n ) ＝ √( 0.5×0.5 ÷ 10 ) ＝ √( 0.25 ÷ 10 ) ＝ √0.025 ＝ <b style="color:var(--truth)">0.158 ＝ 15.8 個百分點</b></p>
+  <p>這就是「n＝10 的不確定度大約 ±16 個百分點」的來源。<b style="color:var(--ink)">注意這是最壞情況</b>——真正的 p 離 0.5 越遠，SE 越小。</p>
+
+  <p style="font-family:'Noto Serif TC',serif;font-weight:700;margin:14px 0 4px">第 2 步　兩組「差值」的不確定度</p>
+  <p>我們要比的不是單獨一組，是 <b>d ＝ p̂₁ − p̂₂</b> 這個差。兩組是各做各的、互相獨立，所以<b style="color:var(--ink)">變異數相加</b>（不是標準差相加，這一步學生一定會弄錯）：</p>
+  <p style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:2;color:var(--ink-2)">
+  Var(d) ＝ Var(p̂₁) ＋ Var(p̂₂) ＝ 0.158² ＋ 0.158²<br>
+  SE(d) ＝ √(0.158² ＋ 0.158²) ＝ 0.158 × √2 ＝ <b style="color:var(--truth)">0.224 ＝ 22.4 個百分點</b></p>
+  <p style="color:var(--truth)">為什麼不是 15.8 ＋ 15.8 ＝ 31.6？因為兩組的晃動是<b>互相獨立</b>的，不會每次都同方向疊加，有時候會互相抵消。相加的是<b>變異數</b>，開根號之後只放大 √2 ≈ 1.41 倍，不是 2 倍。</p>
+
+  <p style="font-family:'Noto Serif TC',serif;font-weight:700;margin:14px 0 4px">第 3 步　乘上判別係數</p>
+  <p>習慣上要差到 <b>1.96 個</b>差值標準誤，才敢說「這兩組真的不一樣」（1.96 就是常態分布下的 95%，粗估時直接記成 2）。</p>
+  <p style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:2;color:var(--ink-2)">
+  門檻 ＝ 1.96 × SE(d) ＝ 1.96 × 22.4 ＝ <b style="color:var(--truth)">43.8 ≈ 44 個百分點</b></p>
+
+  <div class="fxbox">\[\;\text{門檻}=1.96\times\sqrt{2}\times\sqrt{\dfrac{0.25}{n}}\;\]</div>
+
+  <p><b style="color:var(--ink)">把 n 代進去，一張表看完：</b></p>
+  <div class="scroll"><table class="dt">
+    <tr><th>一回滴幾顆<br>（n）</th><th>一組的 SE<br>（p＝0.5）</th><th>差值的 SE<br>＝SE×√2</th><th>判別門檻<br>＝1.96×差值SE</th><th>5 個條件<br>共幾顆</th><th>3 個條件<br>共幾顆</th></tr>
+    <tr><td>10</td><td>15.8 %</td><td>22.4 %</td><td style="color:var(--truth);font-weight:600">44 個百分點</td><td>50</td><td>30</td></tr>
+    <tr><td>20</td><td>11.2 %</td><td>15.8 %</td><td style="color:var(--truth);font-weight:600">31 個百分點</td><td>100</td><td>60</td></tr>
+    <tr><td>30</td><td>9.1 %</td><td>12.9 %</td><td style="color:var(--truth);font-weight:600">25 個百分點</td><td>150</td><td>90</td></tr>
+    <tr><td>50</td><td>7.1 %</td><td>10.0 %</td><td style="color:var(--truth);font-weight:600">20 個百分點</td><td>250</td><td>150</td></tr>
+  </table></div>
+
+  <p style="margin-top:8px"><b style="color:var(--truth)">這張表就是你們排實驗計畫的依據。</b>先問自己：「我預期兩組會差多少？」如果你猜只會差 20 個百分點，那 n＝10 做完也是白做——因為 44 的門檻你跨不過去。</p>
+</div>
+
+<div class="ask">
+  <p class="tosheet">寫進學習單 ⑩</p>
+  <p class="qt">用這張表，排出你自己那一組的實驗計畫</p>
+  <p>① 我預期最強的兩個條件之間，成功率會差大約 <span class="blank" style="min-width:80px"></span> 個百分點。<span style="font-size:12px;color:var(--ink-3)">（沒做過就先猜，做過 pilot 就用 pilot 的數字。）</span></p>
+  <p>② 查上表，要跨過這個差距，我一回至少要滴 <span class="blank" style="min-width:60px"></span> 顆。</p>
+  <p>③ 我打算做 <span class="blank" style="min-width:50px"></span> 個條件，總共要滴 <span class="blank" style="min-width:70px"></span> 顆，一顆抓 30 秒 ＝ <span class="blank" style="min-width:70px"></span> 分鐘。</p>
+  <p>④ 做不完的話，我要砍的是 <b style="color:var(--ink)">條件數</b> 還是 <b style="color:var(--ink)">n</b>？<span class="blank" style="min-width:70px"></span>　理由：<span class="blank" style="min-width:200px"></span></p>
+  <button class="rv">查看提示（想不出來再按）</button>
+  <div class="rvb" hidden>④ 想清楚兩件事的差別：<b>砍 n</b> → 門檻變高，每一個點都變得測不準，整份資料一起失效。<b>砍條件數</b> → 少畫幾個點，但留下來的每個點都站得住。<br>哪一種比較像「做了白做」？</div>
+
+  
 </div>
 
 <div class="story" style="margin-top:14px">
   <p class="t">示範題目 B：類別變因（換一種測量值）</p>
   <p class="simnote">模擬數據 · 不是實驗結果</p>
   <p><b style="color:var(--ink)">題目：</b>在同樣的滴管、高度、濃度、溫度下，探討<b style="color:var(--ink)">水的種類（去離子水／自來水／礦泉水）</b>對<b style="color:var(--ink)">反泡泡存活時間（秒）</b>的影響。</p>
-  <p><b style="color:var(--ink)">怎麼得到一個原始數字：</b>放一顆反泡泡，用碼錶量到它破掉為止 → <b>1 個存活時間</b>，這就是 1 個原始數字。<b style="color:var(--ink)">不用數 10 試</b>——這裡的測量值本身就是連續的數字。</p>
-  <p>同一種水量 <b>3 顆</b>，得到 3 個存活時間，取平均 ＝ 這一回。<b style="color:var(--ink)">所以 n ＝ 3。</b></p>
-  <p style="color:var(--truth)">比較一下 A 題與 B 題：一個要先定義「成功」再數次數，一個直接量到一個數字。<b>但兩題的 n 都是「一回裡有幾個原始數字」，都是 3。</b></p>
+  <p><b style="color:var(--ink)">怎麼得到一個原始數字：</b>放一顆反泡泡，用碼錶量到它破掉為止 → <b>1 個存活時間</b>，這就是 1 個原始數字。<b style="color:var(--ink)">不用先定義「成功」、也不用數個數</b>——這裡的測量值本身就是連續的數字。</p>
+  <p>同一種水量 <b>3 顆</b>，得到 3 個存活時間，取平均 ＝ 這一回。<b style="color:var(--ink)">所以 n ＝ 3。</b>（課堂示範才用 3；真要下結論，這個 n 太小。）</p>
+  <p style="color:var(--truth)">比較一下 A 題與 B 題：<b>A 題的原始數字是 0／1（要先定義成功），B 題的原始數字是秒數（直接量到）。A 題 n＝10、B 題 n＝3，數字不同</b>——但兩題的 n 都是同一個意思：<b>一回裡有幾筆原始數字</b>。</p>
+  <p style="color:var(--truth)"><b>真正的差別在 σ：</b>A 題的 σ 有公式（√(p(1−p))），不做實驗就算得出來；B 題的 σ 沒有公式，只能從那 3 個秒數算 s 去估。<b>所以 B 題更需要把 n 加大</b>——n＝3 估出來的 s 本身就很不可靠。</p>
 </div>
 
 <div class="pnl" style="margin-top:8px">
@@ -517,7 +641,7 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
 
 <div class="pair" style="margin-top:8px">
   <div class="pnl">
-    <div class="ph"><span class="pn"><span class="tag">± 1 SE</span></span><span class="pc">＝ ±s÷√3</span></div>
+    <div class="ph"><span class="pn"><span class="tag">± 1 SE</span></span><span class="pc">＝ ±s÷√3（B 題 n＝3）</span></div>
     <svg id="catSE" viewBox="0 0 360 190"></svg>
   </div>
   <div class="pnl">
@@ -547,6 +671,8 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
   <p>礦泉水跟另外兩種都重疊，所以只能說 <span class="blank" style="min-width:120px"></span>。它的誤差線特別長，代表 <span class="blank" style="min-width:190px"></span>。</p>
   <button class="rv">查看提示（想不出來再按）</button>
   <div class="rvb" hidden>先只用眼睛：把三根誤差線的上下端投影到縱軸上，哪兩根完全沒有交集？<br>誤差線特別長 → 回去看原始數據表，那一列的三個數字長什麼樣？</div>
+
+  
 </div>
 
 <h2><span class="num">08</span>重疊了，然後呢？</h2>
@@ -569,6 +695,8 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
   <p>下排兩張：散布一樣，但平均差不同 → 我選 <span class="blank" style="min-width:70px"></span>，因為 <span class="blank" style="min-width:200px"></span>。</p>
   <p>對照上下兩張圖：鐘形的<b>最高點</b>對到誤差線的 <span class="blank" style="min-width:110px"></span>；鐘形的<b>胖瘦</b>對到誤差線的 <span class="blank" style="min-width:110px"></span>。</p>
   <p>所以「兩組差不差得出來」，要同時看 <span class="blank" style="min-width:110px"></span> 和 <span class="blank" style="min-width:110px"></span> 兩件事。</p>
+
+  
 </div>
 
 <p class="note" style="margin-top:12px">誤差線明顯不重疊 → 可以說「有差」。重疊很多 → 只能說「看不出來」。<b>重疊不代表一定沒差，只代表你這份資料講不出來。</b>那要怎麼辦？——把判斷交給計算，這叫<b>推論統計</b>。</p>
@@ -594,13 +722,16 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
   <p><b style="color:var(--ink)">A 題</b>（液溫 5/10/20/30/50 °C vs 成功率）：X 是 <span class="blank" style="min-width:80px"></span>、Y 是 <span class="blank" style="min-width:80px"></span> → 關鍵字 <span class="blank" style="min-width:110px"></span>。</p>
   <p><b style="color:var(--ink)">B 題</b>（三種水 vs 存活時間）：X 是 <span class="blank" style="min-width:80px"></span>、Y 是 <span class="blank" style="min-width:80px"></span> → 關鍵字 <span class="blank" style="min-width:110px"></span>。</p>
   <p><b style="color:var(--ink)">我自己這一組的題目：</b>X 是 <span class="blank" style="min-width:80px"></span>、Y 是 <span class="blank" style="min-width:80px"></span> → 關鍵字 <span class="blank" style="min-width:110px"></span>。</p>
+
+  
 </div>
 
 <div class="sheet" style="margin-top:12px"><b>寫進小組學習單 ③ ④</b>
 ③ σ／s／SE 三個各是什麼、n 從 1 變到 5 哪一個變窄了（附計算）、做更多回 SE 會不會變小——都要寫理由。<br>
-④ 成功怎麼定義（或測量值是什麼）、一個原始數字怎麼來、一回幾個原始數字（不准寫「因為要三次」）、誤差線畫哪一個、要畫哪一種圖、<b>如果誤差線重疊要用哪一種推論統計（寫關鍵字）</b>。</div>
+④ 成功怎麼定義（或測量值是什麼）、<b>一筆</b>原始數字怎麼來、一回幾筆原始數字（不准寫「因為要三次」）、誤差線畫哪一個、要畫哪一種圖、<b>如果誤差線重疊要用哪一種推論統計（寫關鍵字）</b>。<br>
+<b style="color:var(--truth)">⑩（v15 新增）</b>用判別門檻表排出自己那一組的計畫：預期差幾個百分點 → 一回至少要滴幾顆 → 做幾個條件、共幾顆、幾分鐘 → 做不完要砍條件數還是砍 n。</div>
 
-<footer>骰子母體：平均 μ＝3.5、母體標準差 σ＝1.708｜SE 公式值 ＝ σ ÷ √n<br>v14 · 2026-09-10</footer>
+<footer>骰子母體：平均 μ＝3.5、母體標準差 σ＝1.708｜SE 公式值 ＝ σ ÷ √n<br>v15 學生版 · 2026-09-16</footer>
 </div>
 <script>
 (function(){
@@ -932,19 +1063,34 @@ function drawBridge(){
 }
 
 /* ---------- 07 反泡泡 ---------- */
-var NR=3;
-var CONT={xs:[5,10,20,30,50], unit:"%", ymax:100,
-  raw:[[20,30,50],[40,40,60],[50,60,70],[60,70,70],[20,40,60]]};
-var CAT={c:["去離子水","自來水","礦泉水"], unit:" 秒", ymax:16,
+/* A 題：原始數字 ＝ 一顆泡泡的 0／1，一回 n＝10 顆 */
+var CONT={xs:[5,10,20,30,50], unit:"%", ymax:100, n:10,
+  raw:[[0,0,1,0,0,0,1,0,0,0],   /*  5 °C → 2/10 = 20% */
+       [1,0,0,1,0,1,0,0,1,0],   /* 10 °C → 4/10 = 40% */
+       [1,1,0,1,0,1,1,0,1,0],   /* 20 °C → 6/10 = 60% */
+       [1,1,1,0,1,1,0,1,1,0],   /* 30 °C → 7/10 = 70% */
+       [0,1,0,0,1,1,0,1,0,0]]}; /* 50 °C → 4/10 = 40% */
+/* B 題：原始數字 ＝ 一顆泡泡的存活秒數，一回 n＝3 顆 */
+var CAT={c:["去離子水","自來水","礦泉水"], unit:" 秒", ymax:16, n:3,
   raw:[[9.2,8.4,8.8],[4.6,3.9,5.3],[7.4,5.1,8.6]]};
-function derive(o){ o.m=o.raw.map(mean); o.s=o.raw.map(sd); o.se=o.s.map(function(v){return v/Math.sqrt(NR);}); }
-derive(CONT); derive(CAT);
+function derive(o,scale){ scale=scale||1;
+  o.m =o.raw.map(function(a){return mean(a)*scale;});
+  o.s =o.raw.map(function(a){return sd(a)*scale;});
+  o.se=o.s.map(function(v){return v/Math.sqrt(o.n);});
+  /* 0／1 資料的第二條路：SE ＝ √(p(1−p)/n)，供表格對照 */
+  o.seB=o.raw.map(function(a){var q=mean(a);return Math.sqrt(q*(1-q)/o.n)*scale;});
+}
+derive(CONT,100); derive(CAT,1);
 
+var XL="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 function rawTable(host, firstHead, labels, o, dec, colHead){
-  var h='<table class="dt"><tr><th class="xl"></th><th class="xl">A</th><th class="xl">B</th><th class="xl">C</th>'
-   +'<th class="xl">D</th><th class="xl">E</th><th class="xl">F</th><th class="xl">G</th></tr>';
-  h+='<tr><td class="xl">1</td><th>'+firstHead+'</th><th>'+colHead+'<br>①</th><th>'+colHead+'<br>②</th><th>'+colHead+'<br>③</th>'
-   +'<th>平均 ȳ<br><span style="font-weight:400">圖上的點</span></th><th>s</th><th>SE<br><span style="font-weight:400">＝s÷√3</span></th></tr>';
+  var k=o.n, cols=k+4;
+  var h='<table class="dt"><tr><th class="xl"></th>';
+  for(var c=0;c<cols;c++) h+='<th class="xl">'+XL[c]+'</th>';
+  h+='</tr><tr><td class="xl">1</td><th>'+firstHead+'</th>';
+  for(var j=0;j<k;j++) h+='<th>'+colHead+'<br>'+(j+1)+'</th>';
+  h+='<th>平均<br><span style="font-weight:400">圖上的點</span></th><th>s</th>'
+    +'<th>SE<br><span style="font-weight:400">＝s÷√'+k+'</span></th></tr>';
   labels.forEach(function(lb,i){
     h+='<tr><td class="xl">'+(i+2)+'</td><td class="lb">'+lb+'</td>'
       +o.raw[i].map(function(v){return '<td>'+v.toFixed(dec)+o.unit+'</td>';}).join("")
@@ -953,7 +1099,29 @@ function rawTable(host, firstHead, labels, o, dec, colHead){
   });
   document.getElementById(host).innerHTML=h+'</table>';
 }
-rawTable("rawCont","液溫 °C",CONT.xs.map(function(v){return v+" °C";}),CONT,0,"成功率<br><span style=\"font-weight:400\">10 試</span>");
+/* A 題：0／1 表，末欄多一欄公式路 SE 對照 */
+function rawTableBinom(host, firstHead, labels, o){
+  var k=o.n, cols=k+5;
+  var h='<table class="dt"><tr><th class="xl"></th>';
+  for(var c=0;c<cols;c++) h+='<th class="xl">'+XL[c]+'</th>';
+  h+='</tr><tr><td class="xl">1</td><th>'+firstHead+'</th>';
+  for(var j=0;j<k;j++) h+='<th>第'+(j+1)+'顆</th>';
+  h+='<th>成功率 p̂<br><span style="font-weight:400">＝這 '+k+' 筆的平均<br>＝圖上的點</span></th>'
+    +'<th>s<br><span style="font-weight:400">STDEV.S</span></th>'
+    +'<th>SE<br><span style="font-weight:400">＝s÷√'+k+'</span></th>'
+    +'<th>SE 公式路<br><span style="font-weight:400">＝√(p(1−p)/'+k+')</span></th></tr>';
+  labels.forEach(function(lb,i){
+    var cnt=o.raw[i].reduce(function(a,b){return a+b;},0);
+    h+='<tr><td class="xl">'+(i+2)+'</td><td class="lb">'+lb+'</td>'
+      +o.raw[i].map(function(v){return '<td style="color:'+(v?'var(--accent);font-weight:600':'var(--ink-3)')+'">'+v+'</td>';}).join("")
+      +'<td style="color:var(--accent);font-weight:600">'+cnt+'/'+k+' ＝ '+o.m[i].toFixed(0)+'%</td>'
+      +'<td>'+o.s[i].toFixed(1)+'</td>'
+      +'<td style="color:var(--truth);font-weight:600">'+o.se[i].toFixed(1)+'</td>'
+      +'<td style="color:var(--truth)">'+o.seB[i].toFixed(1)+'</td></tr>';
+  });
+  document.getElementById(host).innerHTML=h+'</table>';
+}
+rawTableBinom("rawCont","液溫 °C",CONT.xs.map(function(v){return v+" °C";}),CONT);
 rawTable("rawCat","水的種類",CAT.c,CAT,1,"存活時間");
 
 function frame(s,AL,AR,B,T,ymax,ticks,ylab,xlab){
