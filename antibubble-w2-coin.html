@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>頁二｜形成率就是擲硬幣</title>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+:root{
+  --ground:#F6F7F5;--panel:#FFFFFF;--ink:#1A1E1C;--ink-2:#4A534E;--ink-3:#7C857F;
+  --line:#DDE2DD;--line-2:#EDF0EC;--accent:#2E6B5E;--accent-soft:#DCE8E4;
+  --truth:#BE5F26;--mine:#C0392B;--dim:#C4CBC6;--alt:#4A6FA5;--alt-soft:#DCE4F0;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#121614;--panel:#1A201D;--ink:#EDF1EE;--ink-2:#AFB9B4;--ink-3:#7C8781;
+  --line:#2C3531;--line-2:#222925;--accent:#6BC0AA;--accent-soft:#22322D;
+  --truth:#E08B4E;--mine:#F0705E;--dim:#39423E;--alt:#8FB0DE;--alt-soft:#232C39;
+}}
+:root[data-theme="dark"]{
+  --ground:#121614;--panel:#1A201D;--ink:#EDF1EE;--ink-2:#AFB9B4;--ink-3:#7C8781;
+  --line:#2C3531;--line-2:#222925;--accent:#6BC0AA;--accent-soft:#22322D;
+  --truth:#E08B4E;--mine:#F0705E;--dim:#39423E;--alt:#8FB0DE;--alt-soft:#232C39;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  line-height:1.7;-webkit-text-size-adjust:100%}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 56px;display:flex;flex-direction:column;gap:14px}
+header{display:flex;flex-direction:column;gap:5px}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{font-family:"Noto Serif TC",serif;font-weight:700;font-size:27px;line-height:1.3;margin:0;text-wrap:balance}
+.sub{color:var(--ink-2);font-size:14px;margin:0}
+h2{font-family:"Noto Serif TC",serif;font-size:20px;margin:24px 0 0;font-weight:700}
+h2 .num{font-family:"IBM Plex Mono",monospace;font-size:13px;color:var(--accent);margin-right:8px}
+
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tab{font-family:"IBM Plex Mono",monospace;font-size:14px;font-weight:600;cursor:pointer;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink-2);
+  border-radius:8px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.3}
+.tab .st{font-size:10px;font-weight:400;color:var(--ink-3);font-family:"Noto Sans TC",sans-serif}
+.tab[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.console{display:grid;grid-template-columns:1fr;gap:12px;background:var(--panel);
+  border:1px solid var(--accent);border-radius:12px;padding:12px}
+@media (min-width:600px){ .console{grid-template-columns:1.35fr 1fr} }
+.cL{min-width:0}
+.cR{display:flex;flex-direction:column;gap:9px;justify-content:flex-start}
+.ph{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:0 2px 3px}
+.pn{font-family:"IBM Plex Mono",monospace;font-size:14px;font-weight:600}
+.pc{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+svg{display:block;width:100%;height:auto}
+.stats{display:flex;gap:14px;padding:4px 2px 0;font-family:"IBM Plex Mono",monospace;
+  font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--ink-3);flex-wrap:wrap}
+.stats b{font-weight:600;font-size:13.5px}
+.sev b{color:var(--accent)}
+
+.tray{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;min-height:52px;align-items:center}
+.die{width:46px;height:46px;border-radius:9px;background:var(--accent);position:relative;
+  box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.die.empty{background:var(--panel);border:1px dashed var(--line);box-shadow:none}
+.die i{position:absolute;width:8px;height:8px;border-radius:50%;background:#FFF}
+.die.rolling{animation:shake .16s linear infinite}
+@keyframes shake{0%{transform:rotate(-7deg) translateY(0)}50%{transform:rotate(7deg) translateY(-3px)}100%{transform:rotate(-7deg)}}
+@media (prefers-reduced-motion:reduce){.die.rolling{animation:none}}
+.mean{text-align:center;font-family:"IBM Plex Mono",monospace;font-size:15px;font-weight:600;
+  color:var(--accent);background:var(--accent-soft);border-radius:8px;padding:7px 10px}
+.mean small{display:block;font-size:10.5px;color:var(--ink-3);font-weight:400;font-family:"Noto Sans TC",sans-serif}
+
+button{font-family:inherit;font-size:15px;font-weight:500;cursor:pointer;border-radius:8px;
+  padding:11px 14px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+button:hover:not(:disabled){border-color:var(--accent)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button:disabled{opacity:.4;cursor:default}
+.primary{background:var(--accent);color:var(--ground);border-color:var(--accent);font-weight:700;font-size:16px}
+.danger{font-size:12.5px;padding:8px 10px;color:var(--ink-3)}
+.danger.armed{border-color:var(--mine);color:var(--mine);font-weight:700}
+.row{display:flex;gap:7px}
+.row button{flex:1}
+.hint{font-size:12.5px;color:var(--ink-3);margin:0;padding:0 2px}
+
+.grid4{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+
+.grid4{grid-template-columns:repeat(2,1fr)}
+@media (min-width:760px){ .grid4{grid-template-columns:repeat(5,1fr)} }
+.mini{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 8px 5px}
+.mini .mh{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;
+  font-size:11.5px;color:var(--ink-3);padding-bottom:2px}
+.mini .mh b{color:var(--ink)}
+.mini .ms{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);
+  display:flex;justify-content:space-between;padding-top:3px}
+.mini .ms .se{color:var(--accent);font-weight:600}
+
+.defs{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:600px){ .defs{grid-template-columns:1fr 1fr} }
+.def{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+.def h3{margin:0 0 2px;font-family:"Noto Serif TC",serif;font-size:17px;color:var(--ink)}
+.def .en{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);letter-spacing:.06em}
+.def dl{margin:0;font-size:13.5px;line-height:1.7}
+.def dt{color:var(--ink-3);font-size:11.5px;margin-top:7px}
+.def dd{margin:0;color:var(--ink-2)}
+.def dd b{color:var(--ink)}
+
+.mine{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;
+  display:flex;flex-direction:column;gap:10px}
+.mine p{margin:0;font-size:14px;color:var(--ink-2)}
+.mrow{display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap}
+.mbox{display:flex;flex-direction:column}
+.mbox .k{font-size:11px;color:var(--ink-3)}
+.mbox .v{font-family:"IBM Plex Mono",monospace;font-size:23px;font-weight:600;font-variant-numeric:tabular-nums}
+.mbox.err .v{color:var(--mine)}
+.mbox .n{font-size:11px;color:var(--ink-3)}
+
+.note{border-left:2px solid var(--accent);padding:2px 0 2px 12px;font-size:13.5px;color:var(--ink-2);margin:0}
+.note b{color:var(--ink);font-weight:700}
+.q{background:var(--accent-soft);border-radius:10px;padding:14px;font-size:14.5px;color:var(--ink)}
+.q b{font-family:"Noto Serif TC",serif;font-size:16px;display:block;margin-bottom:4px}
+.pnl{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 11px 7px}
+.toggle{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.toggle button{border:none;border-radius:0;padding:7px 13px;font-size:13px;font-weight:600;background:var(--panel);color:var(--ink-3)}
+.toggle button[aria-pressed="true"]{background:var(--accent);color:var(--ground)}
+.simnote{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--truth);font-weight:600;padding:0 2px 3px;margin:0}
+.rules{margin:6px 0 0;padding-left:18px;font-size:13.5px;color:var(--ink-2);line-height:1.75}
+.rules b{color:var(--ink)}
+.sheet{background:var(--accent-soft);border-radius:10px;padding:13px 15px;font-size:14px;color:var(--ink)}
+.sheet b{font-family:"Noto Serif TC",serif;display:block;margin-bottom:5px;font-size:15px}
+.story{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+.story .t{font-family:"Noto Serif TC",serif;font-size:15px;color:var(--ink);font-weight:700;margin:0 0 6px}
+.story p{margin:0 0 8px;font-size:13.5px;color:var(--ink-2);line-height:1.75}
+.story p:last-child{margin:0}
+.story code{font-family:"IBM Plex Mono",monospace;font-size:12.5px;background:var(--accent-soft);
+  color:var(--accent);padding:1px 5px;border-radius:4px}
+footer{font-size:12px;color:var(--ink-3);text-align:center;padding-top:8px}
+@media (prefers-reduced-motion:no-preference){.pop{animation:pop .18s ease-out}}
+@keyframes pop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+
+.katex{font-size:1.02em}
+.fxbox{background:var(--accent-soft);border-radius:7px;padding:10px 11px;margin:9px 0;text-align:center;color:var(--accent);overflow-x:auto}
+.ask{background:var(--panel);border:1px solid var(--truth);border-radius:10px;padding:13px 14px;margin-top:8px}
+.ask .qt{font-family:"Noto Serif TC",serif;font-weight:700;font-size:15px;color:var(--ink);margin:0 0 5px}
+.ask p{margin:0 0 6px;font-size:13.5px;color:var(--ink-2);line-height:1.75}
+.ask .blank{display:inline-block;min-width:104px;border-bottom:1.5px dashed var(--truth);
+  height:1.25em;vertical-align:-2px;margin:0 3px}
+.rv{font-size:12.5px;padding:6px 11px;border-color:var(--truth);color:var(--truth);background:transparent;font-weight:600}
+.rvb{margin-top:8px;border-left:2px solid var(--truth);padding:2px 0 2px 11px;font-size:13px;color:var(--ink-2);line-height:1.75}
+.rvb b{color:var(--ink)}
+.tosheet{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--truth);font-weight:600;margin:0 0 6px}
+table.dt{border-collapse:collapse;width:100%;font-size:12.5px;margin-top:6px}
+table.dt th,table.dt td{border:1px solid var(--line);padding:5px 7px;text-align:center;
+  font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+table.dt th{background:var(--accent-soft);color:var(--accent);font-weight:600;font-size:11.5px;
+  font-family:"Noto Sans TC",sans-serif}
+table.dt td.lb{font-family:"Noto Sans TC",sans-serif;text-align:left;color:var(--ink-2)}
+table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-weight:600;
+  font-family:"IBM Plex Mono",monospace}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.terms{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.terms th,.terms td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+.terms th{background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600;white-space:nowrap}
+.terms code{font-family:"IBM Plex Mono",monospace;font-size:11.5px;background:var(--line-2);
+  color:var(--ink);padding:1px 4px;border-radius:4px;word-break:break-all}
+.stat3{display:grid;grid-template-columns:1fr;gap:5px;padding:6px 2px 0}
+.s3{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+  font-size:11.5px;color:var(--ink-3);border-bottom:1px dotted var(--line);padding-bottom:3px}
+.s3 .k{font-family:"Noto Sans TC",sans-serif}
+.s3 .k em{font-style:normal;font-family:"IBM Plex Mono",monospace;color:var(--ink-2);font-weight:600}
+.s3 b{font-family:"IBM Plex Mono",monospace;font-size:14px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.s3.a b{color:var(--accent)}
+.s3.t b{color:var(--truth)}
+.pair{display:grid;grid-template-columns:1fr;gap:8px}
+@media (min-width:560px){ .pair{grid-template-columns:1fr 1fr} }
+.pair .pnl{margin:0}
+.tag{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;
+  padding:2px 7px;border-radius:5px;background:var(--accent-soft);color:var(--accent)}
+.tag.s{background:var(--alt-soft);color:var(--alt)}
+.quad{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.quad th,.quad td{border:1px solid var(--line);padding:9px 10px;vertical-align:top;text-align:left}
+.quad th{background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600}
+.quad td b{color:var(--ink)}
+.quad .kw{font-family:"IBM Plex Mono",monospace;color:var(--truth);font-weight:700}
+
+.ans{margin-top:10px;border:1px solid var(--accent);background:var(--accent-soft);
+  border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.85;color:var(--ink)}
+.ans .al{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:10.5px;
+  letter-spacing:.08em;font-weight:700;color:var(--accent);margin-bottom:4px}
+.ans .al::after{content:"";display:block}
+.ans .tn{margin-top:7px;padding-top:6px;border-top:1px dashed var(--accent);
+  font-size:12.5px;color:var(--ink-2)}
+.tbanner{background:var(--truth);color:#fff;border-radius:10px;padding:11px 14px;
+  font-size:13.5px;line-height:1.75;font-weight:500}
+.tbanner b{color:#fff}
+
+.pgnav{display:grid;grid-template-columns:1fr 1fr;gap:6px;position:sticky;top:0;z-index:5;background:var(--ground);padding:6px 0}
+.pgb{font:600 14px "Noto Sans TC",sans-serif;border:1px solid var(--line);background:var(--panel);color:var(--ink-2);border-radius:10px;padding:10px 6px;cursor:pointer;line-height:1.35}
+.pgb[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.coins{display:flex;flex-wrap:wrap;gap:3px;min-height:26px}
+.coin{width:18px;height:18px;border-radius:50%;display:inline-block;border:1.5px solid var(--accent)}
+.coin.h{background:var(--accent)}
+.seg{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.seg button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:13.5px;font-variant-numeric:tabular-nums}
+.kv b{font-family:"IBM Plex Mono",monospace}
+</style>
+</head><body>
+<div class="wrap">
+<header>
+  <span class="eyebrow">反泡泡 W2 · 頁二 回到反泡泡</span>
+  <h1>形成率就是擲硬幣</h1>
+  <p class="sub">做完「頁一｜骰子」再來這一頁。上半部擲硬幣，看形成率的 SE 最大是多少；下半部是老師的示範題（模擬數據），可以切換。</p>
+</header>
+<h2><span class="num">P2</span>回到反泡泡：每一顆都是一枚硬幣</h2>
+<div class="story">
+  <p class="t">先對好：你的實驗裡，什麼是「一個原始數字」？</p>
+  <div class="scroll"><table class="terms">
+    <tr><th style="width:24%">說法</th><th>形成率</th><th>存活秒數</th></tr>
+    <tr><td><b>一個原始數字</b></td><td>一顆反泡泡：形成記 1、沒形成記 0</td><td>有形成的那一顆撐幾秒（沒形成的留空白，不是 0）</td></tr>
+    <tr><td><b>一回（圖上一個點）</b></td><td>一個條件滴的全部顆數，取平均 ＝ 形成率</td><td>有形成那幾顆的秒數平均</td></tr>
+    <tr><td><b>進到公式的 n</b></td><td>這個條件滴的<b>總顆數</b></td><td><b>有形成</b>的顆數</td></tr>
+    <tr><td><b>拆成輪</b></td><td colspan="2">同一個條件的顆數，拆成至少 3 輪、每輪顆數一樣，和別的條件交錯做（甲輪1→乙輪1→甲輪2…）。拆輪不會改變 n，只是讓「溶液慢慢變差」不會被誤當成旋鈕的效果。</td></tr>
+  </table></div>
+  <p>形成只有 0 和 1 兩種結果——就跟擲硬幣一樣。所以下面用<b>硬幣</b>來模擬形成率：一枚硬幣＝一顆反泡泡，正面＝形成。</p>
+</div>
+
+<h2><span class="num">P3</span>擲硬幣：一回擲 n 枚，算正面的比例</h2>
+<div class="console" style="grid-template-columns:1fr">
+  <div class="seg"><span style="font-size:13px;color:var(--ink-3)">一回幾枚 n：</span>
+    <button class="cn" data-n="5">5</button><button class="cn" data-n="15" aria-pressed="true">15</button><button class="cn" data-n="60">60</button></div>
+  <div class="seg"><span style="font-size:13px;color:var(--ink-3)">正面機率 p：</span>
+    <button class="cp" data-p="0.5" aria-pressed="true">0.5</button><button class="cp" data-p="0.7">0.7</button><button class="cp" data-p="0.9">0.9</button></div>
+  <div class="coins" id="coins"></div>
+  <svg id="chist" viewBox="0 0 600 220" aria-label="200 回的形成率分布"></svg>
+  <div class="kv" id="ckv"></div>
+  <div class="seg"><button id="c1">做 1 回</button><button id="cfill">一鍵補到 200 回</button><button id="creset">清空重做</button></div>
+  <p style="font-size:12.5px;color:var(--ink-3);margin:0">每換一個 n 或 p，就是一組新的模擬。每一組都按到 200 回再抄數字。</p>
+</div>
+
+<div class="story">
+  <p class="qt">寫進學習單二 第二部分</p>
+  <p>⑤ 把 p 換成 0.5、0.7、0.9，n 固定 15，看「一回裡 0／1 的 s」：p＝<span class="blank" style="min-width:50px"></span> 的時候 s 最大，最大是 <span class="blank" style="min-width:50px"></span>。</p>
+  <p>所以實驗之前不知道 p 時，形成率的 SE 一律用 <b>√(0.25 ÷ n)</b>——這是<span class="blank" style="min-width:70px"></span>的情況，算出來會<span class="blank" style="min-width:50px"></span>，比較保守。</p>
+  <button class="rv">查看提示（想不出來再按）</button>
+  <div class="rvb" hidden>0／1 資料的 s 只看 p：s ＝ √(p(1−p))。p＝0.5 時 0.5×0.5＝0.25，開根號 0.5，是最大的；p 越接近 0 或 1，結果越整齊，s 越小。<br>你在做實驗之前不知道自己的 p，就先當最難猜的 0.5 來算——寧可把 SE 估大，也不要估小。</div>
+  <p>⑥ 形成率的 n 是 <span class="blank" style="min-width:120px"></span>；秒數的 n 是 <span class="blank" style="min-width:120px"></span>。</p>
+</div>
+
+<h2><span class="num">P4</span>兩個示範（模擬數據，不是實驗結果）：主角不一樣</h2>
+<div class="seg" style="margin-top:6px"><button class="ex" data-ex="1" aria-pressed="true">示範一｜硬水：秒數是主角</button><button class="ex" data-ex="2" aria-pressed="false">示範二｜溶液放多久：形成率是主角</button></div>
+
+<div class="story exb" id="ex1">
+  <p class="t">示範一：泡泡水加 CaCl₂（硬水），反泡泡會不會撐比較短？</p>
+  <p>押 <b>D 卡</b>（第 5 步）：Ca²⁺ 抓住帶負電的頭，膜上能用的分子變少、排得不密，空氣排得快。<br>→ <b>主角＝平均秒數</b>（預測變短）；<b>檢核＝形成率</b>（預測不變）。</p>
+  <p>預試：甲 0 g/L、乙 1 g/L，各 3 輪 × 5 顆，交錯做，共 30 顆。</p>
+  <div class="scroll"><table class="terms">
+    <tr><th></th><th>形成</th><th>形成率</th><th>形成率 SE</th><th>有秒數 n</th><th>平均秒數</th><th>s</th><th>秒數 SE</th></tr>
+    <tr><td><b>甲 0 g/L</b></td><td>11／15</td><td>73.3 %</td><td>12.9 pt</td><td>11</td><td>10.24 秒</td><td>2.46 秒</td><td>0.74 秒</td></tr>
+    <tr><td><b>乙 1 g/L</b></td><td>10／15</td><td>66.7 %</td><td>12.9 pt</td><td>10</td><td>6.52 秒</td><td>1.78 秒</td><td>0.56 秒</td></tr>
+  </table></div>
+  <p>看什麼：主角（秒數）看起來掉了；檢核（形成率）差不多。<b>今天不判斷有沒有差</b>——W3.5 再用尺量。</p>
+</div>
+
+<div class="story exb" id="ex2" hidden>
+  <p class="t">示範二：泡泡水放多久（新配 vs 放 1 天），反泡泡還做不做得出來？</p>
+  <p>押 <b>B 卡</b>（第 4 步初）：泡泡水放久了，能自由跑到新界面上的分子變少，空氣層剛撐開時<b>鋪得慢</b>，輸給 A 卡的倒數 → 瞬破變多。<br>→ <b>主角＝形成率</b>（預測變低）；<b>檢核＝平均秒數</b>（預測不變：只要生得出來，膜上排得一樣密）。</p>
+  <p>預試：甲 新配、乙 放 1 天（同一瓶分裝、加蓋），各 3 輪 × 5 顆，交錯做，共 30 顆。</p>
+  <div class="scroll"><table class="terms">
+    <tr><th></th><th>形成</th><th>形成率</th><th>形成率 SE</th><th>有秒數 n</th><th>平均秒數</th><th>s</th><th>秒數 SE</th></tr>
+    <tr><td><b>甲 新配</b></td><td>12／15</td><td>80.0 %</td><td>12.9 pt</td><td>12</td><td>8.96 秒</td><td>1.69 秒</td><td>0.49 秒</td></tr>
+    <tr><td><b>乙 放 1 天</b></td><td>7／15</td><td>46.7 %</td><td>12.9 pt</td><td>7</td><td>8.77 秒</td><td>1.60 秒</td><td>0.60 秒</td></tr>
+  </table></div>
+  <p>看什麼：主角（形成率）掉了；檢核（秒數）幾乎一樣。注意乙只有 7 顆有秒數——<b>形成率是主角時，秒數的 n 會被形成率拖小</b>，正式實驗要多做幾顆，秒數這個檢核才算得穩。</p>
+</div>
+
+<div class="story">
+  <p class="qt">兩個示範對照（寫進學習單二 ⑥ 旁邊）</p>
+  <div class="scroll"><table class="terms">
+    <tr><th></th><th>示範一 硬水</th><th>示範二 溶液放多久</th></tr>
+    <tr><td><b>押哪張卡</b></td><td>D 卡（第 5 步）</td><td>B 卡（第 4 步初）</td></tr>
+    <tr><td><b>主角</b></td><td>平均秒數</td><td>形成率</td></tr>
+    <tr><td><b>檢核</b></td><td>形成率、瞬破</td><td>平均秒數</td></tr>
+    <tr><td><b>形成率的 n</b></td><td colspan="2">都是每個條件的總顆數（15）→ SE 都是 12.9 pt</td></tr>
+    <tr><td><b>秒數的 n</b></td><td>11、10</td><td>12、7（形成得少，n 就小）</td></tr>
+  </table></div>
+  <p>兩個都是老師的題目，各組不能選；數字全是模擬的。你們組押的卡決定誰是主角——跟示範一還是示範二比較像？</p>
+</div>
+
+<div class="story">
+  <p class="qt">按按看：把上面硬幣設成 n＝15、p＝0.7，再設成 n＝60、p＝0.7</p>
+  <p>⑧ 形成率 SE 從 n＝15 到 n＝60，剩下幾倍？<span class="blank" style="min-width:60px"></span>（用 √(15÷60) 對對看）顆數變 4 倍，SE 只剩<span class="blank" style="min-width:60px"></span>。</p>
+</div>
+
+<footer>完成：2026-11-15</footer>
+</div>
+<script>
+Array.prototype.forEach.call(document.querySelectorAll(".rv"),function(b){b.onclick=function(){var box=b.nextElementSibling;box.hidden=!box.hidden;b.textContent=box.hidden?"查看提示（想不出來再按）":"收起提示";};});
+(function(){
+  document.querySelectorAll('.ex').forEach(function(b){b.onclick=function(){var k=b.dataset.ex;document.querySelectorAll('.ex').forEach(function(x){x.setAttribute('aria-pressed',x===b)});document.getElementById('ex1').hidden=(k!=='1');document.getElementById('ex2').hidden=(k!=='2');}});
+  var N=15,P=0.5,R=[],last=[];
+  var NS='http://www.w3.org/2000/svg';
+  function sdv(a){if(a.length<2)return null;var m=a.reduce(function(x,y){return x+y},0)/a.length;var q=a.reduce(function(x,y){return x+(y-m)*(y-m)},0);return Math.sqrt(q/(a.length-1));}
+  function one(){var c=[];for(var i=0;i<N;i++)c.push(Math.random()<P?1:0);last=c;R.push({p:c.reduce(function(a,b){return a+b},0)/N,s:sdv(c)});}
+  function draw(){
+    var cs=document.getElementById('coins');cs.innerHTML='';last.forEach(function(v){var e=document.createElement('span');e.className='coin'+(v?' h':'');cs.appendChild(e);});
+    var svg=document.getElementById('chist');while(svg.firstChild)svg.removeChild(svg.firstChild);
+    var L=40,Rr=585,B=190,T=15,bins={};var step=1/N;
+    R.forEach(function(r){var k=Math.round(r.p*N);bins[k]=(bins[k]||0)+1;});
+    var mx=1;for(var k in bins)mx=Math.max(mx,bins[k]);
+    function X(v){return L+v*(Rr-L);}
+    var ax=document.createElementNS(NS,'line');ax.setAttribute('x1',L);ax.setAttribute('x2',Rr);ax.setAttribute('y1',B);ax.setAttribute('y2',B);ax.setAttribute('stroke','var(--ink-3)');svg.appendChild(ax);
+    [0,0.25,0.5,0.75,1].forEach(function(v){var t=document.createElementNS(NS,'text');t.setAttribute('x',X(v));t.setAttribute('y',B+18);t.setAttribute('text-anchor','middle');t.setAttribute('font-size','12');t.setAttribute('fill','var(--ink-3)');t.textContent=(v*100)+'%';svg.appendChild(t);});
+    var tl=document.createElementNS(NS,'line');tl.setAttribute('x1',X(P));tl.setAttribute('x2',X(P));tl.setAttribute('y1',T);tl.setAttribute('y2',B);tl.setAttribute('stroke','var(--truth)');tl.setAttribute('stroke-dasharray','4 3');svg.appendChild(tl);
+    var w=Math.max(2,(Rr-L)*step*0.8);
+    for(var k in bins){var h=(B-T)*bins[k]/mx;var r=document.createElementNS(NS,'rect');r.setAttribute('x',X(k/N)-w/2);r.setAttribute('y',B-h);r.setAttribute('width',w);r.setAttribute('height',h);r.setAttribute('fill','var(--accent)');r.setAttribute('opacity','0.8');svg.appendChild(r);}
+    var ps=R.map(function(r){return r.p}),ss=R.map(function(r){return r.s}).filter(function(v){return v!==null});
+    var seM=sdv(ps), sAvg=ss.length?ss.reduce(function(a,b){return a+b},0)/ss.length:null;
+    var f=function(v,d){return v===null||isNaN(v)?'—':v.toFixed(d)};
+    document.getElementById('ckv').innerHTML=
+      '<span>已做</span><b>'+R.length+' / 200 回</b>'+
+      '<span>這一回的形成率</span><b>'+(last.length?f(last.reduce(function(a,b){return a+b},0)/N*100,1)+' %':'—')+'</b>'+
+      '<span>一回裡 0／1 的 s（平均）</span><b>'+f(sAvg,3)+'</b>'+
+      '<span>SE 實測（200 個形成率散多開）</span><b>'+f(seM,3)+'</b>'+
+      '<span>√(p(1−p)÷n)</span><b>'+Math.sqrt(P*(1-P)/N).toFixed(3)+'</b>'+
+      '<span>√(0.25÷n)（本課一律用這個）</span><b>'+Math.sqrt(0.25/N).toFixed(3)+'</b>';
+    document.getElementById('c1').disabled=R.length>=200; document.getElementById('cfill').disabled=R.length>=200;
+  }
+  function reset(){R=[];last=[];draw();}
+  document.querySelectorAll('.cn').forEach(function(b){b.onclick=function(){N=+b.dataset.n;document.querySelectorAll('.cn').forEach(function(x){x.setAttribute('aria-pressed',x===b)});reset();}});
+  document.querySelectorAll('.cp').forEach(function(b){b.onclick=function(){P=+b.dataset.p;document.querySelectorAll('.cp').forEach(function(x){x.setAttribute('aria-pressed',x===b)});reset();}});
+  document.getElementById('c1').onclick=function(){if(R.length<200){one();draw();}};
+  document.getElementById('cfill').onclick=function(){while(R.length<200)one();draw();};
+  var armed=false;document.getElementById('creset').onclick=function(){var b=this;if(!armed){armed=true;b.textContent='再按一次確定清空';setTimeout(function(){armed=false;b.textContent='清空重做'},2500);return;}armed=false;b.textContent='清空重做';reset();};
+  draw();
+})();
+
+</script>
+</body></html>
