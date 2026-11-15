@@ -147,6 +147,7 @@ footer{font-size:12px;color:var(--ink-3);text-align:center;padding-top:8px}
 .ask p{margin:0 0 6px;font-size:13.5px;color:var(--ink-2);line-height:1.75}
 .ask .blank{display:inline-block;min-width:104px;border-bottom:1.5px dashed var(--truth);
   height:1.25em;vertical-align:-2px;margin:0 3px}
+.story .blank{display:inline-block;min-width:60px;border-bottom:1.5px dashed var(--truth);height:1.25em;vertical-align:-2px;margin:0 3px}
 .rv{font-size:12.5px;padding:6px 11px;border-color:var(--truth);color:var(--truth);background:transparent;font-weight:600}
 .rvb{margin-top:8px;border-left:2px solid var(--truth);padding:2px 0 2px 11px;font-size:13px;color:var(--ink-2);line-height:1.75}
 .rvb b{color:var(--ink)}
@@ -238,16 +239,18 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
   <svg id="chist" viewBox="0 0 600 220" aria-label="200 回的形成率分布"></svg>
   <div class="kv" id="ckv"></div>
   <div class="seg"><button id="c1">做 1 回</button><button id="cfill">一鍵補到 200 回</button><button id="creset">清空重做</button></div>
+  <p style="font-size:12.5px;color:var(--ink-3);margin:0">學習單上 √(p(1−p)÷n) 和 √(0.25÷n) 兩欄，先自己按計算機算，算完再按下面的按鈕對答案。</p>
+  <div class="seg"><button id="cfx" hidden>算好了，對答案（公式值）</button></div>
   <p style="font-size:12.5px;color:var(--ink-3);margin:0">每換一個 n 或 p，就是一組新的模擬。每一組都按到 200 回再抄數字。</p>
 </div>
 
 <div class="story">
   <p class="qt">寫進學習單二 第二部分</p>
-  <p>⑥ 把 p 換成 0.5、0.7、0.9，n 固定 15，看「一回裡 0／1 的 s」：p＝<span class="blank" style="min-width:50px"></span> 的時候 s 最大，最大是 <span class="blank" style="min-width:50px"></span>。</p>
+  <p>⑦ 把 p 換成 0.5、0.7、0.9，n 固定 15，看「一回裡 0／1 的 s」：p＝<span class="blank" style="min-width:50px"></span> 的時候 s 最大，最大是 <span class="blank" style="min-width:50px"></span>。</p>
   <p>所以實驗之前不知道 p 時，形成率的 SE 一律用 <b>√(0.25 ÷ n)</b>——這是<span class="blank" style="min-width:70px"></span>的情況，算出來會<span class="blank" style="min-width:50px"></span>，比較保守。</p>
   <button class="rv">查看提示（想不出來再按）</button>
   <div class="rvb" hidden>0／1 資料的 s 只看 p：s ＝ √(p(1−p))。p＝0.5 時 0.5×0.5＝0.25，開根號 0.5，是最大的；p 越接近 0 或 1，結果越整齊，s 越小。<br>你在做實驗之前不知道自己的 p，就先當最難猜的 0.5 來算——寧可把 SE 估大，也不要估小。</div>
-  <p>⑦ 形成率的 n 是 <span class="blank" style="min-width:120px"></span>；秒數的 n 是 <span class="blank" style="min-width:120px"></span>。</p>
+  <p>⑧ 形成率的 n 是 <span class="blank" style="min-width:120px"></span>；秒數的 n 是 <span class="blank" style="min-width:120px"></span>。</p>
 </div>
 
 <h2><span class="num">P4</span>兩個示範（模擬數據，不是實驗結果）：主角不一樣</h2>
@@ -278,7 +281,7 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
 </div>
 
 <div class="story">
-  <p class="qt">兩個示範對照（寫進學習單二 ⑦ 旁邊）</p>
+  <p class="qt">兩個示範對照（寫進學習單二 ⑧ 旁邊）</p>
   <div class="scroll"><table class="terms">
     <tr><th></th><th>示範一 硬水</th><th>示範二 溶液放多久</th></tr>
     <tr><td><b>押哪張卡</b></td><td>D 卡（第 5 步）</td><td>B 卡（第 4 步初）</td></tr>
@@ -292,7 +295,7 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
 
 <div class="story">
   <p class="qt">按按看：把上面硬幣設成 n＝15、p＝0.7，再設成 n＝60、p＝0.7</p>
-  <p>⑨ 形成率 SE 從 n＝15 到 n＝60，剩下幾倍？<span class="blank" style="min-width:60px"></span>（用 √(15÷60) 對對看）顆數變 4 倍，SE 只剩<span class="blank" style="min-width:60px"></span>。</p>
+  <p>⑩ 形成率 SE 從 n＝15 到 n＝60，剩下幾倍？<span class="blank" style="min-width:60px"></span>（用 √(15÷60) 對對看）顆數變 4 倍，SE 只剩<span class="blank" style="min-width:60px"></span>。</p>
 </div>
 
 <footer>完成：2026-11-16</footer>
@@ -301,6 +304,7 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
 Array.prototype.forEach.call(document.querySelectorAll(".rv"),function(b){b.onclick=function(){var box=b.nextElementSibling;box.hidden=!box.hidden;b.textContent=box.hidden?"查看提示（想不出來再按）":"收起提示";};});
 (function(){
   document.querySelectorAll('.ex').forEach(function(b){b.onclick=function(){var k=b.dataset.ex;document.querySelectorAll('.ex').forEach(function(x){x.setAttribute('aria-pressed',x===b)});document.getElementById('ex1').hidden=(k!=='1');document.getElementById('ex2').hidden=(k!=='2');}});
+  var SHOWFX=false;
   var N=15,P=0.5,R=[],last=[];
   var NS='http://www.w3.org/2000/svg';
   function sdv(a){if(a.length<2)return null;var m=a.reduce(function(x,y){return x+y},0)/a.length;var q=a.reduce(function(x,y){return x+(y-m)*(y-m)},0);return Math.sqrt(q/(a.length-1));}
@@ -325,11 +329,13 @@ Array.prototype.forEach.call(document.querySelectorAll(".rv"),function(b){b.oncl
       '<span>這一回的形成率</span><b>'+(last.length?f(last.reduce(function(a,b){return a+b},0)/N*100,1)+' %':'—')+'</b>'+
       '<span>一回裡 0／1 的 s（平均）</span><b>'+f(sAvg,3)+'</b>'+
       '<span>SE 實測（200 個形成率散多開）</span><b>'+f(seM,3)+'</b>'+
-      '<span>√(p(1−p)÷n)</span><b>'+Math.sqrt(P*(1-P)/N).toFixed(3)+'</b>'+
-      '<span>√(0.25÷n)（本課一律用這個）</span><b>'+Math.sqrt(0.25/N).toFixed(3)+'</b>';
+      (SHOWFX?'<span>√(p(1−p)÷n)</span><b>'+Math.sqrt(P*(1-P)/N).toFixed(3)+'</b>'+
+      '<span>√(0.25÷n)</span><b>'+Math.sqrt(0.25/N).toFixed(3)+'</b>':'');
+    var fb=document.getElementById('cfx'); fb.hidden=SHOWFX||R.length<200;
     document.getElementById('c1').disabled=R.length>=200; document.getElementById('cfill').disabled=R.length>=200;
   }
-  function reset(){R=[];last=[];draw();}
+  function reset(){R=[];last=[];SHOWFX=false;draw();}
+  document.getElementById('cfx').onclick=function(){SHOWFX=true;draw();};
   document.querySelectorAll('.cn').forEach(function(b){b.onclick=function(){N=+b.dataset.n;document.querySelectorAll('.cn').forEach(function(x){x.setAttribute('aria-pressed',x===b)});reset();}});
   document.querySelectorAll('.cp').forEach(function(b){b.onclick=function(){P=+b.dataset.p;document.querySelectorAll('.cp').forEach(function(x){x.setAttribute('aria-pressed',x===b)});reset();}});
   document.getElementById('c1').onclick=function(){if(R.length<200){one();draw();}};
