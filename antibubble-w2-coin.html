@@ -249,7 +249,7 @@ table.dt .xl{background:var(--line-2);color:var(--ink-3);font-size:11px;font-wei
   <p>⑦ 把 p 換成 0.5、0.7、0.9，n 固定 15，看「一回裡 0／1 的 s」：p＝<span class="blank" style="min-width:50px"></span> 的時候 s 最大，最大是 <span class="blank" style="min-width:50px"></span>。</p>
   <p>所以實驗之前不知道 p 時，形成率的 SE 一律用 <b>√(0.25 ÷ n)</b>——這是<span class="blank" style="min-width:70px"></span>的情況，算出來會<span class="blank" style="min-width:50px"></span>，比較保守。</p>
   <button class="rv">查看提示（想不出來再按）</button>
-  <div class="rvb" hidden>0／1 資料的 s 只看 p：s ＝ √(p(1−p))。p＝0.5 時 0.5×0.5＝0.25，開根號 0.5，是最大的；p 越接近 0 或 1，結果越整齊，s 越小。<br>你在做實驗之前不知道自己的 p，就先當最難猜的 0.5 來算——寧可把 SE 估大，也不要估小。</div>
+  <div class="rvb" hidden>0／1 資料的 s 只看 p：s ＝ √(p(1−p))。p＝0.5 時 0.5×0.5＝0.25，開根號 0.5，是最大的；p 越接近 0 或 1，結果越整齊，s 越小。<br><br><b>為什麼 s² ＝ p(1−p)？</b>一回 n 顆裡，記 1 的佔 p、記 0 的佔 1−p，所以平均就是 p。s² 是「每顆離平均多遠，平方後再平均」：<br>・記 1 的那些：離平均 (1−p)，平方 (1−p)²，佔 p → p(1−p)²<br>・記 0 的那些：離平均 (0−p)，平方 p²，佔 1−p → (1−p)p²<br>加起來：p(1−p)² ＋ (1−p)p² ＝ p(1−p)［(1−p)＋p］＝ <b>p(1−p)</b>。<br>例：10 顆裡 7 顆形成（p＝0.7）：(7×0.3² ＋ 3×0.7²) ÷ 10 ＝ (0.63＋1.47) ÷ 10 ＝ 0.21 ＝ 0.7×0.3。<br>（這裡除以 n；計算機的 s 除以 n−1，n 大時差不多。）<br><br>你在做實驗之前不知道自己的 p，就先當最難猜的 0.5 來算——寧可把 SE 估大，也不要估小。</div>
   <p>⑧ 形成率的 n 是 <span class="blank" style="min-width:120px"></span>；秒數的 n 是 <span class="blank" style="min-width:120px"></span>。</p>
 </div>
 
